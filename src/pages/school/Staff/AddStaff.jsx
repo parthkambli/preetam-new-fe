@@ -96,8 +96,8 @@ const validateForm = (form) => {
     const age = today.getFullYear() - dobDate.getFullYear();
     if (dobDate > today) {
       errors.dob = 'Date of birth cannot be in the future.';
-    } else if (age < 16) {
-      errors.dob = 'Staff must be at least 16 years old.';
+    } else if (age < 18) {
+      errors.dob = 'Staff must be at least 18 years old.';
     } else if (age > 80) {
       errors.dob = 'Please enter a valid date of birth.';
     }
