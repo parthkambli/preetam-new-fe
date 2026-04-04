@@ -11,6 +11,8 @@ export default function StaffList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [roles, setRoles] = useState([]);
+
   const [filters, setFilters] = useState({
     search: '',
     mobile: '',
@@ -18,9 +20,37 @@ export default function StaffList() {
     status: ''
   });
 
-  const setFilter = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedFilters(filters);
+  }, 500); // delay (adjust 300–700ms)
+
+  return () => clearTimeout(timer);
+}, [filters]);
+  
+useEffect(() => {
+  const fetchRoles = async () => {
+    try {
+      // const res = await api.roles.getAll(); // check your apiClient
+      const res = await api.staff.getRoles();
+      setRoles(res.data);
+    } catch (err) {
+      console.error("Failed to fetch roles:", err);
+    }
   };
+
+  fetchRoles();
+}, []);
+
+
+  const setFilter = (key, value) => {
+  setFilters((prev) => ({
+    ...prev,
+    [key]: value,
+  }));
+};
 
   // Fetch staff data
   const fetchStaff = async () => {
@@ -29,10 +59,14 @@ export default function StaffList() {
       setError(null);
 
       const params = {};
-      if (filters.search) params.name = filters.search;
-      if (filters.mobile) params.mobile = filters.mobile;
-      if (filters.role) params.role = filters.role;
-      if (filters.status) params.status = filters.status;
+      // if (filters.search) params.name = filters.search;
+      // if (filters.mobile) params.mobile = filters.mobile;
+      // if (filters.role) params.role = filters.role;
+      // if (filters.status) params.status = filters.status;
+      if (debouncedFilters.search) params.name = debouncedFilters.search;
+      if (debouncedFilters.mobile) params.mobile = debouncedFilters.mobile;
+      if (debouncedFilters.role) params.role = debouncedFilters.role;
+      if (debouncedFilters.status) params.status = debouncedFilters.status;
 
       const response = await api.staff.getAll(params);
       
@@ -58,9 +92,13 @@ export default function StaffList() {
   };
 
   // Fetch when component mounts or filters change
+  // useEffect(() => {
+  //   fetchStaff();
+  // }, [filters]);
+
   useEffect(() => {
-    fetchStaff();
-  }, [filters]);
+  fetchStaff();
+}, [debouncedFilters]);
 
   const handleView = (id) => navigate(`/school/staff/view/${id}`);
   const handleEdit = (id) => navigate(`/school/staff/view/${id}`, { state: { editMode: true } });
@@ -84,9 +122,13 @@ export default function StaffList() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading staff list...</div>;
-  }
+  // if (loading) {
+  //   return <div className="p-8 text-center text-gray-500">Loading staff list...</div>;
+  // }
+
+  {loading && (
+  <div className="text-center text-gray-500">Loading...</div>
+)}
 
   if (error) {
     return <div className="p-8 text-center text-red-600">{error}</div>;
@@ -118,7 +160,11 @@ export default function StaffList() {
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
         >
           <option value="">All Roles</option>
-          {/* You can later populate this dynamically */}
+          {roles.map((role) => (
+          <option key={role._id} value={role._id}>
+            {role.name}
+          </option>
+))}
         </select>
         <select
           value={filters.status}
