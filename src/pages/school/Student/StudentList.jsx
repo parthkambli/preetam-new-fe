@@ -20,6 +20,18 @@ export default function StudentList() {
     fetchStudents();
   }, [filters]);
 
+  useEffect(() => {
+  const handleStatusChange = () => {
+    fetchStudents(); // 🔥 refetch instantly
+  };
+
+  window.addEventListener("admissionStatusChanged", handleStatusChange);
+
+  return () => {
+    window.removeEventListener("admissionStatusChanged", handleStatusChange);
+  };
+}, []);
+
   const fetchStudents = async () => {
     setLoading(true);
     setError('');
@@ -45,11 +57,13 @@ export default function StudentList() {
   };
 
   const getStatusStyle = (status) => {
-    const s = status?.toLowerCase() || '';
-    if (s.includes('active'))   return 'bg-green-100 text-green-800';
-    if (s.includes('inactive')) return 'bg-red-100 text-red-800';
-    if (s.includes('pending'))  return 'bg-yellow-100 text-yellow-800';
-    return 'bg-gray-100 text-gray-800';
+     const s = status?.toLowerCase() || '';
+
+  if (s === 'active') return 'bg-green-100 text-green-800';
+  if (s === 'inactive') return 'bg-red-100 text-red-800';
+
+
+  return 'bg-gray-100 text-gray-800';
   };
 
   const formatCurrency = (amount) => {
