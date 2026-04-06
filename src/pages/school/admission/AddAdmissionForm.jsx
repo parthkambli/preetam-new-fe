@@ -1414,6 +1414,8 @@ import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 import Select from 'react-select';
 
+
+
 const generateAdmissionId = () => {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
@@ -1437,6 +1439,11 @@ export default function AddAdmission() {
   const [enquiryOptions, setEnquiryOptions] = useState([]);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
+
+  // Caregiver state
+  const [caregivers, setCaregivers] = useState([]);
+  const [loadingCaregivers, setLoadingCaregivers] = useState(false);
+  const [caregiverError, setCaregiverError] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -1560,6 +1567,51 @@ export default function AddAdmission() {
     }
   };
 
+  
+useEffect(() => {
+  if (step !== 4) return;
+
+  const fetchCaregivers = async () => {
+    try {
+      setLoadingCaregivers(true);
+      setCaregiverError(null);
+
+      const res = await api.staff.getAll();
+
+      const rawList = res.data?.data || res.data || [];
+      // console.log('RAW STAFF LIST:', rawList);
+      const normalize = (str) =>
+        str?.toLowerCase().replace(/[\s_-]/g, '');
+
+      const list = rawList.filter((s) => {
+        const roleValue =
+          typeof s.role === 'string'
+            ? s.role
+            : s.role?.roleName;
+
+        const roleMatch = normalize(roleValue) === 'caregiver';
+
+        const statusMatch =
+          s.status?.toLowerCase() === 'active' ||
+          s.isActive === true;
+
+        return roleMatch && statusMatch;
+      });
+
+      setCaregivers(list);
+    } catch (err) {
+      console.error(err);
+      setCaregiverError('Failed to load caregivers');
+    } finally {
+      setLoadingCaregivers(false);
+    }
+  };
+
+  fetchCaregivers();
+}, [step]);
+
+
+
   const handleChange = (e) => {
     const { name, value, files, type } = e.target;
     if (type === 'file') {
@@ -1627,9 +1679,19 @@ export default function AddAdmission() {
       {/* Progress */}
       <div className="flex justify-between mb-6">
         {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Admission Details'].map((label, i) => (
-          <div key={i} className={`flex-1 text-center py-2 ${step > i + 1 ? 'text-green-600' : step === i + 1 ? 'font-bold text-[#000359]' : 'text-gray-400'}`}>
-            {label}
-          </div>
+          <div
+  key={i}
+  onClick={() => setStep(i + 1)}
+  className={`flex-1 text-center py-2 cursor-pointer ${
+    step > i + 1
+      ? 'text-green-600'
+      : step === i + 1
+      ? 'font-bold text-[#000359]'
+      : 'text-gray-400'
+  }`}
+>
+  {label}
+</div>
         ))}
       </div>
 
@@ -1978,7 +2040,39 @@ export default function AddAdmission() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Caregiver / Staff</label>
-                <input name="assignedCaregiver" value={formData.assignedCaregiver} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+                <div>
+  <select
+    name="assignedCaregiver"
+    value={formData.assignedCaregiver}
+    onChange={handleChange}
+    disabled={loadingCaregivers}
+    className="w-full px-4 py-2.5 border rounded-lg bg-white disabled:bg-gray-100"
+  >
+    <option value="">
+      {loadingCaregivers
+        ? 'Loading caregivers...'
+        : 'Select Caregiver / Staff'}
+    </option>
+
+    {caregivers.map((staff) => (
+      <option key={staff._id} value={staff._id}>
+        {staff.fullName || staff.name || 'Unnamed'}
+      </option>
+    ))}
+  </select>
+
+  {/* Error */}
+  {caregiverError && (
+    <p className="text-sm text-red-500 mt-1">{caregiverError}</p>
+  )}
+
+  {/* Empty state */}
+  {!loadingCaregivers && caregivers.length === 0 && !caregiverError && (
+    <p className="text-sm text-gray-500 mt-1">
+      No caregivers available
+    </p>
+  )}
+</div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Fee Plan</label>

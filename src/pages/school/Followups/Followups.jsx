@@ -590,9 +590,9 @@ export default function Followups() {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'new': return 'bg-blue-100 text-blue-800';
+      case 'new': return 'bg-blue-100 text-blue-700 border border-blue-200';
       case 'follow-up': return 'bg-yellow-100 text-yellow-800';
-      case 'converted': return 'bg-green-100 text-green-800';
+      case 'converted': return 'bg-purple-100 text-purple-700 border border-purple-200';
       case 'pending': return 'bg-yellow-100 text-yellow-700';
       case 'completed': return 'bg-green-100 text-green-700';
       default: return 'bg-gray-100 text-gray-800';
@@ -695,10 +695,10 @@ export default function Followups() {
         >
           <option value="">All Status</option>
           <option value="New">New</option>
-          <option value="Follow-up">Follow-up</option>
+          {/* <option value="Follow-up">Follow-up</option> */}
           <option value="Converted">Converted</option>
-          <option value="Pending">Pending</option>
-          <option value="Completed">Completed</option>
+          {/* <option value="Pending">Pending</option> */}
+          {/* <option value="Completed">Completed</option> */}
         </select>
       </div>
 
@@ -806,7 +806,7 @@ export default function Followups() {
                     className="w-full border rounded px-3 py-2 text-sm"
                   >
                     <option value="New">New</option>
-                    <option value="Follow-up">Follow-up</option>
+                    {/* <option value="Follow-up">Follow-up</option> */}
                     <option value="Converted">Converted</option>
                   </select>
                 </div>

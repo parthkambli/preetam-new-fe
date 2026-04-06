@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "../../../services/apiClient";
 
 // ── Static data ────────────────────────────────────────────────────────────
 const STATS = [
@@ -68,7 +69,8 @@ export default function Reports() {
   const [activeTab, setActiveTab] = useState("admissions"); // 'admissions' | 'participants'
   const [reportDate] = useState("Jan 10, 2024");
   const [exporting, setExporting] = useState("");
-
+  const [admissionsData, setAdmissionsData] = useState([]);
+  const [participantsData, setParticipantsData] = useState([]);
   const isAdmissions = activeTab === "admissions";
 
   const admissionsHeaders = ["Name", "Date", "Status"];
@@ -80,7 +82,38 @@ export default function Reports() {
   const currentTitle = isAdmissions ? "Admissions Report" : "Participants Report";
   const currentHeaders = isAdmissions ? admissionsHeaders : participantsHeaders;
   const currentRows = isAdmissions ? admissionsRows : participantsRows;
-  const currentData = isAdmissions ? ADMISSIONS_DATA : PARTICIPANTS_DATA;
+  const currentData = isAdmissions ? (admissionsData || []) : (participantsData || []);  
+  useEffect(() => {
+  fetchAdmissions();
+  fetchParticipants();   // 👈 ADD THIS
+}, []);
+
+const fetchAdmissions = async () => {
+  try {
+    const res = await api.fitnessEnquiry.getAll();
+
+    console.log("API DATA:", res.data); // IMPORTANT DEBUG
+
+    setAdmissionsData(res.data); // adjust if needed
+  } catch (err) {
+    console.error("Error:", err);
+  }
+};
+
+
+const fetchParticipants = async () => {
+  try {
+    const res = await api.fitnessMember.getAll();
+
+    console.log("Participants API:", res.data);
+
+    setParticipantsData(res.data); // important
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
 
   const handleExportPDF = async () => {
     setExporting("pdf");
@@ -141,7 +174,10 @@ export default function Reports() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {/* Admissions card */}
         <button
-          onClick={() => setActiveTab("admissions")}
+          onClick={() => {
+  setActiveTab("admissions");
+  fetchAdmissions();
+}}
           className={`text-left rounded-xl p-5 border-2 transition-all duration-150 bg-white shadow-sm ${
             isAdmissions ? "border-[#1a2a5e]" : "border-transparent"
           }`}
@@ -159,7 +195,10 @@ export default function Reports() {
 
         {/* Participants card */}
         <button
-          onClick={() => setActiveTab("participants")}
+          onClick={() => {
+  setActiveTab("participants");
+  fetchParticipants();
+}}
           className={`text-left rounded-xl p-5 border-2 transition-all duration-150 bg-white shadow-sm ${
             !isAdmissions ? "border-[#1a2a5e]" : "border-transparent"
           }`}
@@ -192,12 +231,15 @@ export default function Reports() {
               </tr>
             </thead>
             <tbody>
-              {currentData.map((row, idx) => (
+              {(currentData || []).map((row, idx) => (
                 <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   {isAdmissions ? (
                     <>
-                      <td className="px-5 py-3 text-gray-800">{row.name}</td>
-                      <td className="px-5 py-3 text-gray-600">{row.date}</td>
+                      <td className="px-5 py-3 text-gray-800">{row.fullName}</td>
+                      {/* <td className="px-5 py-3 text-gray-600">{row.date}</td> */}
+                      <td className="px-5 py-3 text-gray-600">
+  {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-"}
+</td>
                       <td className="px-5 py-3">
                         <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
                           row.status === "Admitted"
@@ -210,8 +252,8 @@ export default function Reports() {
                     </>
                   ) : (
                     <>
-                      <td className="px-5 py-3 text-gray-800">{row.name}</td>
-                      <td className="px-5 py-3 text-gray-600">{row.category}</td>
+                      <td className="px-5 py-3 text-gray-800">{row.name || row.fullName || "-"}</td>
+                      <td className="px-5 py-3 text-gray-600">{row.category ||"-"}</td>
                       <td className="px-5 py-3">
                         <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
                           row.status === "Active"

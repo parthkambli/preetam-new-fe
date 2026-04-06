@@ -225,9 +225,16 @@ export default function SchoolAdmission() {
 
     try {
       await api.schoolAdmission.update(adm._id, { status: newStatus });
+
+// 🔥 BROADCAST CHANGE (THIS IS THE KEY)
+window.dispatchEvent(
+  new CustomEvent("admissionStatusChanged", {
+    detail: { id: adm._id, status: newStatus },
+  })
+);
     } catch (err) {
       console.error('Failed to update status:', err);
-      alert('Failed to update status. Please try again.');
+      // alert('Failed to update status. Please try again.');
       
       // Revert on error
       setAdmissions(prev =>
