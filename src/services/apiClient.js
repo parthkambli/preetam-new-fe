@@ -214,7 +214,28 @@ export const api = {
     update: (id, data) => apiClient.put(`/fitness/events/${id}`, data),
     delete: (id) => apiClient.delete(`/fitness/events/${id}`),
   },
+    // Fitness Activities
+  fitnessActivities: {
+    getAll: () => apiClient.get('/fitness/activities'),
+    getById: (id) => apiClient.get(`/fitness/activities/${id}`),
+    create: (data) => apiClient.post('/fitness/activities', data),
+    update: (id, data) => apiClient.put(`/fitness/activities/${id}`, data),
+    delete: (id) => apiClient.delete(`/fitness/activities/${id}`),
+  },
+ 
+  // Fitness Schedules
+  fitnessSchedules: {
+    getAll: (params = {}) => apiClient.get('/fitness/schedules', { params }),
+    getById: (id) => apiClient.get(`/fitness/schedules/${id}`),
+    create: (data) => apiClient.post('/fitness/schedules', data),
+    update: (id, data) => apiClient.put(`/fitness/schedules/${id}`, data),
+    delete: (id) => apiClient.delete(`/fitness/schedules/${id}`),
+  },
 
 };
 
 export default apiClient;
+
+
+
+
