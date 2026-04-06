@@ -686,7 +686,7 @@ export default function ActivityList({ onView, onSchedule }) {
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[620px]">
+          <table className="w-full text-sm min-w-155">
             <thead>
               <tr className="bg-[#000359] text-white text-left">
                 {['Activity Name', 'Date', 'Time', 'Place', 'Instructor', 'Actions'].map(h => (
@@ -822,12 +822,12 @@ export default function ActivityList({ onView, onSchedule }) {
                       </td>
                       <td className="px-5 py-3.5 whitespace-nowrap">
                         <div className="flex gap-2">
-                          <button
+                          {/* <button
                             onClick={() => onView?.(a)}
                             className="border border-gray-300 text-gray-700 hover:bg-gray-100 text-xs font-medium px-3 py-1.5 rounded transition-colors"
                           >
                             View
-                          </button>
+                          </button> */}
                           <button
                             onClick={() => startEdit(a)}
                             className="bg-[#000359] hover:bg-[#000280] text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
