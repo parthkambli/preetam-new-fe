@@ -1,69 +1,305 @@
+// import { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// //import { api } from '../../../services/apiClient';
+// //import { api } from '../../../services/api';
+// import api from '../../../services/api';
 
-import { useState } from 'react';
+// export default function StaffList() {
+//   const navigate = useNavigate();
+
+//   const [staff, setStaff] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+
+//   const [filters, setFilters] = useState({ 
+//     search: '', 
+//     mobile: '', 
+//     role: '', 
+//     status: '' 
+//   });
+
+//   const updateFilter = (key, value) => {
+//     setFilters(prev => ({ ...prev, [key]: value }));
+//   };
+
+//   // Fetch staff with safe data extraction
+//   const fetchStaff = async () => {
+//     try {
+//       setLoading(true);
+//       setError(null);
+
+//       const response = await api.fitnessStaff.getAll();
+
+//       // Debug: Check exact response in browser console
+//       console.log("🔍 Full API Response:", response);
+//       console.log("🔍 Response.data:", response.data);
+
+//       // Handle common response patterns safely
+//       let staffData = [];
+
+//       if (Array.isArray(response.data)) {
+//        // staffData = response.data;
+//        staffData = response.data?.data?.staff || [];
+//       } else if (response.data && Array.isArray(response.data.data)) {
+//         staffData = response.data.data;
+//       } else if (response.data && Array.isArray(response.data.staff)) {
+//         staffData = response.data.staff;
+//       } else if (response.data && typeof response.data === 'object') {
+//         // Fallback: try to extract any array-like property
+//         staffData = Object.values(response.data).find(Array.isArray) || [];
+//       }
+
+//       setStaff(staffData);
+
+//     } catch (err) {
+//       console.error("❌ Fetch error:", err);
+//       setError(
+//         err.response?.data?.message || 
+//         err.message || 
+//         "Failed to load staff data. Please check your connection."
+//       );
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchStaff();
+//   }, []);
+
+//   // Safe filter - always works even if staff is not array
+//   const filteredStaff = Array.isArray(staff) 
+//     ? staff.filter(s => {
+//         const searchMatch = !filters.search || 
+//           s.fullName?.toLowerCase().includes(filters.search.toLowerCase());
+
+//         const mobileMatch = !filters.mobile || 
+//           s.mobileNumber?.includes(filters.mobile);
+
+//         const roleMatch = !filters.role || String(s.role) === filters.role;
+//         const statusMatch = !filters.status || s.status === filters.status;
+
+//         return searchMatch && mobileMatch && roleMatch && statusMatch;
+//       })
+//     : [];
+
+//   const formatDate = (dateStr) => {
+//     if (!dateStr) return '-';
+//     return new Date(dateStr).toLocaleDateString('en-GB');
+//   };
+
+//   const uniqueRoles = Array.isArray(staff) 
+//     ? [...new Set(staff.map(s => s.role).filter(Boolean))]
+//     : [];
+
+//   const handleView = (id) => navigate(`/fitness/staff/view/${id}`);
+//   const handleEdit = (id) => navigate(`/fitness/staff/view/${id}`, { state: { editMode: true } });
+
+//   return (
+//     <div className="space-y-4">
+//       {/* Filters */}
+//       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+//         <input
+//           type="text"
+//           placeholder="Search by Name"
+//           value={filters.search}
+//           onChange={e => updateFilter('search', e.target.value)}
+//           className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
+//         />
+//         <input
+//           type="text"
+//           placeholder="Mobile Number"
+//           value={filters.mobile}
+//           onChange={e => updateFilter('mobile', e.target.value)}
+//           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
+//         />
+//         <select
+//           value={filters.role}
+//           onChange={e => updateFilter('role', e.target.value)}
+//           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
+//         >
+//           <option value="">All Roles</option>
+//           {uniqueRoles.map(r => <option key={r} value={r}>{r}</option>)}
+//         </select>
+//         <select
+//           value={filters.status}
+//           onChange={e => updateFilter('status', e.target.value)}
+//           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
+//         >
+//           <option value="">All Status</option>
+//           <option value="Active">Active</option>
+//           <option value="Inactive">Inactive</option>
+//           <option value="Terminated">Terminated</option>
+//         </select>
+//       </div>
+
+//       {/* Table */}
+//       <div className="bg-white rounded-xl shadow overflow-hidden">
+//         <div className="overflow-x-auto">
+//           <table className="w-full text-sm min-w-[700px]">
+//             <thead>
+//               <tr className="bg-[#000359] text-white text-left">
+//                 {['Employee ID', 'Name', 'Role', 'Mobile', 'Employment Type', 'Joining Date', 'Status', 'Actions'].map(h => (
+//                   <th key={h} className="px-4 py-3 font-medium whitespace-nowrap">{h}</th>
+//                 ))}
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {loading ? (
+//                 <tr><td colSpan={8} className="px-5 py-10 text-center text-gray-500">Loading staff data...</td></tr>
+//               ) : error ? (
+//                 <tr><td colSpan={8} className="px-5 py-10 text-center text-red-500">{error}</td></tr>
+//               ) : filteredStaff.length === 0 ? (
+//                 <tr><td colSpan={8} className="px-5 py-10 text-center text-gray-400">No records found</td></tr>
+//               ) : (
+//                 filteredStaff.map(s => (
+//                   <tr key={s._id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
+//                     <td className="px-4 py-3 text-gray-500 text-xs font-mono whitespace-nowrap">{s.employeeId || '-'}</td>
+//                     <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{s.fullName || '-'}</td>
+//                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.role || '-'}</td>
+//                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.mobileNumber || '-'}</td>
+//                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.employmentType || '-'}</td>
+//                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(s.joiningDate)}</td>
+//                     <td className="px-4 py-3 whitespace-nowrap">
+//                       <span className={`px-3 py-1 text-xs font-medium rounded-full border ${
+//                         s.status === 'Active' 
+//                           ? 'bg-green-50 text-green-700 border-green-200'
+//                           : s.status === 'Inactive'
+//                           ? 'bg-red-50 text-red-600 border-red-200'
+//                           : 'bg-gray-100 text-gray-600 border-gray-300'
+//                       }`}>
+//                         {s.status || 'Unknown'}
+//                       </span>
+//                     </td>
+//                     <td className="px-4 py-3 whitespace-nowrap">
+//                       <div className="flex gap-2">
+//                         <button
+//                           onClick={() => handleView(s._id)}
+//                           className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+//                         >
+//                           View
+//                         </button>
+//                         <button
+//                           onClick={() => handleEdit(s._id)}
+//                           className="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+//                         >
+//                           Edit
+//                         </button>
+//                       </div>
+//                     </td>
+//                   </tr>
+//                 ))
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const dummyStaff = [
-  { _id: '1', employeeId: 'EMP-00123', name: 'Suresh Patil',  role: 'Caregiver', mobile: '9876543210', employmentType: 'Full Time', joiningDate: '2024-03-15', status: 'Active'   },
-  { _id: '2', employeeId: 'EMP-00124', name: 'Anita Desai',   role: 'Nurse',     mobile: '9123456789', employmentType: 'Full Time', joiningDate: '2023-06-01', status: 'Active'   },
-  { _id: '3', employeeId: 'EMP-00125', name: 'Rohit Sharma',  role: 'Trainer',   mobile: '9988776655', employmentType: 'Part Time', joiningDate: '2025-01-10', status: 'Inactive' },
-  { _id: '4', employeeId: 'EMP-00126', name: 'Meena Joshi',   role: 'Teacher',   mobile: '9012345678', employmentType: 'Contract',  joiningDate: '2024-08-20', status: 'Active'   },
-];
+import api from '../../../services/api';
 
 export default function StaffList() {
   const navigate = useNavigate();
-  const [staff]   = useState(dummyStaff);
-  const [filters, setFilters] = useState({ search: '', mobile: '', role: '', status: '' });
 
-  const set = (key, val) => setFilters(p => ({ ...p, [key]: val }));
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = staff.filter(s =>
-    (!filters.search || s.name.toLowerCase().includes(filters.search.toLowerCase())) &&
-    (!filters.mobile || s.mobile.includes(filters.mobile)) &&
-    (!filters.role   || s.role === filters.role) &&
-    (!filters.status || s.status === filters.status)
-  );
+  const [filters, setFilters] = useState({ 
+    search: '', 
+    mobile: '', 
+    role: '', 
+    status: '' 
+  });
 
-  const fmt = (d) => new Date(d).toLocaleDateString('en-GB');
-  const uniqueRoles = [...new Set(staff.map(s => s.role))];
-
-  const handleView = (id) => {
-    navigate(`/fitness/staff/view/${id}`);
+  const updateFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleEdit = (id) => {
-    // Navigate to the same detail route but pass editMode: true via location state
-    navigate(`/fitness/staff/view/${id}`, { state: { editMode: true } });
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await api.fitnessStaff.getAll();
+      
+      // Response shape: { data: { success, message, data: { staff: [], pagination: {} } } }
+      const staffData = response.data?.data?.staff || [];
+      setStaff(staffData);
+
+    } catch (err) {
+      console.error("❌ Fetch error:", err);
+      setError(
+        err.response?.data?.message || 
+        err.message || 
+        "Failed to load staff data."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  const filteredStaff = staff.filter(s => {
+    const searchMatch = !filters.search || 
+      s.fullName?.toLowerCase().includes(filters.search.toLowerCase());
+    const mobileMatch = !filters.mobile || 
+      s.mobileNumber?.includes(filters.mobile);
+    const roleMatch = !filters.role || s.role === filters.role;
+    const statusMatch = !filters.status || s.status === filters.status;
+    return searchMatch && mobileMatch && roleMatch && statusMatch;
+  });
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('en-GB');
+  };
+
+  const uniqueRoles = [...new Set(staff.map(s => s.role).filter(Boolean))];
 
   return (
     <div className="space-y-4">
-
       {/* Filters */}
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
         <input
-          type="text" placeholder="Search Name"
-          value={filters.search} onChange={e => set('search', e.target.value)}
+          type="text"
+          placeholder="Search by Name"
+          value={filters.search}
+          onChange={e => updateFilter('search', e.target.value)}
           className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
         />
         <input
-          type="text" placeholder="Mobile Number"
-          value={filters.mobile} onChange={e => set('mobile', e.target.value)}
+          type="text"
+          placeholder="Mobile Number"
+          value={filters.mobile}
+          onChange={e => updateFilter('mobile', e.target.value)}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
         />
         <select
-          value={filters.role} onChange={e => set('role', e.target.value)}
+          value={filters.role}
+          onChange={e => updateFilter('role', e.target.value)}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
         >
           <option value="">All Roles</option>
-          {uniqueRoles.map(r => <option key={r}>{r}</option>)}
+          {uniqueRoles.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <select
-          value={filters.status} onChange={e => set('status', e.target.value)}
+          value={filters.status}
+          onChange={e => updateFilter('status', e.target.value)}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
         >
           <option value="">All Status</option>
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>
+          <option value="Terminated">Terminated</option>
         </select>
       </div>
 
@@ -79,45 +315,75 @@ export default function StaffList() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-10 text-center text-gray-400">No records found</td>
-                </tr>
-              ) : filtered.map(s => (
-                <tr key={s._id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-gray-500 text-xs font-mono whitespace-nowrap">{s.employeeId}</td>
-                  <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{s.name}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.role}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.mobile}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.employmentType}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{fmt(s.joiningDate)}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full border ${
-                      s.status === 'Active'
-                        ? 'bg-green-50 text-green-700 border-green-200'
-                        : 'bg-red-50 text-red-600 border-red-200'
-                    }`}>
-                      {s.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleView(s._id)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
-                      >
-                        View
-                      </button>
-                      <button
-                        onClick={() => handleEdit(s._id)}
-                        className="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
-                      >
-                        Edit
-                      </button>
-                    </div>
+                  <td colSpan={8} className="px-5 py-10 text-center text-gray-500">
+                    Loading staff data...
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={8} className="px-5 py-10 text-center text-red-500">
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-5 py-10 text-center text-gray-400">
+                    No records found
+                  </td>
+                </tr>
+              ) : (
+                filteredStaff.map(s => (
+                  <tr key={s._id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-gray-500 text-xs font-mono whitespace-nowrap">
+                      {s.employeeId || '-'}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
+                      {s.fullName || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      {s.role || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      {s.mobileNumber || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      {s.employmentType || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      {formatDate(s.joiningDate)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full border ${
+                        s.status === 'Active' 
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : s.status === 'Inactive'
+                          ? 'bg-red-50 text-red-600 border-red-200'
+                          : 'bg-gray-100 text-gray-600 border-gray-300'
+                      }`}>
+                        {s.status || 'Unknown'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/fitness/staff/view/${s._id}`)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => navigate(`/fitness/staff/view/${s._id}`, { state: { editMode: true } })}
+                          className="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

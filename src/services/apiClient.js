@@ -206,6 +206,27 @@ export const api = {
     },
     delete: (id) => apiClient.delete(`/fitness/member/${id}`)
   },
+fitnessStaff: {
+  getAll: (params) => apiClient.get('/fitness/staff', { params }),
+  getById: (id) => apiClient.get(`/fitness/staff/${id}`),
+  create: (formData) => apiClient.post('/fitness/staff/create', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  update: (id, formData) => apiClient.put(`/fitness/staff/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  delete: (id) => apiClient.delete(`/fitness/staff/${id}`),
+
+  // Roles — mounted at /api/fitness/roles
+  getRoles: () => apiClient.get('/fitness/roles'),
+  createRole: (data) => apiClient.post('/fitness/roles/create', data),
+  deleteRole: (id) => apiClient.delete(`/fitness/roles/${id}`),
+
+  // Employment Types — mounted at /api/fitness/types
+  getEmploymentTypes: () => apiClient.get('/fitness/types'),
+  createEmploymentType: (data) => apiClient.post('/fitness/types/create', data),
+  deleteEmploymentType: (id) => apiClient.delete(`/fitness/types/${id}`),
+},
 
 // Fitness Events
   fitnessEvents: {

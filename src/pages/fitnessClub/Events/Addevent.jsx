@@ -308,6 +308,11 @@ export default function AddEvent() {
     }
   }, [editingEvent]);
 
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const validate = () => {
     const newErrors = {};
 
@@ -318,15 +323,17 @@ export default function AddEvent() {
     if (!form.startTime) newErrors.startTime = "Start time is required.";
     if (!form.endTime) newErrors.endTime = "End time is required.";
 
+    // Date validation: Today or Future only
     if (form.date) {
       const selectedDate = new Date(form.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate < today) {
-        newErrors.date = "Event date cannot be in the past.";
+        newErrors.date = "Event date cannot be in the past. Only today or future dates allowed.";
       }
     }
 
+    // Time validation: End time must be after start time
     if (form.startTime && form.endTime && form.startTime >= form.endTime) {
       newErrors.endTime = "End time must be after start time.";
     }
@@ -337,6 +344,8 @@ export default function AddEvent() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -372,6 +381,8 @@ export default function AddEvent() {
   };
 
   const handleCancel = () => navigate("/fitness/events");
+
+  const today = getTodayDate();
 
   if (submitted) {
     return (
@@ -439,6 +450,7 @@ export default function AddEvent() {
                 name="date"
                 value={form.date}
                 onChange={handleChange}
+                min={today}                    // ← Only today or future dates
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white transition ${errors.date ? "border-red-400" : "border-gray-300"}`}
               />
               {errors.date && <p className="mt-1 text-xs text-red-500">{errors.date}</p>}
@@ -478,6 +490,7 @@ export default function AddEvent() {
                 name="endTime"
                 value={form.endTime}
                 onChange={handleChange}
+                min={form.startTime || undefined}   // ← End time must be after start time
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white transition ${errors.endTime ? "border-red-400" : "border-gray-300"}`}
               />
               {errors.endTime && <p className="mt-1 text-xs text-red-500">{errors.endTime}</p>}
