@@ -60,71 +60,313 @@
 //   );
 // }
 
-export default function SchoolDashboard() {
+// export default function SchoolDashboard() {
+//   return (
+//     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen space-y-4 sm:space-y-5">
+//       <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Dashboard</h1>
+
+//       {/* Row 1: 3 stat cards — number LEFT, label RIGHT */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+//         {[
+//           { value: "80", label: "Total Participants" },
+//           { value: "70", label: "Total Staff" },
+//           { value: "10", label: "Upcoming Events" },
+//         ].map((s) => (
+//           <div key={s.label} className="bg-white rounded-2xl border border-gray-200 px-4 sm:px-6 py-4 sm:py-5 flex items-center gap-3 sm:gap-4">
+//             <span className="text-2xl sm:text-3xl font-bold text-gray-800">{s.value}</span>
+//             <span className="text-sm sm:text-base text-gray-600 font-medium leading-tight">{s.label}</span>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Row 2: 3-column grid — col1: Participants, col2: Staff, col3: Fee+Enquiries stacked */}
+//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+//         <div className="flex flex-col gap-3 sm:gap-4">
+//         {/* Participants Present Today */}
+//           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+//             <p className="text-xs sm:text-sm font-semibold text-green-600 mb-2 sm:mb-3">Participants Present Today</p>
+//             <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2 sm:mb-3">72%</p>
+//             <div className="w-full h-2 bg-gray-200 rounded-full mb-2 sm:mb-3">
+//               <div className="h-2 bg-green-500 rounded-full" style={{ width: "72%" }} />
+//             </div>
+//             <p className="text-xs text-gray-500">72 of 100 participants attended at least one activity</p>
+//           </div>
+
+//           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+//             <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-2">Total Activity Check-ins</p>
+//             <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-1">76</p>
+//             <p className="text-xs text-gray-500">Multiple activities counted separately</p>
+//           </div>
+//         </div>
+
+//         <div className="flex flex-col gap-3 sm:gap-4">
+//           {/* Staff Attendance */}
+//           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+//             <p className="text-xs sm:text-sm font-semibold text-green-600 mb-2 sm:mb-3">Staff Attendance</p>
+//             <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2 sm:mb-3">18 / 20</p>
+//             <div className="w-full h-2 bg-gray-200 rounded-full mb-2 sm:mb-3">
+//               <div className="h-2 bg-green-500 rounded-full" style={{ width: "90%" }} />
+//             </div>
+//             <p className="text-xs text-gray-500">Staff present in assigned activities</p>
+//           </div>
+
+//           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+//             <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-2">Most Active Program</p>
+//             <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-1">Yoga</p>
+//             <p className="text-xs text-gray-500">32 participants attended today</p>
+//           </div>
+//         </div>
+
+
+
+
+//         {/* Right column: Fee Management + Today Enquiries */}
+//         <div className="flex flex-col gap-3 sm:gap-4">
+//           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+//             <p className="text-sm font-semibold text-gray-800 mb-3">Fee Management</p>
+//             <div className="flex gap-2 mb-3">
+//               <select className="text-xs border border-gray-300 rounded-md px-2 py-1 text-gray-600 focus:outline-none bg-white">
+//                 <option>2023-2024</option>
+//               </select>
+//               <select className="text-xs border border-gray-300 rounded-md px-2 py-1 text-gray-600 focus:outline-none bg-white">
+//                 <option>Annual</option>
+//               </select>
+//             </div>
+//             <div className="bg-blue-100 rounded-xl px-3 sm:px-4 py-2 sm:py-3">
+//               <p className="text-base sm:text-lg font-bold text-gray-800">₹29,545,000</p>
+//               <p className="text-xs text-gray-500 mt-0.5">Total Fee</p>
+//             </div>
+//           </div>
+
+//           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+//             <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Today Total Enquiries</p>
+//             <p className="text-3xl sm:text-4xl font-extrabold text-gray-800">18</p>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Today's Schedule Actives */}
+//       <div>
+//         <h2 className="text-sm sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">Today's Schedule Actives</h2>
+//         <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1">
+//           {[
+//             { name: "Yoga",                  time: "10:00 AM", border: "border-purple-300",  bg: "bg-purple-50"  },
+//             { name: "Art",                   time: "11:00 AM", border: "border-yellow-300",  bg: "bg-yellow-50"  },
+//             { name: "Music",                 time: "12:00 PM", border: "border-pink-300",    bg: "bg-pink-50"    },
+//             { name: "Therapy",               time: "01:00 PM", border: "border-violet-300",  bg: "bg-violet-50"  },
+//             { name: "Group Exercises",       time: "03:00 PM", border: "border-green-300",   bg: "bg-green-50"   },
+//             { name: "Health Awareness Talk", time: "04:00 PM", border: "border-cyan-300",    bg: "bg-cyan-50"    },
+//           ].map((a) => (
+//             <div
+//               key={a.name}
+//               className={`flex-shrink-0 border-2 ${a.border} ${a.bg} rounded-xl px-3 sm:px-5 py-2 sm:py-3 text-center min-w-[100px] sm:min-w-[110px]`}
+//             >
+//               <p className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">{a.name}</p>
+//               <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{a.time}</p>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+
+//       {/* Today's Actives Attendance */}
+//       <div>
+//         <h2 className="text-sm sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">Today's Actives Attendance</h2>
+//         <div className="space-y-2 sm:space-y-3">
+//           {[
+//             { emoji: "🧘", name: "Yoga",  present: 32, total: 40, accent: "border-blue-500"  },
+//             { emoji: "🎵", name: "Music", present: 18, total: 25, accent: "border-pink-500"   },
+//             { emoji: "🎨", name: "Art",   present: 14, total: 20, accent: "border-green-600"  },
+//           ].map((a) => (
+//             <div
+//               key={a.name}
+//               className={`bg-white rounded-xl border border-gray-200 border-l-4 ${a.accent} px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between`}
+//             >
+//               <span className="text-xs sm:text-sm font-medium text-gray-700">
+//                 {a.emoji} {a.name}
+//               </span>
+//               <span className="text-xs sm:text-sm text-gray-500 bg-gray-100 rounded-lg px-3 sm:px-4 py-1 sm:py-1.5 font-medium">
+//                 {a.present} / {a.total} Present
+//               </span>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///New Dashboad
+
+import { useEffect, useState } from 'react';
+import { api } from '../../services/apiClient';
+
+export default function FitnessDashboard() {
+  const [data, setData] = useState({
+    totalParticipants: 0,
+    totalStaff: 0,
+    upcomingEvents: 0,
+    totalActivityCheckins: 0,
+    mostActiveProgram: { name: 'N/A', count: 0 },
+    todayTotalEnquiries: 0,
+  });
+
+  const [schedules, setSchedules] = useState([]);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await api.schoolDashboard.getData();
+        const dashboardData = res?.data || {};
+
+        setData({
+          totalParticipants: dashboardData.totalParticipants || 0,
+          totalStaff: dashboardData.totalStaff || 0,
+          upcomingEvents: dashboardData.upcomingEvents || 0,
+          totalActivityCheckins: dashboardData.totalActivityCheckins || 0,
+          mostActiveProgram:
+            dashboardData.mostActiveProgram || { name: 'N/A', count: 0 },
+          todayTotalEnquiries: dashboardData.todayTotalEnquiries || 0,
+        });
+
+        setSchedules(
+          Array.isArray(dashboardData.todaysScheduleActives)
+            ? dashboardData.todaysScheduleActives
+            : []
+        );
+      } catch (err) {
+        console.log('Dashboard API Error:', err?.response?.data || err.message);
+        setSchedules([]);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen space-y-4 sm:space-y-5">
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Dashboard</h1>
 
-      {/* Row 1: 3 stat cards — number LEFT, label RIGHT */}
+      {/* Row 1: 3 stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {[
-          { value: "80", label: "Total Participants" },
-          { value: "70", label: "Total Staff" },
-          { value: "10", label: "Upcoming Events" },
+          { value: data.totalParticipants, label: 'Total Participants' },
+          { value: data.totalStaff, label: 'Total Staff' },
+          { value: data.upcomingEvents, label: 'Upcoming Events' },
         ].map((s) => (
-          <div key={s.label} className="bg-white rounded-2xl border border-gray-200 px-4 sm:px-6 py-4 sm:py-5 flex items-center gap-3 sm:gap-4">
-            <span className="text-2xl sm:text-3xl font-bold text-gray-800">{s.value}</span>
-            <span className="text-sm sm:text-base text-gray-600 font-medium leading-tight">{s.label}</span>
+          <div
+            key={s.label}
+            className="bg-white rounded-2xl border border-gray-200 px-4 sm:px-6 py-4 sm:py-5 flex items-center gap-3 sm:gap-4"
+          >
+            <span className="text-2xl sm:text-3xl font-bold text-gray-800">
+              {s.value}
+            </span>
+            <span className="text-sm sm:text-base text-gray-600 font-medium leading-tight">
+              {s.label}
+            </span>
           </div>
         ))}
       </div>
 
-      {/* Row 2: 3-column grid — col1: Participants, col2: Staff, col3: Fee+Enquiries stacked */}
+      {/* Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="flex flex-col gap-3 sm:gap-4">
-        {/* Participants Present Today */}
+          {/* Participants Present Today - Static */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-            <p className="text-xs sm:text-sm font-semibold text-green-600 mb-2 sm:mb-3">Participants Present Today</p>
-            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2 sm:mb-3">72%</p>
+            <p className="text-xs sm:text-sm font-semibold text-green-600 mb-2 sm:mb-3">
+              Participants Present Today
+            </p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2 sm:mb-3">
+              72%
+            </p>
             <div className="w-full h-2 bg-gray-200 rounded-full mb-2 sm:mb-3">
-              <div className="h-2 bg-green-500 rounded-full" style={{ width: "72%" }} />
+              <div
+                className="h-2 bg-green-500 rounded-full"
+                style={{ width: '72%' }}
+              />
             </div>
-            <p className="text-xs text-gray-500">72 of 100 participants attended at least one activity</p>
+            <p className="text-xs text-gray-500">
+              72 of 100 participants attended at least one activity
+            </p>
           </div>
 
+          {/* Dynamic */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-            <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-2">Total Activity Check-ins</p>
-            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-1">76</p>
-            <p className="text-xs text-gray-500">Multiple activities counted separately</p>
+            <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-2">
+              Total Activity Check-ins
+            </p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-1">
+              {data.totalActivityCheckins}
+            </p>
+            <p className="text-xs text-gray-500">
+              Multiple activities counted separately
+            </p>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 sm:gap-4">
-          {/* Staff Attendance */}
+          {/* Staff Attendance - Static */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-            <p className="text-xs sm:text-sm font-semibold text-green-600 mb-2 sm:mb-3">Staff Attendance</p>
-            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2 sm:mb-3">18 / 20</p>
+            <p className="text-xs sm:text-sm font-semibold text-green-600 mb-2 sm:mb-3">
+              Staff Attendance
+            </p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2 sm:mb-3">
+              18 / 20
+            </p>
             <div className="w-full h-2 bg-gray-200 rounded-full mb-2 sm:mb-3">
-              <div className="h-2 bg-green-500 rounded-full" style={{ width: "90%" }} />
+              <div
+                className="h-2 bg-green-500 rounded-full"
+                style={{ width: '90%' }}
+              />
             </div>
-            <p className="text-xs text-gray-500">Staff present in assigned activities</p>
+            <p className="text-xs text-gray-500">
+              Staff present in assigned activities
+            </p>
           </div>
 
+          {/* Dynamic */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-            <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-2">Most Active Program</p>
-            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-1">Yoga</p>
-            <p className="text-xs text-gray-500">32 participants attended today</p>
+            <p className="text-xs sm:text-sm font-semibold text-blue-700 mb-2">
+              Most Active Program
+            </p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-1">
+              {data.mostActiveProgram?.name || 'N/A'}
+            </p>
+            <p className="text-xs text-gray-500">
+              {data.mostActiveProgram?.count || 0} participants attended today
+            </p>
           </div>
         </div>
 
-
-
-
-
-        {/* Right column: Fee Management + Today Enquiries */}
+        {/* Right column */}
         <div className="flex flex-col gap-3 sm:gap-4">
+          {/* Fee Management - Static */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-            <p className="text-sm font-semibold text-gray-800 mb-3">Fee Management</p>
+            <p className="text-sm font-semibold text-gray-800 mb-3">
+              Fee Management
+            </p>
             <div className="flex gap-2 mb-3">
               <select className="text-xs border border-gray-300 rounded-md px-2 py-1 text-gray-600 focus:outline-none bg-white">
                 <option>2023-2024</option>
@@ -134,49 +376,66 @@ export default function SchoolDashboard() {
               </select>
             </div>
             <div className="bg-blue-100 rounded-xl px-3 sm:px-4 py-2 sm:py-3">
-              <p className="text-base sm:text-lg font-bold text-gray-800">₹29,545,000</p>
+              <p className="text-base sm:text-lg font-bold text-gray-800">
+                ₹29,545,000
+              </p>
               <p className="text-xs text-gray-500 mt-0.5">Total Fee</p>
             </div>
           </div>
 
+          {/* Dynamic */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-            <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Today Total Enquiries</p>
-            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800">18</p>
+            <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">
+              Today Total Enquiries
+            </p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-gray-800">
+              {data.todayTotalEnquiries}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Today's Schedule Actives */}
+      {/* Today's Schedule Activities */}
       <div>
-        <h2 className="text-sm sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">Today's Schedule Actives</h2>
-        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1">
-          {[
-            { name: "Yoga",                  time: "10:00 AM", border: "border-purple-300",  bg: "bg-purple-50"  },
-            { name: "Art",                   time: "11:00 AM", border: "border-yellow-300",  bg: "bg-yellow-50"  },
-            { name: "Music",                 time: "12:00 PM", border: "border-pink-300",    bg: "bg-pink-50"    },
-            { name: "Therapy",               time: "01:00 PM", border: "border-violet-300",  bg: "bg-violet-50"  },
-            { name: "Group Exercises",       time: "03:00 PM", border: "border-green-300",   bg: "bg-green-50"   },
-            { name: "Health Awareness Talk", time: "04:00 PM", border: "border-cyan-300",    bg: "bg-cyan-50"    },
-          ].map((a) => (
-            <div
-              key={a.name}
-              className={`flex-shrink-0 border-2 ${a.border} ${a.bg} rounded-xl px-3 sm:px-5 py-2 sm:py-3 text-center min-w-[100px] sm:min-w-[110px]`}
-            >
-              <p className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">{a.name}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{a.time}</p>
-            </div>
-          ))}
-        </div>
+        <h2 className="text-sm sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">
+          Today's Schedule Actives
+        </h2>
+
+        {schedules.length > 0 ? (
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1">
+            {schedules.map((item, index) => (
+              <div
+                key={item._id || index}
+                className="flex-shrink-0 border-2 border-purple-300 bg-purple-50 rounded-xl px-3 sm:px-5 py-2 sm:py-3 text-center min-w-[100px] sm:min-w-[110px]"
+              >
+                <p className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  {item.activity?.activityName ||
+                    item.activity?.name ||
+                    item.activityName ||
+                    item.name ||
+                    'Activity'}
+                </p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
+                  {item.startTime || item.time || '-'}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No schedules for today</p>
+        )}
       </div>
 
-      {/* Today's Actives Attendance */}
+      {/* Today's Activities Attendance - Static */}
       <div>
-        <h2 className="text-sm sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">Today's Actives Attendance</h2>
+        <h2 className="text-sm sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">
+          Today's Actives Attendance
+        </h2>
         <div className="space-y-2 sm:space-y-3">
           {[
-            { emoji: "🧘", name: "Yoga",  present: 32, total: 40, accent: "border-blue-500"  },
-            { emoji: "🎵", name: "Music", present: 18, total: 25, accent: "border-pink-500"   },
-            { emoji: "🎨", name: "Art",   present: 14, total: 20, accent: "border-green-600"  },
+            { emoji: '🧘', name: 'Yoga', present: 32, total: 40, accent: 'border-blue-500' },
+            { emoji: '🎵', name: 'Music', present: 18, total: 25, accent: 'border-pink-500' },
+            { emoji: '🎨', name: 'Art', present: 14, total: 20, accent: 'border-green-600' },
           ].map((a) => (
             <div
               key={a.name}
