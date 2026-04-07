@@ -197,6 +197,7 @@ import Profile from './pages/school/Profile/Profile';
 import FitnessDashboard from './pages/fitnessClub/Dashboard';
 import FitnessEnquiry from './pages/fitnessClub/enquiry/EnquiryList';
 import FitnessAddEnquiry from './pages/fitnessClub/enquiry/AddEnquiry';
+import FitnessFollowups from './pages/fitnessClub/Followups/FitnessFollowups';
 import FitnessMembers from './pages/fitnessClub/Members/Members';
 import Addmember from './pages/fitnessClub/Members/Addmember';
 import Viewmember from './pages/fitnessClub/Members/Viewmember';
@@ -265,7 +266,7 @@ function App() {
             <Route path="/fitness/dashboard" element={<FitnessDashboard />} />
             <Route path="/fitness/enquiry" element={<FitnessEnquiry />} />
             <Route path="/fitness/enquiry/add" element={<FitnessAddEnquiry />} />
-            <Route path="/fitness/follow-ups" element={<Followups />} />   {/* Keep if truly shared, otherwise create FitnessFollowups */}
+            <Route path="/fitness/follow-ups" element={<FitnessFollowups />} />  {/* Keep if truly shared, otherwise create FitnessFollowups */}
             <Route path="/fitness/members" element={<FitnessMembers />} />
             <Route path="/fitness/members/add-members" element={<Addmember />} />
             <Route path="/fitness/members/view-member/:id" element={<Viewmember />} />

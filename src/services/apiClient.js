@@ -126,12 +126,15 @@ export const api = {
     delete: (id) => apiClient.delete(`/staff/${id}`),
 
     // Roles
-    getRoles: () => apiClient.get('/staff/roles'),
-    createRole: (data) => apiClient.post('/staff/roles', data),
+  roles: {
+  getAll: () => apiClient.get('/fitness/roles'),
+  create: (data) => apiClient.post('/fitness/roles/create', data),
+  delete: (id) => apiClient.delete(`/fitness/roles/${id}`),
+},
 
     // Employment Types
-    getEmploymentTypes: () => apiClient.get('/staff/employment-types'),
-    createEmploymentType: (data) => apiClient.post('/staff/employment-types', data),
+    getEmploymentTypes: () => apiClient.get('/fitness/types'),
+    createEmploymentType: (data) => apiClient.post('/fitness/types/create', data),
 
     // Attendance
     getAttendance: (params = {}) => apiClient.get('/staff/attendance', { params }),

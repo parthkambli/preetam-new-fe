@@ -329,28 +329,33 @@ export default function FitnessEnquiry() {
 
   // ✅ Calls PUT /api/fitness/enquiry/:id — correct endpoint, correct fields
   const submitRemark = async () => {
-    if (!remark.trim()) {
-      alert('Please enter a remark');
-      return;
-    }
+  if (!remark.trim()) {
+    alert('Please enter a remark');
+    return;
+  }
 
-    setSubmitting(true);
-    try {
-      await api.fitnessEnquiry.update(selectedEnquiry._id, {
-        remark,
-        status: newStatus,
-        nextVisit: nextVisit || null
-      });
-      alert('Follow-up added successfully!');
-      setSelectedEnquiry(null);
-      fetchEnquiries();
-    } catch (err) {
-      console.error('Follow-up error:', err.response?.data);
-      alert(err.response?.data?.message || 'Failed to add follow-up');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  setSubmitting(true);
+  try {
+    await api.followups.create({
+      enquiryType: 'fitness',           // ← tells the followups API this came from fitness
+      enquiryId: selectedEnquiry._id,
+      personName: selectedEnquiry.fullName,
+      mobile: selectedEnquiry.mobile,
+      activity: selectedEnquiry.interestedActivity,
+      newStatus,
+      remark,
+      nextVisit: nextVisit || null
+    });
+    alert('Follow-up added successfully!');
+    setSelectedEnquiry(null);
+    fetchEnquiries();
+  } catch (err) {
+    console.error('Follow-up error:', err.response?.data);
+    alert(err.response?.data?.message || 'Failed to add follow-up');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -385,7 +390,7 @@ export default function FitnessEnquiry() {
         >
           <option value="">Status</option>
           <option value="New">New</option>
-          <option value="Follow-up">Follow-up</option>
+          <option value="Follow Up">Follow-up</option>
           <option value="Converted">Converted</option>
           <option value="Admitted">Admitted</option>
         </select>
@@ -445,7 +450,7 @@ export default function FitnessEnquiry() {
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium ${
                           enq.status === 'New' ? 'bg-blue-100 text-blue-800' :
-                          enq.status === 'Follow-up' ? 'bg-yellow-100 text-yellow-800' :
+                          enq.status === 'Follow Up' ? 'bg-yellow-100 text-yellow-800' :
                           enq.status === 'Converted' ? 'bg-purple-100 text-purple-800' :
                           enq.status === 'Admitted' ? 'bg-green-100 text-green-800' :
                           'bg-gray-100 text-gray-800'
@@ -498,7 +503,7 @@ export default function FitnessEnquiry() {
                   className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#000359]"
                 >
                   <option value="New">New</option>
-                  <option value="Follow-up">Follow-up</option>
+                  <option value="Follow Up">Follow-up</option>
                   <option value="Converted">Converted</option>
                 </select>
               </div>
