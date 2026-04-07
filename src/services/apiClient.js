@@ -235,6 +235,18 @@ export const api = {
     delete: (id) => apiClient.delete(`/fitness/schedules/${id}`),
   },
 
+  // fitness dashboard
+ dashboard: {
+  get: () => apiClient.get('/dashboard'),
+  getTodaySchedules: () => apiClient.get('/fitness/schedules'),
+},
+
+//schoolDashboard
+schoolDashboard: {
+  getData: () => apiClient.get('/school/dashboard'),
+},
+
+
 };
 
 export default apiClient;
