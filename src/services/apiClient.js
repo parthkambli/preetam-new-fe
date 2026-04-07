@@ -342,37 +342,29 @@ export const api = {
     clearEmergencyContact: (id)       => apiClient.delete(`/students/${id}/emergency-contact`)
   },
 
-  // Staff Management
+// ====================== STAFF MANAGEMENT ======================
   staff: {
-    getAll:  (params = {}) => apiClient.get('/staff', { params }),
-    getById: (id)          => apiClient.get(`/staff/${id}`),
-    create:  (formData)    => apiClient.post('/staff', formData, {
+    // Main Staff CRUD
+    getAll: (params = {}) => apiClient.get('/staff', { params }),
+    getById: (id) => apiClient.get(`/staff/${id}`),
+    create: (formData) => apiClient.post('/staff', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-    update:  (id, formData) => apiClient.put(`/staff/${id}`, formData, {
+    update: (id, formData) => apiClient.put(`/staff/${id}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-    delete:  (id)           => apiClient.delete(`/staff/${id}`),
-
-    update: (id, formData) => {
-      return apiClient.put(`/staff/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      });
-    },
     delete: (id) => apiClient.delete(`/staff/${id}`),
 
-    // Roles
-  roles: {
-  getAll: () => apiClient.get('/fitness/roles'),
-  create: (data) => apiClient.post('/fitness/roles/create', data),
-  delete: (id) => apiClient.delete(`/fitness/roles/${id}`),
-},
+    // Roles (School Staff Roles)
+    getRoles: () => apiClient.get('/staff/roles'),
+    createRole: (data) => apiClient.post('/staff/roles', data),
+    // updateRole: (id, data) => apiClient.put(`/staff/roles/${id}`, data),   // if needed later
+    deleteRole: (id) => apiClient.delete(`/staff/roles/${id}`),
 
-    // Employment Types
-    getEmploymentTypes: () => apiClient.get('/fitness/types'),
-    createEmploymentType: (data) => apiClient.post('/fitness/types/create', data),
+    // Employment Types (School)
+    getEmploymentTypes: () => apiClient.get('/staff/employment-types'),
+    createEmploymentType: (data) => apiClient.post('/staff/employment-types', data),
+    // updateEmploymentType, deleteEmploymentType can be added later
 
     // Attendance
     getAttendance: (params = {}) => apiClient.get('/staff/attendance', { params }),
