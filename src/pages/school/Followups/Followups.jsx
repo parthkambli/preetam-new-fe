@@ -694,8 +694,8 @@ export default function Followups() {
           onChange={(e) => handleFilterChange('status', e.target.value)}
         >
           <option value="">All Status</option>
-          <option value="New">New</option>
-          {/* <option value="Follow-up">Follow-up</option> */}
+          {/* <option value="New">New</option> */}
+          <option value="Follow Up">Follow-up</option>
           <option value="Converted">Converted</option>
           {/* <option value="Pending">Pending</option> */}
           {/* <option value="Completed">Completed</option> */}
@@ -805,8 +805,8 @@ export default function Followups() {
                     onChange={handleRemarkChange}
                     className="w-full border rounded px-3 py-2 text-sm"
                   >
-                    <option value="New">New</option>
-                    {/* <option value="Follow-up">Follow-up</option> */}
+                    {/* <option value="New">New</option> */}
+                    <option value="Follow-up">Follow-up</option>
                     <option value="Converted">Converted</option>
                   </select>
                 </div>
