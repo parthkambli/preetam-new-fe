@@ -491,7 +491,7 @@ export default function StudentView() {
               <ReadField label="Diagnosis / Notes" value={student.lastCheckupNotes} className="sm:col-span-3" />
             </div>
             <div className="flex gap-3 mt-5 flex-wrap">
-              <button
+              {/* <button
                 onClick={() => toast.info('Health record history coming soon.')}
                 className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-5 py-2 rounded-lg text-sm transition"
               >
@@ -502,7 +502,7 @@ export default function StudentView() {
                 className="bg-[#000359] hover:bg-[#000280] text-white px-5 py-2 rounded-lg text-sm font-medium transition"
               >
                 Update Health Check up
-              </button>
+              </button> */}
             </div>
           </SectionCard>
         </>
