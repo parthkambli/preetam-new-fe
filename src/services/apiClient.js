@@ -354,11 +354,28 @@ export const api = {
     }),
     delete:  (id)           => apiClient.delete(`/staff/${id}`),
 
-    getRoles:           ()     => apiClient.get('/staff/roles'),
-    createRole:         (data) => apiClient.post('/staff/roles', data),
-    getEmploymentTypes: ()     => apiClient.get('/staff/employment-types'),
-    createEmploymentType:(data)=> apiClient.post('/staff/employment-types', data),
-    getAttendance:      (params = {}) => apiClient.get('/staff/attendance', { params })
+    update: (id, formData) => {
+      return apiClient.put(`/staff/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+    },
+    delete: (id) => apiClient.delete(`/staff/${id}`),
+
+    // Roles
+  roles: {
+  getAll: () => apiClient.get('/fitness/roles'),
+  create: (data) => apiClient.post('/fitness/roles/create', data),
+  delete: (id) => apiClient.delete(`/fitness/roles/${id}`),
+},
+
+    // Employment Types
+    getEmploymentTypes: () => apiClient.get('/fitness/types'),
+    createEmploymentType: (data) => apiClient.post('/fitness/types/create', data),
+
+    // Attendance
+    getAttendance: (params = {}) => apiClient.get('/staff/attendance', { params }),
   },
 
   // Activities
@@ -481,12 +498,25 @@ export const api = {
 
   // Fitness Schedules
   fitnessSchedules: {
-    getAll:  (params = {}) => apiClient.get('/fitness/schedules', { params }),
-    getById: (id)          => apiClient.get(`/fitness/schedules/${id}`),
-    create:  (data)        => apiClient.post('/fitness/schedules', data),
-    update:  (id, data)    => apiClient.put(`/fitness/schedules/${id}`, data),
-    delete:  (id)          => apiClient.delete(`/fitness/schedules/${id}`)
-  }
+    getAll: (params = {}) => apiClient.get('/fitness/schedules', { params }),
+    getById: (id) => apiClient.get(`/fitness/schedules/${id}`),
+    create: (data) => apiClient.post('/fitness/schedules', data),
+    update: (id, data) => apiClient.put(`/fitness/schedules/${id}`, data),
+    delete: (id) => apiClient.delete(`/fitness/schedules/${id}`),
+  },
+
+  // fitness dashboard
+ dashboard: {
+  get: () => apiClient.get('/dashboard'),
+  getTodaySchedules: () => apiClient.get('/fitness/schedules'),
+},
+
+//schoolDashboard
+schoolDashboard: {
+  getData: () => apiClient.get('/school/dashboard'),
+},
+
+
 };
 
 export default apiClient;

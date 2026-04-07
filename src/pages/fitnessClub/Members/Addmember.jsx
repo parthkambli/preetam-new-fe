@@ -301,13 +301,11 @@
 
 
 
-
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { toast } from 'sonner';
-import { api } from '../../../services/apiClient';
-import Select from 'react-select';
+import { toast } from "sonner";
+import { api } from "../../../services/apiClient";
+import Select from "react-select";
 
 const ACTIVITIES = ["Gym Fitness", "Yoga", "Personal Training", "Zumba", "Swimming", "Aerobics", "Other"];
 const PLANS = ["Monthly", "Quarterly", "Half Yearly", "Yearly"];
@@ -341,12 +339,41 @@ const emptyForm = {
   enquiryId: null,
 };
 
-// ─── Field component OUTSIDE parent so it never remounts on re-render ──────────
-const Field = ({ label, name, type = "text", placeholder = "", required = false, readOnly = false, options, form, errors, onChange }) => (
+const formatDateForInput = (dateValue) => {
+  if (!dateValue) return "";
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().split("T")[0];
+};
+
+const generatePassword = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
+  let password = "";
+  for (let i = 0; i < 8; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
+
+// Field component OUTSIDE parent so it never remounts on re-render
+const Field = ({
+  label,
+  name,
+  type = "text",
+  placeholder = "",
+  required = false,
+  readOnly = false,
+  options,
+  form,
+  errors,
+  onChange,
+}) => (
   <div>
     <label className="block text-xs text-gray-600 mb-1">
-      {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+      {label}
+      {required && <span className="text-red-400 ml-0.5">*</span>}
     </label>
+
     {options ? (
       <select
         name={name}
@@ -358,7 +385,11 @@ const Field = ({ label, name, type = "text", placeholder = "", required = false,
         }`}
       >
         <option value="">Select {label}</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
       </select>
     ) : (
       <input
@@ -368,15 +399,16 @@ const Field = ({ label, name, type = "text", placeholder = "", required = false,
         onChange={onChange}
         placeholder={placeholder}
         readOnly={readOnly}
+        maxLength={name === "mobile" ? 10 : undefined}
         className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white read-only:bg-gray-50 read-only:text-gray-500 ${
           errors[name] ? "border-red-400" : "border-gray-300"
         }`}
       />
     )}
+
     {errors[name] && <p className="mt-1 text-xs text-red-500">{errors[name]}</p>}
   </div>
 );
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function AddMember() {
   const navigate = useNavigate();
@@ -393,40 +425,37 @@ export default function AddMember() {
   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ── Pre-fill from enquiry passed via navigation state (from EnquiryList) ──
+  // Pre-fill from enquiry passed via navigation state
   useEffect(() => {
     if (!isEdit && location.state?.enquiry) {
       const enquiry = location.state.enquiry;
       prefillFromEnquiry(enquiry);
       setSelectedEnquiry({
         value: enquiry._id,
-        label: `${enquiry.enquiryId || 'ENQ'} - ${enquiry.fullName} (${enquiry.mobile})`,
+        label: `${enquiry.enquiryId || "ENQ"} - ${enquiry.fullName} (${enquiry.mobile})`,
         data: enquiry,
       });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Load pending enquiries for the dropdown ──────────────────────────────
+  // Load pending enquiries for dropdown
   useEffect(() => {
     if (isEdit) return;
+
     const loadEnquiries = async () => {
       try {
         setLoadingEnquiries(true);
-        // No status filter — backend doesn't have a 'pending' status.
-        // We load all non-Admitted enquiries and filter client-side.
         const response = await api.fitnessEnquiry.getAll({ limit: 100 });
-
-        // axios wraps the response in response.data; backend returns a plain array.
         const raw = response?.data ?? response;
         const list = Array.isArray(raw) ? raw : [];
-        // Only show enquiries not yet converted to a member
-        const filteredList = list.filter(e => e.status !== 'Admitted');
+        const filteredList = list.filter((e) => e.status !== "Admitted");
 
-        const options = filteredList.map(enquiry => ({
+        const options = filteredList.map((enquiry) => ({
           value: enquiry._id,
-          label: `${enquiry.enquiryId || 'ENQ'} - ${enquiry.fullName} (${enquiry.mobile})`,
+          label: `${enquiry.enquiryId || "ENQ"} - ${enquiry.fullName} (${enquiry.mobile})`,
           data: enquiry,
         }));
+
         setEnquiryOptions(options);
       } catch (err) {
         console.error("Failed to load enquiries:", err);
@@ -435,79 +464,117 @@ export default function AddMember() {
         setLoadingEnquiries(false);
       }
     };
+
     loadEnquiries();
   }, [isEdit]);
 
-  // ── Load existing member for edit ────────────────────────────────────────
+  // Load existing member for edit
   useEffect(() => {
     if (!isEdit) return;
+
     const fetchMember = async () => {
       try {
         const response = await api.fitnessMember.getById(id);
         const member = response?.data ?? response;
+
         if (member) {
-          setForm({ ...emptyForm, ...member, photoPreview: member.photo || null });
+          setForm({
+            ...emptyForm,
+            ...member,
+            startDate: formatDateForInput(member.startDate),
+            endDate: formatDateForInput(member.endDate),
+            paymentDate: formatDateForInput(member.paymentDate),
+            photoPreview: member.photo || null,
+          });
         }
       } catch (err) {
         console.error(err);
         toast.error("Failed to load member details.");
       }
     };
+
     fetchMember();
   }, [id, isEdit]);
 
-  // ── Auto-calculate final amount ──────────────────────────────────────────
+  // Auto-calculate final amount
   useEffect(() => {
     const fee = parseFloat(form.planFee) || 0;
     const disc = parseFloat(form.discount) || 0;
-    if (fee > 0) {
-      setForm((p) => ({ ...p, finalAmount: String(Math.max(0, fee - disc)) }));
+
+    if (fee > 0 || disc > 0) {
+      setForm((p) => ({
+        ...p,
+        finalAmount: String(Math.max(0, fee - disc)),
+      }));
     }
   }, [form.planFee, form.discount]);
 
-  // ── Auto-set userId from mobile ──────────────────────────────────────────
+  // Auto-set userId from mobile
   useEffect(() => {
     if (!isEdit && form.mobile) {
       setForm((p) => ({ ...p, userId: form.mobile }));
     }
   }, [form.mobile, isEdit]);
 
-  // ── Helper: map enquiry fields → form fields ─────────────────────────────
+  // Auto-generate password for add mode
+  useEffect(() => {
+    if (!isEdit) {
+      setForm((prev) => {
+        if (prev.password) return prev;
+        return { ...prev, password: generatePassword() };
+      });
+    }
+  }, [isEdit]);
+
   const prefillFromEnquiry = (enquiry) => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       enquiryId: enquiry._id,
-      // FIX: backend uses fullName + mobile (matches FitnessEnquiry list)
-      name: enquiry.fullName || enquiry.name || '',
-      mobile: enquiry.mobile || enquiry.contact || '',
-      email: enquiry.email || '',
-      age: enquiry.age || '',
-      gender: enquiry.gender || 'Male',
-      address: enquiry.address || '',
-      // Pre-fill activity if enquiry has interestedActivity
+      name: enquiry.fullName || enquiry.name || "",
+      mobile: enquiry.mobile || enquiry.contact || "",
+      email: enquiry.email || "",
+      age: enquiry.age || "",
+      gender: enquiry.gender || "Male",
+      address: enquiry.address || "",
       activity: enquiry.interestedActivity || enquiry.activity || prev.activity,
     }));
   };
 
   const handleEnquirySelect = (option) => {
     setSelectedEnquiry(option);
+
     if (option) {
       prefillFromEnquiry(option.data);
       toast.success("Enquiry details loaded successfully!");
     } else {
-      setForm(prev => ({ ...prev, enquiryId: null }));
+      setForm((prev) => ({ ...prev, enquiryId: null }));
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
-    if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+
+    let updatedValue = value;
+
+    if (name === "mobile") {
+      updatedValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    if (name === "age") {
+      updatedValue = value.replace(/\D/g, "").slice(0, 3);
+    }
+
+    setForm((p) => ({ ...p, [name]: updatedValue }));
+
+    if (errors[name]) {
+      setErrors((p) => ({ ...p, [name]: "" }));
+    }
   };
 
   const handlePhoto = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = (ev) => {
       setForm((p) => ({
@@ -521,18 +588,45 @@ export default function AddMember() {
 
   const validate = () => {
     const e = {};
+
+    if (form.startDate && !/^\d{4}-\d{2}-\d{2}$/.test(form.startDate)) {
+      e.startDate = "Enter a valid date.";
+    }
+
+    if (form.endDate && !/^\d{4}-\d{2}-\d{2}$/.test(form.endDate)) {
+      e.endDate = "Enter a valid date.";
+    }
+
+    if (form.paymentDate && !/^\d{4}-\d{2}-\d{2}$/.test(form.paymentDate)) {
+      e.paymentDate = "Enter a valid date.";
+    }
+
+    if (form.startDate && form.endDate && form.endDate < form.startDate) {
+      e.endDate = "End date cannot be before start date.";
+    }
+
     if (!form.name.trim()) e.name = "Full name is required.";
-    if (!form.mobile.trim()) e.mobile = "Mobile number is required.";
-    else if (!/^\d{10}$/.test(form.mobile)) e.mobile = "Enter a valid 10-digit mobile.";
-    if (form.email && !/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email.";
+
+    if (!form.mobile.trim()) {
+      e.mobile = "Mobile number is required.";
+    } else if (!/^\d{10}$/.test(form.mobile)) {
+      e.mobile = "Enter a valid 10-digit mobile.";
+    }
+
+    if (form.email && !/\S+@\S+\.\S+/.test(form.email)) {
+      e.email = "Enter a valid email.";
+    }
+
     if (!form.activity) e.activity = "Activity is required.";
     if (!form.startDate) e.startDate = "Start date is required.";
     if (!form.password?.trim()) e.password = "Password is required.";
+
     return e;
   };
 
   const handleSave = async () => {
     const errs = validate();
+
     if (Object.keys(errs).length) {
       setErrors(errs);
       toast.error("Please fix the highlighted errors before saving.");
@@ -540,18 +634,20 @@ export default function AddMember() {
     }
 
     setLoading(true);
+
     try {
       const formData = new FormData();
 
-      Object.keys(form).forEach(key => {
-        if (key === 'photo' || key === 'photoPreview' || key === 'enquiryId') return;
-        if (form[key] !== null && form[key] !== undefined && form[key] !== '') {
+      Object.keys(form).forEach((key) => {
+        if (key === "photo" || key === "photoPreview" || key === "enquiryId") return;
+
+        if (form[key] !== null && form[key] !== undefined && form[key] !== "") {
           formData.append(key, form[key]);
         }
       });
 
-      if (form.enquiryId) formData.append('enquiryId', form.enquiryId);
-      if (form.photo instanceof File) formData.append('photo', form.photo);
+      if (form.enquiryId) formData.append("enquiryId", form.enquiryId);
+      if (form.photo instanceof File) formData.append("photo", form.photo);
 
       if (isEdit) {
         await api.fitnessMember.update(id, formData);
@@ -581,24 +677,19 @@ export default function AddMember() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="text-lg font-semibold text-gray-800">
-            Member {isEdit ? "updated" : "added"} successfully!
-          </p>
+          <p className="text-lg font-semibold text-gray-800">Member {isEdit ? "updated" : "added"} successfully!</p>
           <p className="text-sm text-gray-500">Redirecting to members list…</p>
         </div>
       </div>
     );
   }
 
-  // Shared props passed to every Field to avoid recreating the component
   const fieldProps = { form, errors, onChange: handleChange };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {isEdit ? "Edit Member" : "Add Member"}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800">{isEdit ? "Edit Member" : "Add Member"}</h1>
         <button
           onClick={() => navigate("/fitness/members")}
           className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -607,7 +698,6 @@ export default function AddMember() {
         </button>
       </div>
 
-      {/* Enquiry Selection */}
       {!isEdit && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">Select Enquiry (Optional)</h2>
@@ -627,15 +717,11 @@ export default function AddMember() {
               classNamePrefix="react-select"
             />
           </div>
-          <p className="text-sm text-gray-500 mt-2">
-            OR fill the member form manually below
-          </p>
+          <p className="text-sm text-gray-500 mt-2">OR fill the member form manually below</p>
         </div>
       )}
 
       <div className="bg-white rounded-xl shadow p-6 sm:p-8 max-w-5xl space-y-8">
-
-        {/* Personal Information */}
         <div>
           <h2 className="text-base font-bold text-[#1a2a5e] mb-4">Personal Information</h2>
 
@@ -651,8 +737,12 @@ export default function AddMember() {
                 ) : (
                   <div className="text-center">
                     <svg className="w-7 h-7 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                     <p className="text-xs text-gray-400 mt-1">Photo</p>
                   </div>
@@ -686,7 +776,6 @@ export default function AddMember() {
           </div>
         </div>
 
-        {/* Membership & Activity */}
         <div>
           <h2 className="text-base font-bold text-[#1a2a5e] mb-4">Membership &amp; Activity</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
@@ -694,13 +783,44 @@ export default function AddMember() {
             <Field label="Membership Status" name="membershipStatus" options={STATUSES} {...fieldProps} />
             <Field label="Status" name="status" options={STATUSES} {...fieldProps} />
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Field label="Start Date" name="startDate" type="date" required {...fieldProps} />
-            <Field label="End Date" name="endDate" type="date" {...fieldProps} />
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
+                Start Date<span className="text-red-400 ml-0.5">*</span>
+              </label>
+              <input
+                type="date"
+                name="startDate"
+                value={form.startDate || ""}
+                onChange={handleChange}
+                min="1900-01-01"
+                max="9999-12-31"
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${
+                  errors.startDate ? "border-red-400" : "border-gray-300"
+                }`}
+              />
+              {errors.startDate && <p className="mt-1 text-xs text-red-500">{errors.startDate}</p>}
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">End Date</label>
+              <input
+                type="date"
+                name="endDate"
+                value={form.endDate || ""}
+                onChange={handleChange}
+                min={form.startDate || ""}
+                max="9999-12-31"
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${
+                  errors.endDate ? "border-red-400" : "border-gray-300"
+                }`}
+              />
+              {errors.endDate && <p className="mt-1 text-xs text-red-500">{errors.endDate}</p>}
+            </div>
           </div>
         </div>
 
-        {/* Membership Plan & Fee Details */}
         <div>
           <h2 className="text-base font-bold text-[#1a2a5e] mb-4">Membership Plan &amp; Fee Details</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
@@ -708,11 +828,28 @@ export default function AddMember() {
             <Field label="Plan" name="plan" options={PLANS} {...fieldProps} />
             <Field label="Plan Fee (₹)" name="planFee" type="number" placeholder="0" {...fieldProps} />
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <Field label="Discount (₹)" name="discount" type="number" placeholder="0" {...fieldProps} />
             <Field label="Final Amount (₹)" name="finalAmount" readOnly placeholder="Auto calculated" {...fieldProps} />
-            <Field label="Payment Date" name="paymentDate" type="date" {...fieldProps} />
+
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Payment Date</label>
+              <input
+                type="date"
+                name="paymentDate"
+                value={form.paymentDate || ""}
+                onChange={handleChange}
+                min="1900-01-01"
+                max="9999-12-31"
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${
+                  errors.paymentDate ? "border-red-400" : "border-gray-300"
+                }`}
+              />
+              {errors.paymentDate && <p className="mt-1 text-xs text-red-500">{errors.paymentDate}</p>}
+            </div>
           </div>
+
           <div>
             <label className="block text-xs text-gray-600 mb-1">Plan Notes</label>
             <textarea
@@ -726,16 +863,30 @@ export default function AddMember() {
           </div>
         </div>
 
-        {/* Login Details */}
         <div>
           <h2 className="text-base font-bold text-[#1a2a5e] mb-4">Login Details</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="User ID (Mobile)" name="userId" placeholder="Auto from mobile" readOnly {...fieldProps} />
-            <Field label="Password" name="password" type="password" placeholder="Create password" required {...fieldProps} />
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Password<span className="text-red-500 ml-0.5">*</span>
+              </label>
+              <input
+                type="text"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="e.g. EMP@1234"
+                className={`w-full border rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-300
+                focus:outline-none focus:ring-2 focus:ring-[#000359]/30 focus:border-[#000359] bg-white transition-all
+                ${errors.password ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+              />
+              {errors.password && <p className="text-xs text-red-500 mt-0.5">{errors.password}</p>}
+            </div>
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-3 pt-6 border-t">
           <button
             onClick={() => navigate("/fitness/members")}
@@ -743,6 +894,7 @@ export default function AddMember() {
           >
             Cancel
           </button>
+
           <button
             onClick={handleSave}
             disabled={loading}
