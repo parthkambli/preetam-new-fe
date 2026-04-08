@@ -54,8 +54,9 @@
 // pages/fitnessClub/Activities/Activities.jsx
 import { useState } from 'react';
 import ActivityList from './Activitylist';
-import AddActivity from './AddActivity';
+import AddActivity from './Addactivity';
 import ScheduleActivity from './Scheduleactivity';
+import BookActivity from './BookActivity'
 
 export default function Activities() {
   const [view, setView] = useState('list');
@@ -77,7 +78,7 @@ export default function Activities() {
         </h1>
 
         <div className="flex gap-2 flex-wrap">
-          <button
+          {/* <button
             onClick={() => setView('schedule')}
             className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
               ${view === 'schedule'
@@ -85,7 +86,16 @@ export default function Activities() {
                 : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
           >
             Scheduled Activities
-          </button>
+          </button> */}
+          <button
+  onClick={() => setView('book')}
+  className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
+    ${view === 'book'
+      ? 'bg-[#000359] text-white shadow-md'
+      : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
+>
+  Book Activity
+</button>
           <button
             onClick={() => setView('add')}
             className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
@@ -98,27 +108,31 @@ export default function Activities() {
         </div>
       </div>
 
-      {view === 'list' && (
-        <ActivityList
-          key={refreshKey}
-          onView={() => {}}
-          onSchedule={() => setView('schedule')}
-        />
-      )}
+{view === 'list' && (
+  <ActivityList
+    key={refreshKey}
+    onView={() => {}}
+    onSchedule={() => setView('schedule')}
+  />
+)}
 
-      {view === 'add' && (
-        <AddActivity
-          onCancel={() => setView('list')}
-          onSaved={handleSaved}
-        />
-      )}
+{view === 'add' && (
+  <AddActivity
+    onCancel={() => setView('list')}
+    onSaved={handleSaved}
+  />
+)}
 
-      {view === 'schedule' && (
-        <ScheduleActivity
-          onCancel={() => setView('list')}
-          onSaved={handleSaved}
-        />
-      )}
+{view === 'book' && (
+  <BookActivity />
+)}
+
+{false && view === 'schedule' && (
+  <ScheduleActivity
+    onCancel={() => setView('list')}
+    onSaved={handleSaved}
+  />
+)}
 
     </div>
   );
