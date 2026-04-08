@@ -492,6 +492,21 @@ fitnessStaff: {
   deleteEmploymentType: (id) => apiClient.delete(`/fitness/types/${id}`),
 },
 
+// ====================== FITNESS FEES ======================
+fitnessFees: {
+  getTypes:        ()             => apiClient.get('/fitness/fees/types'),
+  createType:      (data)         => apiClient.post('/fitness/fees/types', data),
+  updateType:      (id, data)     => apiClient.put(`/fitness/fees/types/${id}`, data),
+  deleteType:      (id)           => apiClient.delete(`/fitness/fees/types/${id}`),
+
+  getAllotments:   (params = {})  => apiClient.get('/fitness/fees/allotments', { params }),
+  allotFee:        (data)         => apiClient.post('/fitness/fees/allotments', data),
+  updateAllotment: (id, data)     => apiClient.put(`/fitness/fees/allotments/${id}`, data),
+
+  getPayments:     (params = {})  => apiClient.get('/fitness/fees/payments', { params }),
+  addPayment:      (data)         => apiClient.post('/fitness/fees/payments', data),
+},
+
   // Fitness Events
   fitnessEvents: {
     getAll:  (params = {}) => apiClient.get('/fitness/events', { params }),

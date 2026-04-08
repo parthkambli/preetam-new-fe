@@ -459,7 +459,7 @@
     return (
       <div className={className}>
         <p className="text-xs font-semibold text-[#1e3a8a] mb-1">{label}</p>
-        <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 min-h-[38px] whitespace-pre-wrap break-words">
+        <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-sm text-gray-700 min-h-9.5 whitespace-pre-wrap wrap-break-words">
           {value || '—'}
         </div>
       </div>
@@ -690,7 +690,7 @@
 
             <div>
               <p className="text-xs font-semibold text-[#1e3a8a] mb-1">Diagnosis / Notes</p>
-              <div className="border border-gray-200 rounded-md px-3 py-3 bg-gray-50 text-sm text-gray-700 min-h-[100px] whitespace-pre-wrap">
+              <div className="border border-gray-200 rounded-md px-3 py-3 bg-gray-50 text-sm text-gray-700 min-h-25 whitespace-pre-wrap">
                 {record.diagnosis || record.notes || '—'}
               </div>
             </div>
