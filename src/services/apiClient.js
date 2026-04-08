@@ -3,7 +3,7 @@ import axios from "axios";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// Create axios instance
+// services/apiClient.js
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -11,7 +11,7 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor — attach auth token + org ID
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
   },
 );
 
-// Response interceptor for error handling
+// Response interceptor — handle 401
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -47,8 +47,9 @@ apiClient.interceptors.response.use(
   },
 );
 
-// API methods
+// ─────────────────────────────────────────────────────────────────────────────
 export const api = {
+
   // Auth
   auth: {
     login: (credentials) => apiClient.post("/auth/login", credentials),
@@ -105,7 +106,7 @@ export const api = {
       apiClient.delete(`/students/${id}/emergency-contact`),
   },
 
-  // Staff Management
+// ====================== STAFF MANAGEMENT ======================
   staff: {
     getAll: (params = {}) => apiClient.get("/staff", { params }),
     getById: (id) => apiClient.get(`/staff/${id}`),
@@ -143,7 +144,7 @@ export const api = {
       apiClient.get("/staff/attendance", { params }),
   },
 
-  // Activities Management
+  // Activities
   activities: {
     // Master Activities
     getAll: () => apiClient.get("/activities"),
@@ -178,7 +179,9 @@ export const api = {
     addPayment: (data) => apiClient.post("/fees/payments", data),
   },
 
-  // Health Records
+  // ── Health Records ────────────────────────────────────────────────────────
+  // Backend: routes/healthRecordRoutes.js  ←→  controllers/healthRecordController.js
+  // Files stored at: uploads/student/health-report/<filename>
   healthRecords: {
     getAll: (params = {}) => apiClient.get("/health-records", { params }),
     create: (formData) =>
@@ -191,6 +194,7 @@ export const api = {
       }),
     delete: (id) => apiClient.delete(`/health-records/${id}`),
   },
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Events
   events: {
@@ -216,6 +220,43 @@ export const api = {
     },
     delete: (id) => apiClient.delete(`/fitness/member/${id}`),
   },
+
+fitnessStaff: {
+  getAll: (params) => apiClient.get('/fitness/staff', { params }),
+  getById: (id) => apiClient.get(`/fitness/staff/${id}`),
+  create: (formData) => apiClient.post('/fitness/staff/create', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  update: (id, formData) => apiClient.put(`/fitness/staff/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  delete: (id) => apiClient.delete(`/fitness/staff/${id}`),
+
+  // Roles — mounted at /api/fitness/roles
+  getRoles: () => apiClient.get('/fitness/roles'),
+  createRole: (data) => apiClient.post('/fitness/roles/create', data),
+  deleteRole: (id) => apiClient.delete(`/fitness/roles/${id}`),
+
+  // Employment Types — mounted at /api/fitness/types
+  getEmploymentTypes: () => apiClient.get('/fitness/types'),
+  createEmploymentType: (data) => apiClient.post('/fitness/types/create', data),
+  deleteEmploymentType: (id) => apiClient.delete(`/fitness/types/${id}`),
+},
+
+// ====================== FITNESS FEES ======================
+fitnessFees: {
+  getTypes:        ()             => apiClient.get('/fitness/fees/types'),
+  createType:      (data)         => apiClient.post('/fitness/fees/types', data),
+  updateType:      (id, data)     => apiClient.put(`/fitness/fees/types/${id}`, data),
+  deleteType:      (id)           => apiClient.delete(`/fitness/fees/types/${id}`),
+
+  getAllotments:   (params = {})  => apiClient.get('/fitness/fees/allotments', { params }),
+  allotFee:        (data)         => apiClient.post('/fitness/fees/allotments', data),
+  updateAllotment: (id, data)     => apiClient.put(`/fitness/fees/allotments/${id}`, data),
+
+  getPayments:     (params = {})  => apiClient.get('/fitness/fees/payments', { params }),
+  addPayment:      (data)         => apiClient.post('/fitness/fees/payments', data),
+},
 
   // Fitness Events
   fitnessEvents: {

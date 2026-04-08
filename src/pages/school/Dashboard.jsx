@@ -218,7 +218,7 @@
 
 
 
-///New Dashboad
+// Dashboard
 
 import { useEffect, useState } from 'react';
 import { api } from '../../services/apiClient';

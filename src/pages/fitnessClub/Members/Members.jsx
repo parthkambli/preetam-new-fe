@@ -207,6 +207,209 @@
 
 
 
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { toast } from 'sonner';
+// import { api } from '../../../services/apiClient';
+
+// export default function Members() {
+//   const navigate = useNavigate();
+
+//   const [members, setMembers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("");
+
+//   // Fetch members from API
+//   const fetchMembers = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await api.fitnessMember.getAll({
+//         // You can add query params here if backend supports
+//         // search: searchTerm,
+//         // status: statusFilter
+//       });
+//       setMembers(response.data);
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to load members");
+//       setMembers([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchMembers();
+//   }, []);
+
+//   // Client-side filtering
+//   const filteredMembers = members.filter((member) => {
+//     const matchesSearch =
+//       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       member.mobile?.includes(searchTerm);
+
+//     const matchesStatus = !statusFilter || member.status === statusFilter;
+
+//     return matchesSearch && matchesStatus;
+//   });
+
+//   const handleDelete = async (id) => {
+//     if (!window.confirm("Are you sure you want to delete this member?")) return;
+
+//     try {
+//       await api.fitnessMember.delete(id);
+//       toast.success("Member deleted successfully");
+//       fetchMembers(); // Refresh list
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to delete member");
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+//       {/* Header */}
+//       <div className="flex items-center justify-between mb-6">
+//         <h1 className="text-2xl font-bold text-gray-800">Fitness Members</h1>
+//         <div className="flex gap-3">
+//           <button
+//             onClick={fetchMembers}
+//             className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+//           >
+//             ↻ Refresh
+//           </button>
+//           <button
+//             onClick={() => navigate("/fitness/members/add-members")}
+//             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
+//           >
+//             + Add Member
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Filters */}
+//       <div className="flex flex-col sm:flex-row gap-3 mb-6">
+//         <input
+//           type="text"
+//           placeholder="Search by Name or Mobile"
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         />
+//         <select
+//           value={statusFilter}
+//           onChange={(e) => setStatusFilter(e.target.value)}
+//           className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         >
+//           <option value="">All Status</option>
+//           <option value="Active">Active</option>
+//           <option value="Inactive">Inactive</option>
+//         </select>
+//       </div>
+
+//       {/* Table */}
+//       <div className="bg-white rounded-xl shadow overflow-hidden">
+//         <div className="overflow-x-auto">
+//           <table className="min-w-full text-sm">
+//             <thead>
+//               <tr className="bg-[#1a2a5e] text-white">
+//                 <th className="px-5 py-4 text-left font-semibold">Name</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Mobile</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Activity</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Plan</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Status</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Action</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {loading ? (
+//                 <tr>
+//                   <td colSpan={6} className="px-6 py-20 text-center">
+//                     <div className="flex justify-center">
+//                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]"></div>
+//                     </div>
+//                     <p className="text-gray-500 mt-3">Loading members...</p>
+//                   </td>
+//                 </tr>
+//               ) : filteredMembers.length === 0 ? (
+//                 <tr>
+//                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400">
+//                     No members found.
+//                   </td>
+//                 </tr>
+//               ) : (
+//                 filteredMembers.map((member, idx) => (
+//                   <tr 
+//                     key={member._id || member.id} 
+//                     className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+//                   >
+//                     <td className="px-5 py-4 font-medium text-gray-800">
+//                       {member.name}
+//                     </td>
+//                     <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
+//                     <td className="px-5 py-4 text-gray-600">{member.activity}</td>
+//                     <td className="px-5 py-4 text-gray-600">{member.plan}</td>
+//                     <td className="px-5 py-4">
+//                       <span
+//                         className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+//                           member.status === "Active"
+//                             ? "bg-green-100 text-green-700"
+//                             : "bg-red-100 text-red-600"
+//                         }`}
+//                       >
+//                         {member.status}
+//                       </span>
+//                     </td>
+//                     <td className="px-5 py-4">
+//                       <div className="flex gap-2">
+//                         <button
+//                           onClick={() => navigate(`/fitness/members/view-member/${member._id || member.id}`)}
+//                           className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                         >
+//                           View
+//                         </button>
+//                         <button
+//                           onClick={() => navigate(`/fitness/members/edit-member/${member._id || member.id}`)}
+//                           className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                         >
+//                           Edit
+//                         </button>
+//                         <button
+//                           onClick={() => handleDelete(member._id || member.id)}
+//                           className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                         >
+//                           Delete
+//                         </button>
+//                       </div>
+//                     </td>
+//                   </tr>
+//                 ))
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <p className="text-xs text-gray-400 mt-4 text-center">
+//         Showing {filteredMembers.length} of {members.length} members
+//       </p>
+//     </div>
+//   );
+// }
+
+
+
+
+
+// New Oneeeee
+
+
+
+
+
+
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
@@ -220,15 +423,23 @@ export default function Members() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
+  // 🔥 AUTO STATUS FUNCTION
+  const getStatusFromDate = (startDate, endDate) => {
+    if (!startDate || !endDate) return "Inactive";
+
+    const today = new Date().toISOString().split("T")[0];
+    const s = new Date(startDate).toISOString().split("T")[0];
+    const e = new Date(endDate).toISOString().split("T")[0];
+
+    if (today >= s && today <= e) return "Active";
+    return "Inactive";
+  };
+
   // Fetch members from API
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await api.fitnessMember.getAll({
-        // You can add query params here if backend supports
-        // search: searchTerm,
-        // status: statusFilter
-      });
+      const response = await api.fitnessMember.getAll();
       setMembers(response.data);
     } catch (err) {
       console.error(err);
@@ -243,13 +454,15 @@ export default function Members() {
     fetchMembers();
   }, []);
 
-  // Client-side filtering
+  // Client-side filtering (UPDATED 🔥)
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.mobile?.includes(searchTerm);
 
-    const matchesStatus = !statusFilter || member.status === statusFilter;
+    const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+
+    const matchesStatus = !statusFilter || liveStatus === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -260,7 +473,7 @@ export default function Members() {
     try {
       await api.fitnessMember.delete(id);
       toast.success("Member deleted successfully");
-      fetchMembers(); // Refresh list
+      fetchMembers();
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete member");
@@ -339,52 +552,56 @@ export default function Members() {
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map((member, idx) => (
-                  <tr 
-                    key={member._id || member.id} 
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-5 py-4 font-medium text-gray-800">
-                      {member.name}
-                    </td>
-                    <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
-                    <td className="px-5 py-4 text-gray-600">{member.activity}</td>
-                    <td className="px-5 py-4 text-gray-600">{member.plan}</td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          member.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-600"
-                        }`}
-                      >
-                        {member.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => navigate(`/fitness/members/view-member/${member._id || member.id}`)}
-                          className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                filteredMembers.map((member, idx) => {
+                  const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+
+                  return (
+                    <tr 
+                      key={member._id || member.id} 
+                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <td className="px-5 py-4 font-medium text-gray-800">
+                        {member.name}
+                      </td>
+                      <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
+                      <td className="px-5 py-4 text-gray-600">{member.activity}</td>
+                      <td className="px-5 py-4 text-gray-600">{member.plan}</td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                            liveStatus === "Active"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-600"
+                          }`}
                         >
-                          View
-                        </button>
-                        <button
-                          onClick={() => navigate(`/fitness/members/edit-member/${member._id || member.id}`)}
-                          className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(member._id || member.id)}
-                          className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {liveStatus}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => navigate(`/fitness/members/view-member/${member._id || member.id}`)}
+                            className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => navigate(`/fitness/members/edit-member/${member._id || member.id}`)}
+                            className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(member._id || member.id)}
+                            className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
