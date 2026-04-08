@@ -468,8 +468,6 @@
 
 
 
-
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
@@ -498,7 +496,6 @@ export default function AddFitnessEnquiry() {
     responsibleStaff: '',
   });
 
-  // ================= STAFF =================
   useEffect(() => {
     const fetchStaff = async () => {
       setStaffLoading(true);
@@ -516,9 +513,9 @@ export default function AddFitnessEnquiry() {
 
         setStaffList(staffData);
       } catch (err) {
-        console.error("Failed to load staff:", err);
+        console.error('Failed to load staff:', err);
         setStaffList([]);
-        setError("Could not load staff members.");
+        setError('Could not load staff members.');
       } finally {
         setStaffLoading(false);
       }
@@ -527,7 +524,6 @@ export default function AddFitnessEnquiry() {
     fetchStaff();
   }, []);
 
-  // ================= ACTIVITIES =================
   useEffect(() => {
     const fetchActivities = async () => {
       setActivityLoading(true);
@@ -544,7 +540,7 @@ export default function AddFitnessEnquiry() {
 
         setActivityList(activityData);
       } catch (err) {
-        console.error("Failed to load activities:", err);
+        console.error('Failed to load activities:', err);
         setActivityList([]);
       } finally {
         setActivityLoading(false);
@@ -559,7 +555,6 @@ export default function AddFitnessEnquiry() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -572,15 +567,39 @@ export default function AddFitnessEnquiry() {
     }
 
     try {
-      await api.fitnessEnquiry.create(form);
+      const payload = {
+        ...form,
+        age: form.age !== '' ? Number(form.age) : '',
+        interestedActivity: form.interestedActivity || null,
+        responsibleStaff: form.responsibleStaff || null,
+      };
+
+      await api.fitnessEnquiry.create(payload);
       alert('Enquiry saved successfully!');
       navigate('/fitness/enquiry');
     } catch (err) {
+      console.error('SAVE ENQUIRY ERROR:', err?.response?.data || err.message);
       setError(err.response?.data?.message || 'Failed to save enquiry');
     } finally {
       setLoading(false);
     }
   };
+
+  const genderOptions = [
+    { label: 'Male', value: 'Male' },
+    { label: 'Female', value: 'Female' },
+    { label: 'Other', value: 'Other' },
+  ];
+
+  const activityOptions = activityList.map((a) => ({
+    label: a.name || a.activityName || a.title || 'Unnamed',
+    value: a._id,
+  }));
+
+  const staffOptions = staffList.map((s) => ({
+    label: s.fullName || s.name || 'Unnamed',
+    value: s._id,
+  }));
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -602,8 +621,6 @@ export default function AddFitnessEnquiry() {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-8">
         <div className="border border-blue-200 rounded-lg p-6 space-y-6">
-
-          {/* Row 1 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium mb-1.5">Full Name</label>
@@ -628,27 +645,21 @@ export default function AddFitnessEnquiry() {
               />
             </div>
 
-            {/* Gender */}
             <div>
               <label className="block text-sm font-medium mb-1.5">Gender</label>
               <Select
-                options={[
-                  { label: "Male", value: "Male" },
-                  { label: "Female", value: "Female" },
-                  { label: "Other", value: "Other" },
-                ]}
-                value={form.gender ? { label: form.gender, value: form.gender } : null}
+                options={genderOptions}
+                value={genderOptions.find((opt) => opt.value === form.gender) || null}
                 onChange={(selected) =>
                   setForm((prev) => ({
                     ...prev,
-                    gender: selected?.value || "",
+                    gender: selected?.value || '',
                   }))
                 }
               />
             </div>
           </div>
 
-          {/* Row 2 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium mb-1.5">Mobile</label>
@@ -661,58 +672,42 @@ export default function AddFitnessEnquiry() {
               />
             </div>
 
-            {/* Activities */}
             <div>
               <label className="block text-sm font-medium mb-1.5">Interested Activity</label>
               <Select
                 isLoading={activityLoading}
-                options={activityList.map((a) => ({
-                  label: a.name || a.title || "Unnamed",
-                  value: a.name || a.title,
-                }))}
+                options={activityOptions}
                 value={
                   form.interestedActivity
-                    ? {
-                        label: form.interestedActivity,
-                        value: form.interestedActivity,
-                      }
+                    ? activityOptions.find((opt) => opt.value === form.interestedActivity) || null
                     : null
                 }
                 onChange={(selected) =>
                   setForm((prev) => ({
                     ...prev,
-                    interestedActivity: selected?.value || "",
+                    interestedActivity: selected?.value || '',
                   }))
                 }
                 placeholder="Select Activity"
               />
             </div>
 
-            {/* Staff */}
             <div>
               <label className="block text-sm font-medium mb-1.5">
                 Responsible Staff *
               </label>
               <Select
                 isLoading={staffLoading}
-                options={staffList.map((s) => ({
-                  label: s.fullName || "Unnamed",
-                  value: s._id,
-                }))}
+                options={staffOptions}
                 value={
                   form.responsibleStaff
-                    ? staffList
-                        .map((s) => ({
-                          label: s.fullName,
-                          value: s._id,
-                        }))
-                        .find((opt) => opt.value === form.responsibleStaff)
+                    ? staffOptions.find((opt) => opt.value === form.responsibleStaff) || null
                     : null
                 }
                 onChange={(selected) =>
                   setForm((prev) => ({
                     ...prev,
-                    responsibleStaff: selected?.value || "",
+                    responsibleStaff: selected?.value || '',
                   }))
                 }
                 placeholder="Select Staff"
@@ -720,23 +715,22 @@ export default function AddFitnessEnquiry() {
             </div>
           </div>
 
-          {/* Row 3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium mb-1.5">Source</label>
               <Select
                 options={[
-                  { label: "Walk-in", value: "Walk-in" },
-                  { label: "App", value: "App" },
-                  { label: "Call", value: "Call" },
-                  { label: "Website", value: "Website" },
-                  { label: "Reference", value: "Reference" },
+                  { label: 'Walk-in', value: 'Walk-in' },
+                  { label: 'App', value: 'App' },
+                  { label: 'Call', value: 'Call' },
+                  { label: 'Website', value: 'Website' },
+                  { label: 'Reference', value: 'Reference' },
                 ]}
                 value={{ label: form.source, value: form.source }}
                 onChange={(selected) =>
                   setForm((prev) => ({
                     ...prev,
-                    source: selected.value,
+                    source: selected?.value || 'Walk-in',
                   }))
                 }
               />
@@ -754,7 +748,6 @@ export default function AddFitnessEnquiry() {
             </div>
           </div>
 
-          {/* Notes */}
           <div>
             <label className="block text-sm font-medium mb-1.5">Notes</label>
             <textarea
