@@ -284,6 +284,7 @@ function App() {
             <Route path="/fitness/reports" element={<FitnessReports />} />
             <Route path="/fitness/user-management" element={<FitnessUserManagement />} />
             <Route path="/fitness/user-management/Add-user" element={<FitnessAdduser />} />
+            
           </Route>
 
           {/* Root Redirect */}
