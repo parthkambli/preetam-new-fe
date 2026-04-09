@@ -615,7 +615,7 @@ export default function FitnessFollowups() {
                     onChange={handleRemarkChange}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   >
-                    <option value="New">New</option>
+                    {/* <option value="New">New</option> */}
                     <option value="Follow Up">Follow-up</option>
                     <option value="Converted">Converted</option>
                   </select>

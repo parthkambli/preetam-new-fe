@@ -207,11 +207,679 @@
 
 
 
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { toast } from 'sonner';
+// import { api } from '../../../services/apiClient';
+
+// export default function Members() {
+//   const navigate = useNavigate();
+
+//   const [members, setMembers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("");
+
+//   // Fetch members from API
+//   const fetchMembers = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await api.fitnessMember.getAll({
+//         // You can add query params here if backend supports
+//         // search: searchTerm,
+//         // status: statusFilter
+//       });
+//       setMembers(response.data);
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to load members");
+//       setMembers([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchMembers();
+//   }, []);
+
+//   // Client-side filtering
+//   const filteredMembers = members.filter((member) => {
+//     const matchesSearch =
+//       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       member.mobile?.includes(searchTerm);
+
+//     const matchesStatus = !statusFilter || member.status === statusFilter;
+
+//     return matchesSearch && matchesStatus;
+//   });
+
+//   const handleDelete = async (id) => {
+//     if (!window.confirm("Are you sure you want to delete this member?")) return;
+
+//     try {
+//       await api.fitnessMember.delete(id);
+//       toast.success("Member deleted successfully");
+//       fetchMembers(); // Refresh list
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to delete member");
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+//       {/* Header */}
+//       <div className="flex items-center justify-between mb-6">
+//         <h1 className="text-2xl font-bold text-gray-800">Fitness Members</h1>
+//         <div className="flex gap-3">
+//           <button
+//             onClick={fetchMembers}
+//             className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+//           >
+//             ↻ Refresh
+//           </button>
+//           <button
+//             onClick={() => navigate("/fitness/members/add-members")}
+//             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
+//           >
+//             + Add Member
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Filters */}
+//       <div className="flex flex-col sm:flex-row gap-3 mb-6">
+//         <input
+//           type="text"
+//           placeholder="Search by Name or Mobile"
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         />
+//         <select
+//           value={statusFilter}
+//           onChange={(e) => setStatusFilter(e.target.value)}
+//           className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         >
+//           <option value="">All Status</option>
+//           <option value="Active">Active</option>
+//           <option value="Inactive">Inactive</option>
+//         </select>
+//       </div>
+
+//       {/* Table */}
+//       <div className="bg-white rounded-xl shadow overflow-hidden">
+//         <div className="overflow-x-auto">
+//           <table className="min-w-full text-sm">
+//             <thead>
+//               <tr className="bg-[#1a2a5e] text-white">
+//                 <th className="px-5 py-4 text-left font-semibold">Name</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Mobile</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Activity</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Plan</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Status</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Action</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {loading ? (
+//                 <tr>
+//                   <td colSpan={6} className="px-6 py-20 text-center">
+//                     <div className="flex justify-center">
+//                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]"></div>
+//                     </div>
+//                     <p className="text-gray-500 mt-3">Loading members...</p>
+//                   </td>
+//                 </tr>
+//               ) : filteredMembers.length === 0 ? (
+//                 <tr>
+//                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400">
+//                     No members found.
+//                   </td>
+//                 </tr>
+//               ) : (
+//                 filteredMembers.map((member, idx) => (
+//                   <tr 
+//                     key={member._id || member.id} 
+//                     className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+//                   >
+//                     <td className="px-5 py-4 font-medium text-gray-800">
+//                       {member.name}
+//                     </td>
+//                     <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
+//                     <td className="px-5 py-4 text-gray-600">{member.activity}</td>
+//                     <td className="px-5 py-4 text-gray-600">{member.plan}</td>
+//                     <td className="px-5 py-4">
+//                       <span
+//                         className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+//                           member.status === "Active"
+//                             ? "bg-green-100 text-green-700"
+//                             : "bg-red-100 text-red-600"
+//                         }`}
+//                       >
+//                         {member.status}
+//                       </span>
+//                     </td>
+//                     <td className="px-5 py-4">
+//                       <div className="flex gap-2">
+//                         <button
+//                           onClick={() => navigate(`/fitness/members/view-member/${member._id || member.id}`)}
+//                           className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                         >
+//                           View
+//                         </button>
+//                         <button
+//                           onClick={() => navigate(`/fitness/members/edit-member/${member._id || member.id}`)}
+//                           className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                         >
+//                           Edit
+//                         </button>
+//                         <button
+//                           onClick={() => handleDelete(member._id || member.id)}
+//                           className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                         >
+//                           Delete
+//                         </button>
+//                       </div>
+//                     </td>
+//                   </tr>
+//                 ))
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <p className="text-xs text-gray-400 mt-4 text-center">
+//         Showing {filteredMembers.length} of {members.length} members
+//       </p>
+//     </div>
+//   );
+// }
+
+
+
+
+
+// New Oneeeee
+
+
+
+
+
+
+
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { toast } from 'sonner';
+// import { api } from '../../../services/apiClient';
+
+// export default function Members() {
+//   const navigate = useNavigate();
+
+//   const [members, setMembers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("");
+
+//   // 🔥 AUTO STATUS FUNCTION
+//   const getStatusFromDate = (startDate, endDate) => {
+//     if (!startDate || !endDate) return "Inactive";
+
+//     const today = new Date().toISOString().split("T")[0];
+//     const s = new Date(startDate).toISOString().split("T")[0];
+//     const e = new Date(endDate).toISOString().split("T")[0];
+
+//     if (today >= s && today <= e) return "Active";
+//     return "Inactive";
+//   };
+
+//   // Fetch members from API
+//   const fetchMembers = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await api.fitnessMember.getAll();
+//       setMembers(response.data);
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to load members");
+//       setMembers([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchMembers();
+//   }, []);
+
+//   // Client-side filtering (UPDATED 🔥)
+//   const filteredMembers = members.filter((member) => {
+//     const matchesSearch =
+//       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       member.mobile?.includes(searchTerm);
+
+//     const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+
+//     const matchesStatus = !statusFilter || liveStatus === statusFilter;
+
+//     return matchesSearch && matchesStatus;
+//   });
+
+//   const handleDelete = async (id) => {
+//     if (!window.confirm("Are you sure you want to delete this member?")) return;
+
+//     try {
+//       await api.fitnessMember.delete(id);
+//       toast.success("Member deleted successfully");
+//       fetchMembers();
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to delete member");
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+//       {/* Header */}
+//       <div className="flex items-center justify-between mb-6">
+//         <h1 className="text-2xl font-bold text-gray-800">Fitness Members</h1>
+//         <div className="flex gap-3">
+//           <button
+//             onClick={fetchMembers}
+//             className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+//           >
+//             ↻ Refresh
+//           </button>
+//           <button
+//             onClick={() => navigate("/fitness/members/add-members")}
+//             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
+//           >
+//             + Add Member
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Filters */}
+//       <div className="flex flex-col sm:flex-row gap-3 mb-6">
+//         <input
+//           type="text"
+//           placeholder="Search by Name or Mobile"
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         />
+//         <select
+//           value={statusFilter}
+//           onChange={(e) => setStatusFilter(e.target.value)}
+//           className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         >
+//           <option value="">All Status</option>
+//           <option value="Active">Active</option>
+//           <option value="Inactive">Inactive</option>
+//         </select>
+//       </div>
+
+//       {/* Table */}
+//       <div className="bg-white rounded-xl shadow overflow-hidden">
+//         <div className="overflow-x-auto">
+//           <table className="min-w-full text-sm">
+//             <thead>
+//               <tr className="bg-[#1a2a5e] text-white">
+//                 <th className="px-5 py-4 text-left font-semibold">Name</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Mobile</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Activity</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Plan</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Responsible Staff</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Status</th>
+//                 <th className="px-5 py-4 text-left font-semibold">Action</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {loading ? (
+//                 <tr>
+//                   <td colSpan={6} className="px-6 py-20 text-center">
+//                     <div className="flex justify-center">
+//                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]"></div>
+//                     </div>
+//                     <p className="text-gray-500 mt-3">Loading members...</p>
+//                   </td>
+//                 </tr>
+//               ) : filteredMembers.length === 0 ? (
+//                 <tr>
+//                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400">
+//                     No members found.
+//                   </td>
+//                 </tr>
+//               ) : (
+//                 filteredMembers.map((member, idx) => {
+//                   const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+
+//                   return (
+//                     <tr
+//                       key={member._id || member.id}
+//                       className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+//                     >
+//                       <td className="px-5 py-4 font-medium text-gray-800">
+//                         {member.name}
+//                       </td>
+//                       <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
+//                       <td className="px-5 py-4 text-gray-600">{member.activity}</td>
+//                       <td className="px-5 py-4 text-gray-600">{member.plan}</td>
+//                       <td className="px-5 py-4 text-gray-600">
+//                         {member.staff?.fullName || '-'}
+//                       </td>
+//                       <td className="px-5 py-4">
+//                         <span
+//                           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${liveStatus === "Active"
+//                               ? "bg-green-100 text-green-700"
+//                               : "bg-red-100 text-red-600"
+//                             }`}
+//                         >
+//                           {liveStatus}
+//                         </span>
+//                       </td>
+//                       <td className="px-5 py-4">
+//                         <div className="flex gap-2">
+//                           <button
+//                             onClick={() => navigate(`/fitness/members/view-member/${member._id || member.id}`)}
+//                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                           >
+//                             View
+//                           </button>
+//                           <button
+//                             onClick={() => navigate(`/fitness/members/edit-member/${member._id || member.id}`)}
+//                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                           >
+//                             Edit
+//                           </button>
+//                           <button
+//                             onClick={() => handleDelete(member._id || member.id)}
+//                             className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                           >
+//                             Delete
+//                           </button>
+//                         </div>
+//                       </td>
+//                     </tr>
+//                   );
+//                 })
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <p className="text-xs text-gray-400 mt-4 text-center">
+//         Showing {filteredMembers.length} of {members.length} members
+//       </p>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 
+const PLANS = ["Monthly", "Quarterly", "Half Yearly", "Yearly"];
+const PAYMENT_MODES = ['Cash', 'Cheque', 'Online', 'UPI'];
+const PAYMENT_STATUSES = ["Paid", "Pending"];
+
+// ─── Renew Modal Component ───────────────────────────────────────────────────
+function RenewModal({ member, onClose, onRenewed }) {
+  const [form, setForm] = useState({
+    plan: member.plan || "Monthly",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: "",
+    planFee: member.planFee || "",
+    discount: "0",
+    finalAmount: "",
+    paymentMode: member.paymentMode || "",
+    paymentDate: new Date().toISOString().split("T")[0],
+    paymentStatus: "Paid",
+  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [staffOptions, setStaffOptions] = useState([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+
+  // Auto calculate endDate based on plan
+  useEffect(() => {
+    if (!form.startDate || !form.plan) return;
+    const start = new Date(form.startDate);
+    let end = new Date(start);
+
+    if (form.plan === "Monthly")      end.setMonth(end.getMonth() + 1);
+    else if (form.plan === "Quarterly") end.setMonth(end.getMonth() + 3);
+    else if (form.plan === "Half Yearly") end.setMonth(end.getMonth() + 6);
+    else if (form.plan === "Yearly")  end.setFullYear(end.getFullYear() + 1);
+
+    end.setDate(end.getDate() - 1);
+    setForm(prev => ({ ...prev, endDate: end.toISOString().split("T")[0] }));
+  }, [form.startDate, form.plan]);
+
+  // Auto calculate finalAmount
+  useEffect(() => {
+    const fee = parseFloat(form.planFee) || 0;
+    const disc = parseFloat(form.discount) || 0;
+    setForm(prev => ({
+      ...prev,
+      finalAmount: fee > 0 ? String(Math.max(0, fee - disc)) : ""
+    }));
+  }, [form.planFee, form.discount]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.startDate) e.startDate = "Start date required";
+    if (!form.endDate)   e.endDate   = "End date required";
+    if (form.endDate < form.startDate) e.endDate = "End date cannot be before start date";
+    return e;
+  };
+
+  const handleRenew = async () => {
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    setLoading(true);
+    try {
+      await api.fitnessMember.renew(member._id, form);
+      toast.success(`${member.name} ka membership renew ho gaya!`);
+      onRenewed();
+      onClose();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Renew failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    // Backdrop
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-lg font-bold text-[#1a2a5e]">Renew Membership</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{member.name} • {member.mobile}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-lg"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="px-6 py-5 space-y-4">
+          {/* Plan + Start Date */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Plan</label>
+              <select
+                name="plan"
+                value={form.plan}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+              >
+                {PLANS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Start Date <span className="text-red-400">*</span></label>
+              <input
+                type="date"
+                name="startDate"
+                value={form.startDate}
+                onChange={handleChange}
+                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors.startDate ? "border-red-400" : "border-gray-300"}`}
+              />
+              {errors.startDate && <p className="text-xs text-red-500 mt-1">{errors.startDate}</p>}
+            </div>
+          </div>
+
+          {/* End Date (auto calculated) */}
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">End Date <span className="text-red-400">*</span></label>
+            <input
+              type="date"
+              name="endDate"
+              value={form.endDate}
+              onChange={handleChange}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors.endDate ? "border-red-400" : "border-gray-300"}`}
+            />
+            {errors.endDate && <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>}
+            <p className="text-xs text-gray-400 mt-1">Plan select karne se auto set ho jaata hai</p>
+          </div>
+
+          {/* Fee Details */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Plan Fee (₹)</label>
+              <input
+                type="number"
+                name="planFee"
+                value={form.planFee}
+                onChange={handleChange}
+                placeholder="0"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Discount (₹)</label>
+              <input
+                type="number"
+                name="discount"
+                value={form.discount}
+                onChange={handleChange}
+                placeholder="0"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Final (₹)</label>
+              <input
+                type="number"
+                name="finalAmount"
+                value={form.finalAmount}
+                readOnly
+                placeholder="Auto"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Payment Details */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
+              <select
+                name="paymentMode"
+                value={form.paymentMode}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+              >
+                <option value="">Select</option>
+                {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Payment Status</label>
+              <select
+                name="paymentStatus"
+                value={form.paymentStatus}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+              >
+                {PAYMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Payment Date */}
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Payment Date</label>
+            <input
+              type="date"
+              name="paymentDate"
+              value={form.paymentDate}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+            />
+          </div>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            className="flex-1 border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleRenew}
+            disabled={loading}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg py-2.5 text-sm font-semibold disabled:opacity-70 flex items-center justify-center gap-2"
+          >
+            {loading && (
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+              </svg>
+            )}
+            {loading ? "Renewing..." : "✓ Renew Now"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+///
+
+
+
+// ─── Main Members Component ──────────────────────────────────────────────────
 export default function Members() {
   const navigate = useNavigate();
 
@@ -220,15 +888,22 @@ export default function Members() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  // Fetch members from API
+  // Renew modal state
+  const [renewMember, setRenewMember] = useState(null); // null = modal closed
+
+  const getStatusFromDate = (startDate, endDate) => {
+    if (!startDate || !endDate) return "Inactive";
+    const today = new Date().toISOString().split("T")[0];
+    const s = new Date(startDate).toISOString().split("T")[0];
+    const e = new Date(endDate).toISOString().split("T")[0];
+    if (today >= s && today <= e) return "Active";
+    return "Inactive";
+  };
+
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await api.fitnessMember.getAll({
-        // You can add query params here if backend supports
-        // search: searchTerm,
-        // status: statusFilter
-      });
+      const response = await api.fitnessMember.getAll();
       setMembers(response.data);
     } catch (err) {
       console.error(err);
@@ -239,28 +914,23 @@ export default function Members() {
     }
   };
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
+  useEffect(() => { fetchMembers(); }, []);
 
-  // Client-side filtering
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.mobile?.includes(searchTerm);
-
-    const matchesStatus = !statusFilter || member.status === statusFilter;
-
+    const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+    const matchesStatus = !statusFilter || liveStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this member?")) return;
-
     try {
       await api.fitnessMember.delete(id);
       toast.success("Member deleted successfully");
-      fetchMembers(); // Refresh list
+      fetchMembers();
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete member");
@@ -269,6 +939,16 @@ export default function Members() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+
+      {/* Renew Modal */}
+      {renewMember && (
+        <RenewModal
+          member={renewMember}
+          onClose={() => setRenewMember(null)}
+          onRenewed={fetchMembers}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Fitness Members</h1>
@@ -318,6 +998,7 @@ export default function Members() {
                 <th className="px-5 py-4 text-left font-semibold">Mobile</th>
                 <th className="px-5 py-4 text-left font-semibold">Activity</th>
                 <th className="px-5 py-4 text-left font-semibold">Plan</th>
+                <th className="px-5 py-4 text-left font-semibold">Responsible Staff</th>
                 <th className="px-5 py-4 text-left font-semibold">Status</th>
                 <th className="px-5 py-4 text-left font-semibold">Action</th>
               </tr>
@@ -325,7 +1006,7 @@ export default function Members() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]"></div>
                     </div>
@@ -334,57 +1015,71 @@ export default function Members() {
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center text-gray-400">
+                  <td colSpan={7} className="px-6 py-20 text-center text-gray-400">
                     No members found.
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map((member, idx) => (
-                  <tr 
-                    key={member._id || member.id} 
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-5 py-4 font-medium text-gray-800">
-                      {member.name}
-                    </td>
-                    <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
-                    <td className="px-5 py-4 text-gray-600">{member.activity}</td>
-                    <td className="px-5 py-4 text-gray-600">{member.plan}</td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          member.status === "Active"
+                filteredMembers.map((member, idx) => {
+                  const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+
+                  return (
+                    <tr
+                      key={member._id || member.id}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <td className="px-5 py-4 font-medium text-gray-800">{member.name}</td>
+                      <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
+                      <td className="px-5 py-4 text-gray-600">{member.activity}</td>
+                      <td className="px-5 py-4 text-gray-600">{member.plan}</td>
+                      <td className="px-5 py-4 text-gray-600">
+                       {member.staff?.fullName || member.staff?.name || (typeof member.staff === 'string' ? member.staff : '-')}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          liveStatus === "Active"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-600"
-                        }`}
-                      >
-                        {member.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => navigate(`/fitness/members/view-member/${member._id || member.id}`)}
-                          className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => navigate(`/fitness/members/edit-member/${member._id || member.id}`)}
-                          className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(member._id || member.id)}
-                          className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        }`}>
+                          {liveStatus}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => navigate(`/fitness/members/view-member/${member._id || member.id}`)}
+                            className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => navigate(`/fitness/members/edit-member/${member._id || member.id}`)}
+                            className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                          >
+                            Edit
+                          </button>
+
+                          {/* ✅ RENEW BUTTON - sirf Inactive members ko dikhega */}
+                          {liveStatus === "Inactive" && (
+                            <button
+                              onClick={() => setRenewMember(member)}
+                              className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                            >
+                              Renew
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleDelete(member._id || member.id)}
+                            className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
