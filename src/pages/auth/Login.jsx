@@ -280,32 +280,60 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useOrg();
 
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+  //   setError('');
+  //   setLoading(true);
+
+  //   try {
+  //     const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+  //       userId,
+  //       password
+  //     });
+
+  //     const { token, organizations, defaultOrg, user } = response.data;
+
+  //     localStorage.setItem('token', token);
+  //     localStorage.setItem('organizations', JSON.stringify(organizations));
+  //     localStorage.setItem('currentOrgId', defaultOrg.id);
+  //     localStorage.setItem('user', JSON.stringify(user));
+
+  //     login(organizations, defaultOrg);
+  //     navigate(`/${defaultOrg.id}/dashboard`);
+  //   } catch (err) {
+  //     setError(err.response?.data?.message || 'Login failed. Please try again.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        userId,
-        password
-      });
+  try {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      userId,
+      password
+    });
 
-      const { token, organizations, defaultOrg, user } = response.data;
+    const { token, organizations, defaultOrg, user } = response.data;
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('organizations', JSON.stringify(organizations));
-      localStorage.setItem('currentOrgId', defaultOrg.id);
-      localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('token', token);
+    localStorage.setItem('organizations', JSON.stringify(organizations));
+    localStorage.setItem('currentOrgId', defaultOrg.id);
 
-      login(organizations, defaultOrg);
-      navigate(`/${defaultOrg.id}/dashboard`);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Pass user data to context
+    login(organizations, defaultOrg, user);   // ← Added user as third argument
+
+    navigate(`/${defaultOrg.id}/dashboard`);
+  } catch (err) {
+    setError(err.response?.data?.message || 'Login failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center px-4 py-8">
