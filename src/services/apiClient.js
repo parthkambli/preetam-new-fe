@@ -297,10 +297,16 @@ fitnessFees: {
     getTodaySchedules: () => apiClient.get("/fitness/schedules"),
   },
 
+   //fitness reports summery
+  reports: {
+  getSummary: () => apiClient.get('/reports/summary'),
+},
+
   //schoolDashboard
   schoolDashboard: {
     getData: () => apiClient.get("/school/dashboard"),
   },
+
 };
 
 export default apiClient;
