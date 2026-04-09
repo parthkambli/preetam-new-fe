@@ -533,6 +533,8 @@ export default function ViewMember() {
           <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <ReadField label="Full Name" value={member.name} />
             <ReadField label="Mobile Number" value={member.mobile} />
+              <ReadField label="Responsible Staff" value={member.staff?.fullName} />
+
           </div>
         </div>
 

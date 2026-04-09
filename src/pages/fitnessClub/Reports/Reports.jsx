@@ -71,6 +71,25 @@ export default function Reports() {
   const [exporting, setExporting] = useState("");
   const [admissionsData, setAdmissionsData] = useState([]);
   const [participantsData, setParticipantsData] = useState([]);
+
+
+const [stats, setStats] = useState({
+  totalEnquiries: 0,
+  totalAdmissions: 0,
+  activeParticipants: 0,
+  totalRevenue: 0,
+  pendingFees: 0,
+});
+const fetchSummary = async () => {
+  try {
+    const res = await api.reports.getSummary();
+
+    setStats(res.data);
+  } catch (err) {
+    console.error("Summary error:", err);
+  }
+};
+
   const isAdmissions = activeTab === "admissions";
 
   const admissionsHeaders = ["Name", "Date", "Status"];
@@ -85,7 +104,8 @@ export default function Reports() {
   const currentData = isAdmissions ? (admissionsData || []) : (participantsData || []);  
   useEffect(() => {
   fetchAdmissions();
-  fetchParticipants();   // 👈 ADD THIS
+  fetchParticipants();
+  fetchSummary();    // 👈 ADD THIS
 }, []);
 
 const fetchAdmissions = async () => {
@@ -148,10 +168,18 @@ const fetchParticipants = async () => {
       <div className="bg-gray-100 rounded-2xl p-4 mb-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Top 4 cards */}
-          {STATS.filter((s) => !s.wide).map((stat) => (
+          {/* {STATS.filter((s) => !s.wide).map((stat) => ( */}
+
+          {[
+  { label: "Total Enquiries", value: stats.totalEnquiries },
+  { label: "Total Admissions", value: stats.totalAdmissions },
+  { label: "Active Participants", value: stats.activeParticipants },
+  { label: "Total Revenue", value: stats.totalRevenue, prefix: "₹ " },
+].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                {stat.prefix}{stat.value}
+                {/* {stat.prefix}{stat.value} */}
+                {stat.prefix || ""}{stat.value?.toLocaleString()}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">{stat.label}</p>
             </div>
@@ -159,7 +187,11 @@ const fetchParticipants = async () => {
         </div>
         {/* Bottom 2 wide cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-          {STATS.filter((s) => s.wide).map((stat) => (
+          {/* {STATS.filter((s) => s.wide).map((stat) => ( */}
+          {[
+  { label: "Pending Fees", value: stats.pendingFees, prefix: "₹ " },
+  { label: "Today's Attendance", value: "118" }, // keep static for now
+].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                 {stat.prefix}{stat.value}
