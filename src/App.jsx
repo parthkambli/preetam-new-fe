@@ -192,6 +192,11 @@ import SchoolReports from './pages/school/Reports/Reports';
 import SchoolUserManagement from './pages/school/UserManagement/UserManagement';
 import SchoolAdduser from './pages/school/UserManagement/Adduser';
 import Profile from './pages/school/Profile/Profile';
+// aadi
+import SchoolStaffDashboard from "./pages/SchoolStaff/Dashboard";
+import SchoolStaffAttendance from './pages/SchoolStaff/Attendance';
+import SchoolStaffMySchedule from './pages/SchoolStaff/Myschedule';
+
 
 // ====================== FITNESS CLUB PAGES ======================
 import FitnessDashboard from './pages/fitnessClub/Dashboard';
@@ -215,6 +220,14 @@ import FitnessAddevent from './pages/fitnessClub/Events/Addevent';              
 import FitnessReports from './pages/fitnessClub/Reports/Reports';
 import FitnessUserManagement from './pages/fitnessClub/UserManagement/UserManagement';
 import FitnessAdduser from './pages/fitnessClub/UserManagement/Adduser';           // Dedicated version
+// import DashboardPage from './pages/FitnessStaff/Dashboard';
+// aadi 
+import FitnessStaffDashboard from "./pages/FitnessStaff/Dashboard";
+import FitnessStaffAttendance from "./pages/FitnessStaff/Attendance";
+import FitnessStaffMySchedule from "./pages/FitnessStaff/MySchedule";
+
+
+
 
 function App() {
   return (
@@ -261,6 +274,11 @@ function App() {
             <Route path="/school/user-management" element={<SchoolUserManagement />} />
             <Route path="/school/user-management/Add-user" element={<SchoolAdduser />} />
             <Route path="/profile" element={<Profile />} />
+            //Aadi
+            <Route path="/school-staff" element={<SchoolStaffDashboard/>} />
+             <Route path="/school-staff/attendance" element={<SchoolStaffAttendance />} /> 
+             <Route path="/school-staff/my-schedule" element={<SchoolStaffMySchedule />} /> 
+             //aadi
 
             {/* ====================== FITNESS CLUB ROUTES ====================== */}
             <Route path="/fitness/dashboard" element={<FitnessDashboard />} />
@@ -284,7 +302,14 @@ function App() {
             <Route path="/fitness/reports" element={<FitnessReports />} />
             <Route path="/fitness/user-management" element={<FitnessUserManagement />} />
             <Route path="/fitness/user-management/Add-user" element={<FitnessAdduser />} />
-            
+            //Added by Aadi
+            <Route path="/fitness-staff" element={<FitnessStaffDashboard/>} />
+             <Route path="/fitness-staff/attendance" element={<FitnessStaffAttendance />} /> 
+             <Route path="/fitness-staff/my-Schedule" element={< FitnessStaffMySchedule />} /> 
+            //Added by Aadi
+
+
+        
           </Route>
 
           {/* Root Redirect */}

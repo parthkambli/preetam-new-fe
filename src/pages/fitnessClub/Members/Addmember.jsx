@@ -2325,9 +2325,8 @@ const Field = ({
         value={form[name] || ""}
         onChange={onChange}
         disabled={readOnly}
-        className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white disabled:bg-gray-50 ${
-          errors[name] ? "border-red-400" : "border-gray-300"
-        }`}
+        className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white disabled:bg-gray-50 ${errors[name] ? "border-red-400" : "border-gray-300"
+          }`}
       >
         <option value="">Select {label}</option>
         {options.map((o) => (
@@ -2345,9 +2344,8 @@ const Field = ({
         placeholder={placeholder}
         readOnly={readOnly}
         maxLength={name === "mobile" ? 10 : undefined}
-        className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white read-only:bg-gray-50 read-only:text-gray-500 ${
-          errors[name] ? "border-red-400" : "border-gray-300"
-        }`}
+        className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white read-only:bg-gray-50 read-only:text-gray-500 ${errors[name] ? "border-red-400" : "border-gray-300"
+          }`}
       />
     )}
 
@@ -2467,6 +2465,10 @@ export default function AddMember() {
               typeof member.staff === "object"
                 ? member.staff?._id || ""
                 : member.staff || "",
+            responsibleStaff:
+              typeof member.responsibleStaff === "object"
+                ? member.responsibleStaff?._id || ""
+                : member.responsibleStaff || "",
           });
         }
       } catch (err) {
@@ -2803,9 +2805,8 @@ export default function AddMember() {
                 onChange={handleChange}
                 min="1900-01-01"
                 max="9999-12-31"
-                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${
-                  errors.startDate ? "border-red-400" : "border-gray-300"
-                }`}
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors.startDate ? "border-red-400" : "border-gray-300"
+                  }`}
               />
               {errors.startDate && <p className="mt-1 text-xs text-red-500">{errors.startDate}</p>}
             </div>
@@ -2821,9 +2822,8 @@ export default function AddMember() {
                 onChange={handleChange}
                 min={form.startDate || ""}
                 max="9999-12-31"
-                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${
-                  errors.endDate ? "border-red-400" : "border-gray-300"
-                }`}
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors.endDate ? "border-red-400" : "border-gray-300"
+                  }`}
               />
               {errors.endDate && <p className="mt-1 text-xs text-red-500">{errors.endDate}</p>}
             </div>
@@ -2871,9 +2871,8 @@ export default function AddMember() {
                 onChange={handleChange}
                 min="1900-01-01"
                 max="9999-12-31"
-                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${
-                  errors.paymentDate ? "border-red-400" : "border-gray-300"
-                }`}
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors.paymentDate ? "border-red-400" : "border-gray-300"
+                  }`}
               />
               {errors.paymentDate && <p className="mt-1 text-xs text-red-500">{errors.paymentDate}</p>}
             </div>
