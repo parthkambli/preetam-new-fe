@@ -59,8 +59,14 @@ import ScheduleActivity from './Scheduleactivity';
 import BookActivity from './BookActivity'
 import ActivityStats from './components/ActivityStats';
 import TodaySchedule from './components/TodaySchedule';
+import ActivityManager from './ActivityManager';
+import { format, addDays, startOfWeek } from "date-fns";
+import DateStrip from "./components/DateStrip";
+
 import EmptyState from './components/EmptyState';
 import { api } from '../../../services/apiClient';
+const isSameDate = (date) =>
+  format(new Date(date), "yyyy-MM-dd") === selected;
 export default function Activities() {
   // const [view, setView] = useState('list');
   const [view, setView] = useState('dashboard');
@@ -70,6 +76,9 @@ export default function Activities() {
 const [slotBookings, setSlotBookings] = useState([]);
 const [showModal, setShowModal] = useState(false);
 
+const [editActivity, setEditActivity] = useState(null);
+
+
   const [stats, setStats] = useState({
   totalActivities: 0,
   totalBookings: 0,
@@ -78,6 +87,9 @@ const [showModal, setShowModal] = useState(false);
 });
 
 const [todaySlots, setTodaySlots] = useState([]);
+const [selectedDate, setSelectedDate] = useState(new Date());
+
+
 
   const handleSaved = () => {
     setRefreshKey(prev => prev + 1);
@@ -86,7 +98,7 @@ const [todaySlots, setTodaySlots] = useState([]);
 
   const fetchDashboard = async () => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const selected = format(selectedDate, "yyyy-MM-dd");
 
     const [activitiesRes, bookingsRes] = await Promise.all([
       api.fitnessActivities.getAll(),
@@ -95,8 +107,8 @@ const [todaySlots, setTodaySlots] = useState([]);
 
     const activities = activitiesRes.data.data || [];
     const bookings = bookingsRes.data.data || [];
-
-    const todayBookings = bookings.filter(b => b.date === today);
+console.log("SAMPLE BOOKING:", bookings[0]);
+    const todayBookings = bookings.filter(b => b.date === selected);
 
     let totalSlots = 0;
     let fullSlots = 0;
@@ -109,9 +121,9 @@ const [todaySlots, setTodaySlots] = useState([]);
 
         const booked = bookings.filter(
   (b) =>
-    b.activityId === activity._id &&
-    b.slotId === slot._id &&
-    b.date === today
+    String(b.activityId) === String(activity._id) &&
+    String(b.slotId) === String(slot._id) &&
+    isSameDate(b.date)
 ).length;
 
         if (booked >= activity.capacity) fullSlots++;
@@ -140,25 +152,29 @@ const [todaySlots, setTodaySlots] = useState([]);
   }
 };
 
+// console.log(todaySlots);
+
 useEffect(() => {
   if (view === 'dashboard') {
     fetchDashboard();
   }
-}, [view]);
+}, [view, selectedDate]);
 
 const handleSlotClick = async (slot) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+   const selected = format(selectedDate, "yyyy-MM-dd");
 
     const res = await api.fitnessActivities.getBookings();
     const bookings = res.data.data || [];
 
+console.log("CLICK BOOKINGS:", bookings[0]);
+console.log("CLICKED SLOT:", slot);
     const filtered = bookings.filter(
-      (b) =>
-        b.activityId === slot.activityId &&
-        b.slotId === slot.slotId &&
-        b.date === today
-    );
+  (b) =>
+    String(b.activityId) === String(slot.activityId) &&
+    String(b.slotId) === String(slot.slotId) &&
+    isSameDate(b.date)
+);
 
     setSelectedSlot(slot);
     setSlotBookings(filtered);
@@ -191,6 +207,7 @@ const handleSlotClick = async (slot) => {
           >
             Scheduled Activities
           </button> */}
+          
           <button
   onClick={() => setView('book')}
   className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
@@ -199,6 +216,16 @@ const handleSlotClick = async (slot) => {
       : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
 >
   Book Activity
+</button>
+
+<button
+  onClick={() => setView('manage')}
+  className={`px-5 py-2 rounded-md text-sm font-semibold
+    ${view === 'manage'
+      ? 'bg-[#000359] text-white'
+      : 'border border-[#000359] text-[#000359]'}`}
+>
+  Manage Activities
 </button>
           <button
             onClick={() => setView('add')}
@@ -211,17 +238,20 @@ const handleSlotClick = async (slot) => {
           </button>
         </div>
       </div>
-
-{view === 'dashboard' && (
+      {view === 'dashboard' && (
   <>
+    <DateStrip
+      selectedDate={selectedDate}
+      setSelectedDate={setSelectedDate}
+    />
+
     <ActivityStats stats={stats} />
     <TodaySchedule
-  slots={todaySlots}
-  onSlotClick={handleSlotClick}
-/>
+      slots={todaySlots}
+      onSlotClick={handleSlotClick}
+    />
   </>
 )}
-
 {view === 'list' && (
   <ActivityList
     key={refreshKey}
@@ -232,9 +262,16 @@ const handleSlotClick = async (slot) => {
 
 {view === 'add' && (
   <AddActivity
-    onCancel={() => setView('list')}
-    onSaved={handleSaved}
-  />
+  editData={editActivity}
+  onCancel={() => {
+    setEditActivity(null);
+    setView('dashboard');
+  }}
+  onSaved={() => {
+    setEditActivity(null);
+    handleSaved();
+  }}
+/>
 )}
 
 {view === 'book' && (
@@ -245,6 +282,14 @@ const handleSlotClick = async (slot) => {
   <ScheduleActivity
     onCancel={() => setView('list')}
     onSaved={handleSaved}
+  />
+)}
+{view === 'manage' && (
+  <ActivityManager
+    onEdit={(activity) => {
+  setEditActivity(activity);
+  setView('add');
+}}
   />
 )}
 

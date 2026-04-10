@@ -96,7 +96,7 @@ export default function FitnessFees() {
             <p className="text-xs text-gray-500 mt-1">{card.label}</p>
           </div>
         ))}
-      </div>x
+      </div>
 
       {activeTab === 'add-payments' && <AddPayments />}
       {activeTab === 'allot-fees' && <AllotFees />}
