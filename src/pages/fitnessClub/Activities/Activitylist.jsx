@@ -313,6 +313,24 @@ export default function ActivityList({ onView, onEdit }) {
     }
   };
 
+  const handleDelete = async (id) => {
+  const confirmDelete = window.confirm(
+    'Are you sure you want to delete this activity?'
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await api.fitnessSchedules.delete(id); // 🔥 adjust if needed
+    toast.success('Activity deleted successfully');
+    fetchActivities();
+  } catch (err) {
+    const msg =
+      err?.response?.data?.message || 'Failed to delete activity';
+    toast.error(msg);
+  }
+};
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -456,7 +474,23 @@ export default function ActivityList({ onView, onEdit }) {
                     <td className="px-5 py-3.5">{a.place}</td>
                     <td className="px-5 py-3.5">{a.instructor}</td>
                     <td className="px-5 py-3.5">
-                      <button
+                      <td className="px-5 py-3.5">
+  <div className="flex gap-2">
+    <button
+      onClick={() => startEdit(a)}
+      className="bg-[#000359] hover:bg-[#000280] text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+    >
+      Edit
+    </button>
+
+    <button
+      onClick={() => handleDelete(a._id)}
+      className="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+    >
+      Delete
+    </button>
+  </div>
+</td><button
                         onClick={() => startEdit(a)}
                         className="bg-[#000359] hover:bg-[#000280] text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
                       >
