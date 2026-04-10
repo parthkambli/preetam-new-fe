@@ -78,13 +78,22 @@
 
 
 // pages/fitnessClub/Activities/AddActivity.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 
-export default function AddActivity({ onCancel, onSaved }) {
+export default function AddActivity({ onCancel, onSaved, editData }) {
 
   const [activityName, setActivityName] = useState('');
+
+  useEffect(() => {
+  if (editData) {
+    setActivityName(editData.name || '');
+    setCapacity(editData.capacity || 0);
+    setSlots(editData.slots || []);
+  }
+}, [editData]);
+
   const [capacity, setCapacity] = useState(''); // ✅ NEW
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -138,16 +147,24 @@ export default function AddActivity({ onCancel, onSaved }) {
     setError('');
 
     try {
-      await api.fitnessActivities.create({
-        name: activityName.trim(),
-        capacity: Number(capacity), // ✅ NEW
-        slots
-      });
+      if (editData) {
+    await api.fitnessActivities.update(editData._id, {
+      name: activityName.trim(),
+      capacity: Number(capacity),
+      slots
+    });
 
-      toast.success('Activity added successfully');
-      onSaved?.();
+    toast.success('Activity updated successfully');
+  } else {
+    await api.fitnessActivities.create({
+      name: activityName.trim(),
+      capacity: Number(capacity),
+      slots
+    });
 
-    } catch (err) {
+    toast.success('Activity added successfully');
+
+    } }catch (err) {
       const msg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
