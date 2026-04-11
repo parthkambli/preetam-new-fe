@@ -8,14 +8,14 @@ export default function ActivityStats({ stats = {} }) {
       label: 'Bookings',
       value: stats.totalBookings || 0,
     },
-    {
-      label: 'Available Slots',
-      value: stats.availableSlots || 0,
-    },
-    {
-      label: 'Full Slots',
-      value: stats.fullSlots || 0,
-    },
+    // {
+    //   label: 'Available Slots',
+    //   value: stats.availableSlots || 0,
+    // },
+    // {
+    //   label: 'Full Slots',
+    //   value: stats.fullSlots || 0,
+    // },
   ];
 
   return (

@@ -38,67 +38,86 @@ export default function ActivityManager({ onEdit }) {
       );
     }
   };
+return (
+  <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
+    
+    <table className="w-full text-sm">
+      
+      {/* HEADER */}
+      <thead>
+        <tr className="bg-[#000359] text-white">
+          <th className="px-6 py-3 text-left font-medium">Activity</th>
+          <th className="px-6 py-3 text-left font-medium">Slots</th>
+          <th className="px-6 py-3 text-left font-medium">Capacity</th>
+          <th className="px-6 py-3 text-left font-medium">Action</th>
+        </tr>
+      </thead>
 
-  return (
-    <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-[#000359] text-white text-left">
-            <th className="px-5 py-3">Activity</th>
-            <th className="px-5 py-3">Slots</th>
-            <th className="px-5 py-3">Capacity</th>
-            <th className="px-5 py-3">Actions</th>
+      {/* BODY */}
+      <tbody className="divide-y">
+        {loading ? (
+          <tr>
+            <td colSpan={4} className="text-center py-10 text-gray-400">
+              Loading...
+            </td>
           </tr>
-        </thead>
-
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={4} className="text-center py-8 text-gray-400">
-                Loading...
+        ) : activities.length === 0 ? (
+          <tr>
+            <td colSpan={4} className="text-center py-10 text-gray-400">
+              No activities found
+            </td>
+          </tr>
+        ) : (
+          activities.map((a) => (
+            <tr
+              key={a._id}
+              className="hover:bg-gray-50 transition"
+            >
+              {/* Activity */}
+              <td className="px-6 py-4 font-medium text-gray-800">
+                {a.name}
               </td>
-            </tr>
-          ) : activities.length === 0 ? (
-            <tr>
-              <td colSpan={4} className="text-center py-8 text-gray-400">
-                No activities found
-              </td>
-            </tr>
-          ) : (
-            activities.map((a) => (
-              <tr key={a._id} className="border-t">
-                <td className="px-5 py-3">{a.name}</td>
 
-                <td className="px-5 py-3">
+              {/* Slots */}
+              <td className="px-6 py-4">
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-xs">
                   {a.slots?.length || 0}
-                </td>
+                </span>
+              </td>
 
-                <td className="px-5 py-3">
+              {/* Capacity */}
+              <td className="px-6 py-4">
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-xs">
                   {a.capacity || 0}
-                </td>
+                </span>
+              </td>
 
-                <td className="px-5 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => onEdit(a)}
-                      className="bg-[#000359] text-white px-3 py-1 rounded text-xs"
-                    >
-                      Edit
-                    </button>
+              {/* Actions */}
+              <td className="px-6 py-4">
+                <div className="flex gap-2">
+                  
+                  <button
+                    onClick={() => onEdit(a)}
+                    className="px-3 py-1.5 text-xs rounded-md bg-[#000359] text-white hover:opacity-90"
+                  >
+                    Edit
+                  </button>
 
-                    <button
-                      onClick={() => handleDelete(a._id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded text-xs"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+                  <button
+                    onClick={() => handleDelete(a._id)}
+                    className="px-3 py-1.5 text-xs rounded-md bg-red-100 text-red-600 hover:bg-red-200"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+
+    </table>
+  </div>
+);
 }
