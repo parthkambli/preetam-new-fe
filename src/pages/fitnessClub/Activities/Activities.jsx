@@ -51,287 +51,571 @@
 // }
 
 
-// pages/fitnessClub/Activities/Activities.jsx
+// // pages/fitnessClub/Activities/Activities.jsx
+// import { useState, useEffect } from 'react';
+// import ActivityList from './Activitylist';
+// import AddActivity from './Addactivity';
+// import ScheduleActivity from './Scheduleactivity';
+// import BookActivity from './BookActivity'
+// import ActivityStats from './components/ActivityStats';
+// import TodaySchedule from './components/TodaySchedule';
+// import ActivityManager from './ActivityManager';
+// import { format, addDays, startOfWeek } from "date-fns";
+// import DateStrip from "./components/DateStrip";
+
+// import { api } from '../../../services/apiClient';
+
+// export default function Activities() {
+//   // const [view, setView] = useState('list');
+//   const [view, setView] = useState('dashboard');
+//   const [refreshKey, setRefreshKey] = useState(0);
+
+//   const [selectedSlot, setSelectedSlot] = useState(null);
+// const [slotBookings, setSlotBookings] = useState([]);
+// const [showModal, setShowModal] = useState(false);
+
+// const [editActivity, setEditActivity] = useState(null);
+
+
+//   const [stats, setStats] = useState({
+//   totalActivities: 0,
+//   totalBookings: 0,
+//   availableSlots: 0,
+//   fullSlots: 0,
+// });
+
+// const [todaySlots, setTodaySlots] = useState([]);
+// const [selectedDate, setSelectedDate] = useState(new Date());
+
+
+
+//   const handleSaved = () => {
+//     setRefreshKey(prev => prev + 1);
+//     setView('list');
+//   };
+
+//   const fetchDashboard = async () => {
+//   try {
+//     const selected = format(selectedDate, "yyyy-MM-dd");
+//     const isSameDate = (date) =>
+//   format(new Date(date), "yyyy-MM-dd") === selected;
+
+
+//     console.log("ACTIVITY:", activity.name);
+// console.log("SLOT TIME:", `${slot.startTime} - ${slot.endTime}`);
+// console.log("BOOKING TIME:", bookings[0]?.slotTime);
+
+
+
+//     const [activitiesRes, bookingsRes] = await Promise.all([
+//       api.fitnessActivities.getAll(),
+//       api.fitnessActivities.getBookings(),
+//     ]);
+
+//     const activities = activitiesRes.data.data || [];
+//     const bookings = bookingsRes.data.data || [];
+// console.log("SAMPLE BOOKING:", bookings[0]);
+//     const todayBookings = bookings.filter(
+//   (b) => format(new Date(b.date), "yyyy-MM-dd") === selected
+// );
+
+//     let totalSlots = 0;
+//     let fullSlots = 0;
+
+//     const slots = [];
+
+//     activities.forEach((activity) => {
+//       activity.slots?.forEach((slot) => {
+//         totalSlots++;
+
+//         const booked = bookings.filter(
+//   (b) =>
+//     b.activityName === activity.name &&
+//     b.slotTime === `${slot.startTime} - ${slot.endTime}` &&
+//     isSameDate(b.date)
+// ).length;
+
+//         if (booked >= activity.capacity) fullSlots++;
+
+//         slots.push({
+//   activity: activity.name,
+//   time: `${slot.startTime} - ${slot.endTime}`,
+//   booked,
+//   capacity: activity.capacity,
+//   slotId: slot._id,
+//   activityId: activity._id,
+// });
+//       });
+//     });
+
+//     setStats({
+//       totalActivities: activities.length,
+//       totalBookings: todayBookings.length,
+//       availableSlots: totalSlots - fullSlots,
+//       fullSlots,
+//     });
+
+//     setTodaySlots(slots);
+//   } catch (err) {
+//     console.error('Dashboard error:', err);
+//   }
+// };
+
+// // console.log(todaySlots);
+
+// useEffect(() => {
+//   if (view === 'dashboard') {
+//     fetchDashboard();
+//   }
+// }, [view, selectedDate]);
+
+// const handleSlotClick = async (slot) => {
+//   try {
+//    const isSameDate = (date) =>
+//   format(new Date(date), "yyyy-MM-dd") === selected;
+
+//     const res = await api.fitnessActivities.getBookings();
+//     const bookings = res.data.data || [];
+
+
+//     const filtered = bookings.filter(
+//   (b) =>
+//     b.activityName === slot.activity &&
+//     b.slotTime === slot.time &&
+//     isSameDate(b.date)
+// );
+
+//     setSelectedSlot(slot);
+//     setSlotBookings(filtered);
+//     setShowModal(true);
+
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+
+//   return (
+//     <div className="p-4 sm:p-6 space-y-5">
+
+//       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+//         <h1 className="text-xl font-semibold text-gray-800">
+//             {view === 'dashboard' && 'Activities'}
+//             {view === 'list'      && 'Activities List'}
+//             {view === 'add'       && 'Add Activities'}
+//             {view === 'schedule'  && 'Scheduled Activities'}
+//             {view === 'book'      && 'Book Activity'}
+//         </h1>
+
+//         <div className="flex gap-2 flex-wrap">
+//           {/* <button
+//             onClick={() => setView('schedule')}
+//             className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
+//               ${view === 'schedule'
+//                 ? 'bg-[#000359] text-white shadow-md'
+//                 : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
+//           >
+//             Scheduled Activities
+//           </button> */}
+          
+//           <button
+//   onClick={() => setView('book')}
+//   className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
+//     ${view === 'book'
+//       ? 'bg-[#000359] text-white shadow-md'
+//       : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
+// >
+//   Book Activity
+// </button>
+
+// <button
+//   onClick={() => setView('manage')}
+//   className={`px-5 py-2 rounded-md text-sm font-semibold
+//     ${view === 'manage'
+//       ? 'bg-[#000359] text-white'
+//       : 'border border-[#000359] text-[#000359]'}`}
+// >
+//   Manage Activities
+// </button>
+//           <button
+//             onClick={() => setView('add')}
+//             className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
+//               ${view === 'add'
+//                 ? 'bg-[#000359] text-white shadow-md'
+//                 : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
+//           >
+//             Add Activities
+//           </button>
+//         </div>
+//       </div>
+//       {view === 'dashboard' && (
+//   <>
+//     <DateStrip
+//       selectedDate={selectedDate}
+//       setSelectedDate={setSelectedDate}
+//     />
+
+//     <ActivityStats stats={stats} />
+//     <TodaySchedule
+//       slots={todaySlots}
+//       onSlotClick={handleSlotClick}
+//     />
+//   </>
+// )}
+// {view === 'list' && (
+//   <ActivityList
+//     key={refreshKey}
+//     onView={() => {}}
+//     onSchedule={() => setView('schedule')}
+//   />
+// )}
+
+// {view === 'add' && (
+//   <AddActivity
+//   editData={editActivity}
+//   onCancel={() => {
+//     setEditActivity(null);
+//     setView('dashboard');
+//   }}
+//   onSaved={() => {
+//     setEditActivity(null);
+//     handleSaved();
+//   }}
+// />
+// )}
+
+// {view === 'book' && (
+//   <BookActivity />
+// )}
+
+// {false && view === 'schedule' && (
+//   <ScheduleActivity
+//     onCancel={() => setView('list')}
+//     onSaved={handleSaved}
+//   />
+// )}
+// {view === 'manage' && (
+//   <ActivityManager
+//     onEdit={(activity) => {
+//   setEditActivity(activity);
+//   setView('add');
+// }}
+//   />
+// )}
+
+// {showModal && (
+//   <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+//     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+
+//       <h3 className="text-lg font-semibold mb-3">
+//         {selectedSlot?.activity}
+//       </h3>
+
+//       <p className="text-sm text-gray-500 mb-4">
+//         {selectedSlot?.time}
+//       </p>
+
+//       {slotBookings.length === 0 ? (
+//         <p className="text-sm text-gray-400">No bookings yet</p>
+//       ) : (
+//         <div className="space-y-2 max-h-60 overflow-y-auto">
+//           {slotBookings.map((b) => (
+//             <div
+//               key={b._id}
+//               className="border rounded-md px-3 py-2 text-sm"
+//             >
+//               {b.customerName}
+//             </div>
+//           ))}
+//         </div>
+//       )}
+
+//       <div className="mt-5 text-right">
+//         <button
+//           onClick={() => setShowModal(false)}
+//           className="px-4 py-2 text-sm bg-[#000359] text-white rounded-md"
+//         >
+//           Close
+//         </button>
+//       </div>
+
+//     </div>
+//   </div>
+// )}
+
+//     </div>
+//   );
+// }
+
+
 import { useState, useEffect } from 'react';
 import ActivityList from './Activitylist';
 import AddActivity from './Addactivity';
 import ScheduleActivity from './Scheduleactivity';
-import BookActivity from './BookActivity'
+import BookActivity from './BookActivity';
 import ActivityStats from './components/ActivityStats';
 import TodaySchedule from './components/TodaySchedule';
 import ActivityManager from './ActivityManager';
-import { format, addDays, startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import DateStrip from "./components/DateStrip";
-
-import EmptyState from './components/EmptyState';
 import { api } from '../../../services/apiClient';
-const isSameDate = (date) =>
-  format(new Date(date), "yyyy-MM-dd") === selected;
+
 export default function Activities() {
-  // const [view, setView] = useState('list');
   const [view, setView] = useState('dashboard');
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [selectedSlot, setSelectedSlot] = useState(null);
-const [slotBookings, setSlotBookings] = useState([]);
-const [showModal, setShowModal] = useState(false);
+  const [slotBookings, setSlotBookings] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
-const [editActivity, setEditActivity] = useState(null);
-
+  const [editActivity, setEditActivity] = useState(null);
 
   const [stats, setStats] = useState({
-  totalActivities: 0,
-  totalBookings: 0,
-  availableSlots: 0,
-  fullSlots: 0,
-});
+    totalActivities: 0,
+    totalBookings: 0,
+    availableSlots: 0,
+    fullSlots: 0,
+  });
 
-const [todaySlots, setTodaySlots] = useState([]);
-const [selectedDate, setSelectedDate] = useState(new Date());
-
-
+  const [todaySlots, setTodaySlots] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const handleSaved = () => {
     setRefreshKey(prev => prev + 1);
     setView('list');
   };
 
+  // ================= DASHBOARD =================
   const fetchDashboard = async () => {
-  try {
-    const selected = format(selectedDate, "yyyy-MM-dd");
+    try {
+      const selected = format(selectedDate, "yyyy-MM-dd");
 
-    const [activitiesRes, bookingsRes] = await Promise.all([
-      api.fitnessActivities.getAll(),
-      api.fitnessActivities.getBookings(),
-    ]);
+      const isSameDate = (date) =>
+        format(new Date(date), "yyyy-MM-dd") === selected;
 
-    const activities = activitiesRes.data.data || [];
-    const bookings = bookingsRes.data.data || [];
-console.log("SAMPLE BOOKING:", bookings[0]);
-    const todayBookings = bookings.filter(b => b.date === selected);
+      const [activitiesRes, bookingsRes] = await Promise.all([
+        api.fitnessActivities.getAll(),
+        api.fitnessActivities.getBookings(),
+      ]);
 
-    let totalSlots = 0;
-    let fullSlots = 0;
+      const activities = activitiesRes.data.data || [];
+      const bookings = bookingsRes.data.data || [];
 
-    const slots = [];
+      const todayBookings = bookings.filter((b) => isSameDate(b.date));
 
-    activities.forEach((activity) => {
-      activity.slots?.forEach((slot) => {
-        totalSlots++;
+      let totalSlots = 0;
+      let fullSlots = 0;
 
-        const booked = bookings.filter(
-  (b) =>
-    String(b.activityId) === String(activity._id) &&
-    String(b.slotId) === String(slot._id) &&
-    isSameDate(b.date)
-).length;
+      const slots = [];
 
-        if (booked >= activity.capacity) fullSlots++;
+      activities.forEach((activity) => {
+        activity.slots?.forEach((slot) => {
+          totalSlots++;
 
-        slots.push({
-  activity: activity.name,
-  time: `${slot.startTime} - ${slot.endTime}`,
-  booked,
-  capacity: activity.capacity,
-  slotId: slot._id,
-  activityId: activity._id,
-});
+          const slotTime = `${slot.startTime} - ${slot.endTime}`;
+
+          const booked = bookings.filter(
+            (b) =>
+              b.activityName === activity.name &&
+              b.slotTime.trim() === slotTime.trim() &&
+              isSameDate(b.date)
+          ).length;
+
+          if (booked >= activity.capacity) fullSlots++;
+
+          slots.push({
+            activity: activity.name,
+            time: slotTime,
+            booked,
+            capacity: activity.capacity,
+            slotId: slot._id,
+            activityId: activity._id,
+          });
+        });
       });
-    });
 
-    setStats({
-      totalActivities: activities.length,
-      totalBookings: todayBookings.length,
-      availableSlots: totalSlots - fullSlots,
-      fullSlots,
-    });
+      setStats({
+        totalActivities: activities.length,
+        totalBookings: todayBookings.length,
+        availableSlots: totalSlots - fullSlots,
+        fullSlots,
+      });
 
-    setTodaySlots(slots);
-  } catch (err) {
-    console.error('Dashboard error:', err);
-  }
-};
+      setTodaySlots(slots);
 
-// console.log(todaySlots);
+    } catch (err) {
+      console.error('Dashboard error:', err);
+    }
+  };
 
-useEffect(() => {
-  if (view === 'dashboard') {
-    fetchDashboard();
-  }
-}, [view, selectedDate]);
+  useEffect(() => {
+    if (view === 'dashboard') {
+      fetchDashboard();
+    }
+  }, [view, selectedDate]);
 
-const handleSlotClick = async (slot) => {
-  try {
-   const selected = format(selectedDate, "yyyy-MM-dd");
+  // ================= SLOT CLICK =================
+  const handleSlotClick = async (slot) => {
+    try {
+      const selected = format(selectedDate, "yyyy-MM-dd");
 
-    const res = await api.fitnessActivities.getBookings();
-    const bookings = res.data.data || [];
+      const isSameDate = (date) =>
+        format(new Date(date), "yyyy-MM-dd") === selected;
 
-console.log("CLICK BOOKINGS:", bookings[0]);
-console.log("CLICKED SLOT:", slot);
-    const filtered = bookings.filter(
-  (b) =>
-    String(b.activityId) === String(slot.activityId) &&
-    String(b.slotId) === String(slot.slotId) &&
-    isSameDate(b.date)
-);
+      const res = await api.fitnessActivities.getBookings();
+      const bookings = res.data.data || [];
 
-    setSelectedSlot(slot);
-    setSlotBookings(filtered);
-    setShowModal(true);
+      const filtered = bookings.filter(
+        (b) =>
+          b.activityName === slot.activity &&
+          b.slotTime.trim() === slot.time.trim() &&
+          isSameDate(b.date)
+      );
 
-  } catch (err) {
-    console.error(err);
-  }
-};
+      setSelectedSlot(slot);
+      setSlotBookings(filtered);
+      setShowModal(true);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 space-y-5">
 
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl font-semibold text-gray-800">
-            {view === 'dashboard' && 'Activities'}
-            {view === 'list'      && 'Activities List'}
-            {view === 'add'       && 'Add Activities'}
-            {view === 'schedule'  && 'Scheduled Activities'}
-            {view === 'book'      && 'Book Activity'}
+          {view === 'dashboard' && 'Activities'}
+          {view === 'list' && 'Activities List'}
+          {view === 'add' && 'Add Activities'}
+          {view === 'schedule' && 'Scheduled Activities'}
+          {view === 'book' && 'Book Activity'}
         </h1>
 
         <div className="flex gap-2 flex-wrap">
-          {/* <button
-            onClick={() => setView('schedule')}
-            className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
-              ${view === 'schedule'
-                ? 'bg-[#000359] text-white shadow-md'
-                : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
-          >
-            Scheduled Activities
-          </button> */}
-          
           <button
-  onClick={() => setView('book')}
-  className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
-    ${view === 'book'
-      ? 'bg-[#000359] text-white shadow-md'
-      : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
->
-  Book Activity
-</button>
+            onClick={() => setView('book')}
+            className={`px-5 py-2 rounded-md text-sm font-semibold
+              ${view === 'book'
+                ? 'bg-[#000359] text-white'
+                : 'border border-[#000359] text-[#000359]'}`}
+          >
+            Book Activity
+          </button>
 
-<button
-  onClick={() => setView('manage')}
-  className={`px-5 py-2 rounded-md text-sm font-semibold
-    ${view === 'manage'
-      ? 'bg-[#000359] text-white'
-      : 'border border-[#000359] text-[#000359]'}`}
->
-  Manage Activities
-</button>
+          <button
+            onClick={() => setView('manage')}
+            className={`px-5 py-2 rounded-md text-sm font-semibold
+              ${view === 'manage'
+                ? 'bg-[#000359] text-white'
+                : 'border border-[#000359] text-[#000359]'}`}
+          >
+            Manage Activities
+          </button>
+
           <button
             onClick={() => setView('add')}
-            className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors whitespace-nowrap
+            className={`px-5 py-2 rounded-md text-sm font-semibold
               ${view === 'add'
-                ? 'bg-[#000359] text-white shadow-md'
-                : 'border border-[#000359] text-[#000359] bg-white hover:bg-[#000359]/5'}`}
+                ? 'bg-[#000359] text-white'
+                : 'border border-[#000359] text-[#000359]'}`}
           >
             Add Activities
           </button>
         </div>
       </div>
+
+      {/* DASHBOARD */}
       {view === 'dashboard' && (
-  <>
-    <DateStrip
-      selectedDate={selectedDate}
-      setSelectedDate={setSelectedDate}
-    />
+        <>
+          <DateStrip
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+          />
 
-    <ActivityStats stats={stats} />
-    <TodaySchedule
-      slots={todaySlots}
-      onSlotClick={handleSlotClick}
-    />
-  </>
-)}
-{view === 'list' && (
-  <ActivityList
-    key={refreshKey}
-    onView={() => {}}
-    onSchedule={() => setView('schedule')}
-  />
-)}
+          <ActivityStats stats={stats} />
 
-{view === 'add' && (
-  <AddActivity
-  editData={editActivity}
-  onCancel={() => {
-    setEditActivity(null);
-    setView('dashboard');
-  }}
-  onSaved={() => {
-    setEditActivity(null);
-    handleSaved();
-  }}
-/>
-)}
-
-{view === 'book' && (
-  <BookActivity />
-)}
-
-{false && view === 'schedule' && (
-  <ScheduleActivity
-    onCancel={() => setView('list')}
-    onSaved={handleSaved}
-  />
-)}
-{view === 'manage' && (
-  <ActivityManager
-    onEdit={(activity) => {
-  setEditActivity(activity);
-  setView('add');
-}}
-  />
-)}
-
-{showModal && (
-  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
-
-      <h3 className="text-lg font-semibold mb-3">
-        {selectedSlot?.activity}
-      </h3>
-
-      <p className="text-sm text-gray-500 mb-4">
-        {selectedSlot?.time}
-      </p>
-
-      {slotBookings.length === 0 ? (
-        <p className="text-sm text-gray-400">No bookings yet</p>
-      ) : (
-        <div className="space-y-2 max-h-60 overflow-y-auto">
-          {slotBookings.map((b) => (
-            <div
-              key={b._id}
-              className="border rounded-md px-3 py-2 text-sm"
-            >
-              {b.customerName}
-            </div>
-          ))}
-        </div>
+          <TodaySchedule
+            slots={todaySlots}
+            onSlotClick={handleSlotClick}
+          />
+        </>
       )}
 
-      <div className="mt-5 text-right">
-        <button
-          onClick={() => setShowModal(false)}
-          className="px-4 py-2 text-sm bg-[#000359] text-white rounded-md"
-        >
-          Close
-        </button>
-      </div>
+      {view === 'list' && (
+        <ActivityList
+          key={refreshKey}
+          onView={() => {}}
+          onSchedule={() => setView('schedule')}
+        />
+      )}
 
-    </div>
-  </div>
-)}
+      {view === 'add' && (
+        <AddActivity
+          editData={editActivity}
+          onCancel={() => {
+            setEditActivity(null);
+            setView('dashboard');
+          }}
+          onSaved={() => {
+            setEditActivity(null);
+            handleSaved();
+          }}
+        />
+      )}
+
+      {view === 'book' && <BookActivity />}
+
+      {view === 'manage' && (
+        <ActivityManager
+          onEdit={(activity) => {
+            setEditActivity(activity);
+            setView('add');
+          }}
+        />
+      )}
+
+      {/* MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+
+            <h3 className="text-lg font-semibold mb-3">
+              {selectedSlot?.activity}
+            </h3>
+
+            <p className="text-sm text-gray-500 mb-4">
+              {selectedSlot?.time}
+            </p>
+
+            {slotBookings.length === 0 ? (
+              <p className="text-sm text-gray-400">No bookings yet</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {slotBookings.map((b) => (
+                  <div
+                    key={b._id}
+                    className="border rounded-md px-3 py-2 text-sm"
+                  >
+                    {b.customerName}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-5 text-right">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-sm bg-[#000359] text-white rounded-md"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

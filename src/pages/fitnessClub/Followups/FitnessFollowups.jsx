@@ -309,7 +309,7 @@ export default function FitnessFollowups() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   const [filters, setFilters] = useState({
     status: '',
     date: '',
@@ -381,23 +381,28 @@ export default function FitnessFollowups() {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'new':       return 'bg-blue-100 text-blue-700 border border-blue-200';
+      case 'new': return 'bg-blue-100 text-blue-700 border border-blue-200';
       case 'follow up': return 'bg-yellow-100 text-yellow-800';
       case 'converted': return 'bg-purple-100 text-purple-700 border border-purple-200';
       case 'completed': return 'bg-green-100 text-green-700';
-      default:          return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const openRemarkModal = (fp) => {
-    setSelectedFollowup(fp);
-    setRemarkForm({
-      remark: fp.remark || '',
-      nextVisit: fp.nextVisit ? new Date(fp.nextVisit).toISOString().split('T')[0] : '',
-      newStatus: fp.newStatus || 'Follow Up',
-      activity: fp.activity || ''
-    });
-  };
+  const today = new Date().toISOString().split('T')[0];
+  const existingNextVisit = fp.nextVisit
+    ? new Date(fp.nextVisit).toISOString().split('T')[0]
+    : '';
+
+  setSelectedFollowup(fp);
+  setRemarkForm({
+    remark: fp.remark || '',
+    nextVisit: existingNextVisit && existingNextVisit >= today ? existingNextVisit : '',
+    newStatus: fp.newStatus || 'Follow Up',
+    activity: fp.activity || ''
+  });
+};
 
   const closeModal = () => {
     setSelectedFollowup(null);
@@ -472,8 +477,8 @@ export default function FitnessFollowups() {
         <input
           type="date"
           className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-          value={filters.date}
-          onChange={(e) => handleFilterChange('date', e.target.value)}
+          onChange={handleRemarkChange}
+          min={new Date().toISOString().split('T')[0]}
         />
         <select
           className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
@@ -604,6 +609,7 @@ export default function FitnessFollowups() {
                     name="nextVisit"
                     value={remarkForm.nextVisit}
                     onChange={handleRemarkChange}
+                     min={new Date().toISOString().split('T')[0]}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   />
                 </div>

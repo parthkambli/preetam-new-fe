@@ -2,7 +2,6 @@ import ActivityCard from './ActivityCard';
 import EmptyState from './EmptyState';
 
 export default function TodaySchedule({ slots = [], onSlotClick }) {
-  console.log(slots);
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
       

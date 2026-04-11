@@ -86,7 +86,11 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
 
   const [activityName, setActivityName] = useState('');
 
-  useEffect(() => {
+useEffect(() => {
+  fetchStaff();
+}, []);
+
+useEffect(() => {
   if (editData) {
     setActivityName(editData.name || '');
     setCapacity(editData.capacity || 0);
@@ -97,9 +101,27 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
   const [capacity, setCapacity] = useState(''); // ✅ NEW
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [staffList, setStaffList] = useState([]);
+
+
+const fetchStaff = async () => {
+  try {
+    const res = await api.fitnessStaff.getAll();
+
+    console.log("FINAL STAFF DATA:", res.data);
+
+    const staffArray = res.data?.data?.staff || [];
+
+    setStaffList(Array.isArray(staffArray) ? staffArray : []);
+
+  } catch (err) {
+    console.error("Error fetching staff", err);
+    setStaffList([]);
+  }
+};
 
   const [slots, setSlots] = useState([
-    { startTime: '', endTime: '' } // ✅ REMOVED capacity
+    { startTime: '', endTime: '', staffId:'' } // ✅ REMOVED capacity
   ]);
 
   const handleSlotChange = (index, field, value) => {
@@ -111,7 +133,7 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
   const addSlot = () => {
     setSlots([
       ...slots,
-      { startTime: '', endTime: '' }
+      { startTime: '', endTime: '', staffId:'' }
     ]);
   };
 
@@ -225,51 +247,67 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
           <div className="border border-gray-200 rounded-lg overflow-hidden">
 
             {/* Header */}
-            <div className="grid grid-cols-3 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600">
-              <div>Start Time</div>
-              <div>End Time</div>
-              <div></div>
-            </div>
+            <div className="grid grid-cols-12 gap-3 mb-2 mx-4 text-sm font-semibold text-gray-600">
+  <div className="col-span-3">Start Time</div>
+  <div className="col-span-1"></div>
+  <div className="col-span-3">End Time</div>
+  <div className="col-span-4">Instructor</div> {/* NEW */}
+  <div className="col-span-1"></div>
+</div>
 
             {/* Rows */}
             {slots.map((slot, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-3 items-center px-4 py-3 border-t"
-              >
-                <input
-                  type="time"
-                  value={slot.startTime}
-                  onChange={(e) =>
-                    handleSlotChange(index, 'startTime', e.target.value)
-                  }
-                  className="border border-gray-300 rounded-md px-2 py-2 text-sm"
-                />
+              <div className="grid grid-cols-12 gap-3 items-center mb-2 mx-2">
 
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400">{'>'}</span>
-                  <input
-                    type="time"
-                    value={slot.endTime}
-                    onChange={(e) =>
-                      handleSlotChange(index, 'endTime', e.target.value)
-                    }
-                    className="border border-gray-300 rounded-md px-2 py-2 text-sm w-full"
-                  />
-                </div>
+  {/* Start Time */}
+  <div className="col-span-3">
+    <input
+      type="time"
+      value={slot.startTime}
+      onChange={(e) => handleSlotChange(index, 'startTime', e.target.value)}
+      className="w-full border rounded-lg px-3 py-2 text-sm"
+    />
+  </div>
 
-                <div className="flex justify-center">
-                  {slots.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeSlot(index)}
-                      className="text-gray-500 hover:text-red-500 text-lg"
-                    >
-                      🗑
-                    </button>
-                  )}
-                </div>
-              </div>
+  {/* Arrow */}
+  <div className="col-span-1 text-center text-gray-400">
+    →
+  </div>
+
+  {/* End Time */}
+  <div className="col-span-3">
+    <input
+      type="time"
+      value={slot.endTime}
+      onChange={(e) => handleSlotChange(index, 'endTime', e.target.value)}
+      className="w-full border rounded-lg px-3 py-2 text-sm"
+    />
+  </div>
+
+  {/* 🔥 NEW: Staff Dropdown */}
+  <div className="col-span-4">
+    <select
+      value={slot.staffId || ''}
+      onChange={(e) => handleSlotChange(index, 'staffId', e.target.value)}
+      className="w-full border rounded-lg px-3 py-2 text-sm"
+    >
+      <option value="">Select Staff</option>
+      {Array.isArray(staffList) && staffList.map((staff) => (
+        <option key={staff._id} value={staff._id}>
+          {staff.fullName}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Delete */}
+  <div className="col-span-1 text-center">
+    <button onClick={() => removeSlot(index)}>
+      🗑️
+    </button>
+  </div>
+
+</div>
             ))}
 
             {/* Add Slot */}
