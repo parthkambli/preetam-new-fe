@@ -173,12 +173,17 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
       };
 
       if (editData) {
-        await api.fitnessActivities.update(editData._id, payload);
-        toast.success('Activity updated successfully');
-      } else {
-        await api.fitnessActivities.create(payload);
-        toast.success('Activity added successfully');
-      }
+  await api.fitnessActivities.update(editData._id, payload);
+  toast.success('Activity updated successfully');
+} else {
+  await api.fitnessActivities.create(payload);
+  toast.success('Activity added successfully');
+
+  // ✅ RESET FORM ONLY WHEN ADDING
+  setActivityName('');
+  setCapacity('');
+  setSlots([{ startTime: '', endTime: '', staffId: '', membersOnly: true }]);
+}
 
       onSaved?.();
     } catch (err) {
