@@ -545,15 +545,17 @@ export default function AddMember() {
 
       const availabilityData = res.data?.data || res.data || [];
 
-      const slots = availabilityData.map((slotInfo) => ({
-        value: slotInfo.slotId,
-        label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays}/${slotInfo.totalDays} days - ${slotInfo.availabilityPercentage}%)`,
-        disabled: slotInfo.fullyAvailableDays === 0,
-      }));
+      const slots = availabilityData
+        .filter(slotInfo => slotInfo.membersOnly === true)   // ✅ Only Members Only slots
+        .map((slotInfo) => ({
+          value: slotInfo.slotId,
+          label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays}/${slotInfo.totalDays} days - ${slotInfo.availabilityPercentage}%)`,
+          disabled: slotInfo.fullyAvailableDays === 0,
+        }));
 
       setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
 
-      // Auto-select first fully available slot
+      // Auto-select first available members-only slot
       setForm((prev) => {
         const current = prev.activityFees[index];
         if (!current.slot && slots.length > 0) {

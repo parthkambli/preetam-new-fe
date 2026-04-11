@@ -767,29 +767,41 @@ const [filteredMembers, setFilteredMembers] = useState([]);
             {slots.length === 0 && (
               <div className="text-center py-5 text-gray-400 text-sm">No slots available</div>
             )}
-            {slots.map(slot => {
-              const isFull = slot.booked >= slot.capacity;
-              return (
-                <div
-                  key={slot.slotId}
-                  className="flex justify-between items-center px-4 py-3 border-t"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{slot.startTime} - {slot.endTime}</p>
-                    <p className="text-xs text-gray-500">{slot.booked}/{slot.capacity} booked</p>
-                  </div>
-                  <button
-                    disabled={isFull}
-                    onClick={() => handleBook(slot)}
-                    className={`px-4 py-1.5 text-sm rounded-md text-white ${
-                      isFull ? 'bg-gray-400' : 'bg-[#000359] hover:bg-[#000280]'
-                    }`}
+            {slots
+              .filter(slot => slot.membersOnly === false)   // ✅ Only show open slots
+              .map(slot => {
+                const isFull = slot.booked >= slot.capacity;
+                return (
+                  <div
+                    key={slot.slotId}
+                    className="flex justify-between items-center px-4 py-3 border-t"
                   >
-                    {isFull ? 'Full' : 'Book'}
-                  </button>
-                </div>
-              );
-            })}
+                    <div>
+                      <p className="text-sm font-medium">
+                        {slot.startTime} - {slot.endTime}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {slot.booked}/{slot.capacity} booked • Open to All
+                      </p>
+                    </div>
+                    <button
+                      disabled={isFull}
+                      onClick={() => handleBook(slot)}
+                      className={`px-4 py-1.5 text-sm rounded-md text-white ${
+                        isFull ? 'bg-gray-400' : 'bg-[#000359] hover:bg-[#000280]'
+                      }`}
+                    >
+                      {isFull ? 'Full' : 'Book'}
+                    </button>
+                  </div>
+                );
+              })}
+
+            {slots.filter(slot => slot.membersOnly === false).length === 0 && (
+              <div className="text-center py-8 text-gray-400">
+                No open slots available for walk-in booking
+              </div>
+            )}
           </div>
         </div>
       </div>
