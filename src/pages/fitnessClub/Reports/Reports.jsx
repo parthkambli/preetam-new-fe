@@ -80,10 +80,16 @@ const [stats, setStats] = useState({
   totalRevenue: 0,
   pendingFees: 0,
 });
-const fetchSummary = async () => {
-  try {
-    const res = await api.reports.getSummary();
+const [fromDate, setFromDate] = useState("");
+const [toDate, setToDate] = useState("");
 
+
+const fetchSummary = async (from = "", to = "") => {
+  try {
+    const params = {};
+    if (from) params.fromDate = from;
+    if (to) params.toDate = to;
+    const res = await api.reports.getSummary(params);
     setStats(res.data);
   } catch (err) {
     console.error("Summary error:", err);
@@ -102,6 +108,8 @@ const fetchSummary = async () => {
   const currentHeaders = isAdmissions ? admissionsHeaders : participantsHeaders;
   const currentRows = isAdmissions ? admissionsRows : participantsRows;
   const currentData = isAdmissions ? (admissionsData || []) : (participantsData || []);  
+
+
   useEffect(() => {
   fetchAdmissions();
   fetchParticipants();
@@ -153,16 +161,64 @@ const fetchParticipants = async () => {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
-        <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-sm text-gray-700 shadow-sm">
-          <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          {reportDate}
-        </div>
-      </div>
+      {/* ── Header ── */}
+<div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+  <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
+
+  {/* Date range filter */}
+  <div className="flex flex-wrap items-center gap-2">
+    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-3 py-1.5 shadow-sm">
+      <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <input
+        type="date"
+        value={fromDate}
+        onChange={(e) => setFromDate(e.target.value)}
+        className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
+        placeholder="From"
+      />
+    </div>
+
+    <span className="text-gray-400 text-sm font-medium">to</span>
+
+    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-3 py-1.5 shadow-sm">
+      <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <input
+        type="date"
+        value={toDate}
+        onChange={(e) => setToDate(e.target.value)}
+        className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
+        placeholder="To"
+      />
+    </div>
+
+    <button
+      onClick={() => fetchSummary(fromDate, toDate)}
+      disabled={!fromDate || !toDate}
+      className="bg-[#1a2a5e] hover:bg-[#152147] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors shadow-sm"
+    >
+      Apply
+    </button>
+
+    {(fromDate || toDate) && (
+      <button
+        onClick={() => {
+          setFromDate("");
+          setToDate("");
+          fetchSummary(); // reload all data
+        }}
+        className="text-sm text-gray-500 hover:text-red-500 border border-gray-300 bg-white px-3 py-1.5 rounded-lg transition-colors shadow-sm"
+      >
+        Clear
+      </button>
+    )}
+  </div>
+</div>
 
       {/* ── Stats grid ── */}
       <div className="bg-gray-100 rounded-2xl p-4 mb-6">

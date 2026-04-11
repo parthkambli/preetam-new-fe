@@ -298,8 +298,11 @@ fitnessFees: {
   },
 
    //fitness reports summery
-  reports: {
-  getSummary: () => apiClient.get('/reports/summary'),
+ reports: {
+  getSummary: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/reports/summary${query ? "?" + query : ""}`);
+  },
 },
 
   //schoolDashboard
