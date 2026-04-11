@@ -640,7 +640,13 @@ export default function AddFitnessEnquiry() {
                 type="number"
                 name="age"
                 value={form.age}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || Number(value) >= 0) {
+                    setForm((prev) => ({ ...prev, age: value }));
+                  }
+                }}
+                min={0}
                 className="w-full px-4 py-3 border rounded-lg"
               />
             </div>
@@ -666,7 +672,11 @@ export default function AddFitnessEnquiry() {
               <input
                 name="mobile"
                 value={form.mobile}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setForm((prev) => ({ ...prev, mobile: onlyDigits }));
+                }}
+                maxLength={10}
                 className="w-full px-4 py-3 border rounded-lg"
                 required
               />
@@ -743,6 +753,7 @@ export default function AddFitnessEnquiry() {
                 name="enquiryDate"
                 value={form.enquiryDate}
                 onChange={handleChange}
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-3 border rounded-lg"
               />
             </div>
