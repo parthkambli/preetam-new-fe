@@ -381,7 +381,7 @@ export default function Activities() {
 
   const handleSaved = () => {
     setRefreshKey(prev => prev + 1);
-    setView('list');
+    setView('add');
   };
 
   // ================= DASHBOARD =================
