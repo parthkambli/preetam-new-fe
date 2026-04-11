@@ -560,6 +560,9 @@ export default function BookActivity() {
   const [filterActivity, setFilterActivity] = useState('');
   const [filterDate, setFilterDate] = useState('');
 
+  const [members, setMembers] = useState([]);
+const [filteredMembers, setFilteredMembers] = useState([]);
+
   /* =========================
      FETCH ACTIVITIES
   ========================= */
@@ -584,9 +587,23 @@ export default function BookActivity() {
      FETCH BOOKINGS
   ========================= */
   const fetchBookings = async () => {
+  try {
     const res = await api.fitnessActivities.getBookings();
-    setBookings(res.data.data || []);
-  };
+
+    console.log("BOOKINGS API:", res.data); // 👈 DEBUG
+
+    const data =
+      res.data?.data ||
+      res.data?.bookings ||
+      res.data ||
+      [];
+
+    setBookings(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("FETCH BOOKINGS ERROR:", err);
+    setBookings([]);
+  }
+};
 
   /* =========================
      BOOK SLOT
@@ -616,6 +633,25 @@ export default function BookActivity() {
       );
     }
   };
+    /* =========================
+     BOOK SLOT
+  ========================= */
+
+  const fetchMembers = async () => {
+  try {
+    const res = await api.fitnessMember.getAll();
+
+    const data =
+      res.data?.data ||
+      res.data ||
+      [];
+
+    setMembers(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("MEMBER FETCH ERROR:", err);
+  }
+};
+
 
   /* =========================
      CANCEL BOOKING
@@ -638,11 +674,26 @@ export default function BookActivity() {
   useEffect(() => {
     fetchActivities();
     fetchBookings();
+    fetchMembers();
   }, []);
 
   useEffect(() => {
     fetchAvailability();
   }, [selectedActivity, date]);
+
+  useEffect(() => {
+  if (!memberName.trim()) {
+    setFilteredMembers([]);
+    return;
+  }
+
+  const filtered = members.filter(m => {
+    const name = (m.name || m.fullName || "").toLowerCase();
+    return name.includes(memberName.toLowerCase());
+  });
+
+  setFilteredMembers(filtered);
+}, [memberName, members]);
 
   // Filtered bookings
   const filteredBookings = bookings.filter(b => {
@@ -689,6 +740,26 @@ export default function BookActivity() {
           onChange={(e) => setMemberName(e.target.value)}
           className="w-full border rounded-lg px-3 py-2 text-sm"
         />
+        {filteredMembers.length > 0 && (
+  <div className="border rounded-lg mt-1 max-h-40 overflow-y-auto bg-white shadow">
+    {filteredMembers.map(m => {
+      const displayName = m.name || m.fullName || "Unknown";
+
+      return (
+        <div
+          key={m._id}
+          onClick={() => {
+            setMemberName(displayName);
+            setFilteredMembers([]);
+          }}
+          className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+        >
+          {displayName}
+        </div>
+      );
+    })}
+  </div>
+)}
 
         <div>
           <h3 className="text-sm font-semibold mb-2">Available Slots</h3>
