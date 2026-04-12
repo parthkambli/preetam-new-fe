@@ -317,8 +317,10 @@ export default function FitnessAddPayments({ onSuccess }) {
     }
 
     const filtered = allotments.filter(
-      (a) => a.memberId?._id === form.memberId || a.memberId === form.memberId
-    );
+  (a) =>
+    (a.memberId?._id === form.memberId || a.memberId === form.memberId) &&
+    a.status !== 'Paid' // 🔥 KEY LINE
+);
     setAllotmentsForMember(filtered);
   }, [form.memberId, allotments]);
 
