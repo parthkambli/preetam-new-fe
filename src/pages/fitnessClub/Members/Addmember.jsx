@@ -321,22 +321,37 @@ const ActivityFeeRow = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        {/* Membership Status: read-only, computed */}
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">
-            Membership Status
-            <span className="ml-1 text-[10px] text-gray-400 font-normal">(auto-computed)</span>
-          </label>
-          <div className={`w-full border rounded-lg px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${
-            activityStatus === "Active"
-              ? "bg-green-50 border-green-300 text-green-700"
-              : "bg-gray-100 border-gray-300 text-gray-500"
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${activityStatus === "Active" ? "bg-green-500" : "bg-gray-400"}`} />
-            {activityStatus}
-          </div>
-          <p className="mt-0.5 text-[10px] text-gray-400">Active when Paid &amp; within date range</p>
+      {/* Membership Status: read-only, computed */}
+      <div>
+        <label className="block text-xs text-gray-600 mb-1">
+          Membership Status
+          <span className="ml-1 text-[10px] text-gray-400 font-normal">(auto-computed)</span>
+        </label>
+        <div className={`w-full border rounded-lg px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${
+          activityStatus === "Active"
+            ? "bg-green-50 border-green-300 text-green-700"
+            : "bg-gray-100 border-gray-300 text-gray-500"
+        }`}>
+          <span className={`w-2 h-2 rounded-full ${activityStatus === "Active" ? "bg-green-500" : "bg-gray-400"}`} />
+          {activityStatus}
         </div>
+        <p className="mt-0.5 text-[10px] text-gray-400">Active when Paid &amp; within date range</p>
+
+        {/* Future Activation Message */}
+        {entry.paymentStatus === "Paid" && 
+        entry.startDate && 
+        new Date(entry.startDate) > new Date() && (
+          <p className="mt-2 text-amber-600 text-xs flex items-center gap-1 bg-amber-50 p-2 rounded-lg border border-amber-200">
+            <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+            Membership will become <span className="font-semibold">Active</span> on{" "}
+            {new Date(entry.startDate).toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            })}
+          </p>
+        )}
+      </div>
         <div>
           <label className="block text-xs text-gray-600 mb-1">Responsible Person</label>
           <Select

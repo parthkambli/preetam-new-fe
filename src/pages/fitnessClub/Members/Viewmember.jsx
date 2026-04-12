@@ -374,11 +374,256 @@
 
 
 
+// import { useState, useEffect } from "react";
+// import { useParams, useNavigate } from "react-router-dom";
+// import { toast } from 'sonner';
+// import { api } from '../../../services/apiClient';
+
+// function ReadField({ label, value, className = "" }) {
+//   return (
+//     <div className={className}>
+//       <label className="block text-xs text-gray-500 mb-1">{label}</label>
+//       <div className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 bg-gray-50 min-h-[42px] flex items-center">
+//         {value || <span className="text-gray-400">—</span>}
+//       </div>
+//     </div>
+//   );
+// }
+
+// function SectionTitle({ children }) {
+//   return (
+//     <h2 className="text-base font-bold text-[#1a2a5e] mb-4 mt-8 first:mt-0">
+//       {children}
+//     </h2>
+//   );
+// }
+
+// export default function ViewMember() {
+//   const { id } = useParams();
+//   const navigate = useNavigate();
+
+//   const [member, setMember] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(false);
+
+//   useEffect(() => {
+//     const fetchMember = async () => {
+//       if (!id) return;
+//       setLoading(true);
+//       setError(false);
+
+//       try {
+//         const response = await api.fitnessMember.getById(id);
+//         setMember(response.data);
+//       } catch (err) {
+//         console.error(err);
+//         toast.error("Failed to load member details");
+//         setError(true);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchMember();
+//   }, [id]);
+
+//   const formatDate = (dateStr) => {
+//     if (!dateStr) return "—";
+//     const dt = new Date(dateStr);
+//     return dt.toLocaleDateString("en-GB", {
+//       day: "2-digit",
+//       month: "short",
+//       year: "numeric"
+//     });
+//   };
+
+//   const formatCurrency = (amount) => {
+//     if (!amount) return "—";
+//     return `₹ ${Number(amount).toLocaleString("en-IN")}`;
+//   };
+
+//   const formatDateOnly = (dateStr) => {
+//     if (!dateStr) return "";
+//     const dt = new Date(dateStr);
+//     if (isNaN(dt.getTime())) return "";
+//     return dt.toISOString().split("T")[0];
+//   };
+
+//   const getStatusFromDate = (startDate, endDate) => {
+//     const formattedStartDate = formatDateOnly(startDate);
+//     const formattedEndDate = formatDateOnly(endDate);
+
+//     if (!formattedStartDate || !formattedEndDate) return "Inactive";
+
+//     const today = new Date().toISOString().split("T")[0];
+
+//     if (today >= formattedStartDate && today <= formattedEndDate) {
+//       return "Active";
+//     }
+
+//     return "Inactive";
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a2a5e] mx-auto"></div>
+//           <p className="text-gray-500 mt-4">Loading member details...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error || !member) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <p className="text-gray-500 mb-4">Member not found or failed to load.</p>
+//           <button
+//             onClick={() => navigate("/fitness/members")}
+//             className="bg-[#1a2a5e] text-white px-6 py-2.5 rounded-lg text-sm hover:bg-[#152147]"
+//           >
+//             Back to Members
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pb-24">
+//       {/* Header */}
+//       <div className="flex items-center justify-between mb-6">
+//         <h1 className="text-2xl font-bold text-gray-800">Member Details</h1>
+//         <button
+//           onClick={() => navigate("/fitness/members")}
+//           className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+//         >
+//           Back to Members
+//         </button>
+//       </div>
+
+//       <div className="bg-white rounded-xl shadow p-6 sm:p-8 max-w-5xl mx-auto">
+
+//         {/* Personal Information */}
+//         <SectionTitle>Personal Information</SectionTitle>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_1fr] gap-6 mb-6">
+//           {/* Profile Photo */}
+//           <div>
+//             <label className="block text-xs text-gray-500 mb-2">Profile Photo</label>
+//             <div className="w-32 h-32 border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
+//               {member.photo ? (
+//                 <img
+//                   src={member.photo}
+//                   alt={member.name}
+//                   className="w-full h-full object-cover"
+//                 />
+//               ) : (
+//                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+//                   No Photo
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+
+//           <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+//             <ReadField label="Full Name" value={member.name} />
+//             <ReadField label="Mobile Number" value={member.mobile} />
+//               <ReadField label="Responsible Staff" value={member.staff?.fullName} />
+
+//           </div>
+//         </div>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+//           <ReadField label="Email" value={member.email} />
+//           <ReadField label="Age" value={member.age} />
+//           <ReadField label="Gender" value={member.gender} />
+//         </div>
+
+//         <ReadField label="Address" value={member.address} className="mb-8" />
+
+//         {/* Membership & Activity */}
+//         <SectionTitle>Membership &amp; Activity</SectionTitle>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+//           <ReadField label="Activity" value={member.activity} />
+//           <ReadField label="Membership Status" value={liveStatus} />
+//           {/* <ReadField label="Status" value={liveStatus} /> */}
+//         </div>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+//           <ReadField label="Start Date" value={formatDate(member.startDate)} />
+//           <ReadField label="End Date" value={formatDate(member.endDate)} />
+//         </div>
+
+//         {/* Membership Plan & Fee Details */}
+//         <SectionTitle>Membership Plan &amp; Fee Details</SectionTitle>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+//           <ReadField label="Plan Duration" value={member.planDuration} />
+//           <ReadField label="Plan" value={member.plan} />
+//           <ReadField label="Plan Fee" value={formatCurrency(member.planFee)} />
+//         </div>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+//           <ReadField label="Discount" value={formatCurrency(member.discount)} />
+//           <ReadField label="Final Amount" value={formatCurrency(member.finalAmount)} />
+//           <ReadField label="Payment Date" value={formatDate(member.paymentDate)} />
+//         </div>
+
+//         <ReadField label="Plan Notes" value={member.planNotes} className="mb-8" />
+
+//         {/* Login Details */}
+//         <SectionTitle>Login Details</SectionTitle>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//           <ReadField label="User ID" value={member.userId} />
+//           <div>
+//             <label className="block text-xs text-gray-500 mb-1">Password</label>
+//             <div className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 bg-gray-50">
+//               ••••••••
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Floating Edit Button */}
+//       <div className="fixed bottom-8 right-8 z-50">
+//         <button
+//           onClick={() => navigate(`/fitness/members/edit-member/${id}`)}
+//           className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-6 py-3.5 rounded-2xl shadow-xl flex items-center gap-2 transition-all active:scale-95"
+//         >
+//           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+//           </svg>
+//           Edit Member
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+// ViewMember.jsx — mirrors AddMember's multi-activity structure
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from 'sonner';
-import { api } from '../../../services/apiClient';
+import { toast } from "sonner";
+import { api } from "../../../services/apiClient";
 
+// ── Small display helpers ─────────────────────────────────────────────────────
 function ReadField({ label, value, className = "" }) {
   return (
     <div className={className}>
@@ -392,29 +637,166 @@ function ReadField({ label, value, className = "" }) {
 
 function SectionTitle({ children }) {
   return (
-    <h2 className="text-base font-bold text-[#1a2a5e] mb-4 mt-8 first:mt-0">
-      {children}
-    </h2>
+    <h2 className="text-base font-bold text-[#1a2a5e] mb-4 mt-8 first:mt-0">{children}</h2>
   );
 }
 
-export default function ViewMember() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+// ── Status badge ──────────────────────────────────────────────────────────────
+function StatusBadge({ status }) {
+  const active = status === "Active";
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+      active ? "bg-green-50 border-green-300 text-green-700" : "bg-gray-100 border-gray-300 text-gray-500"
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-green-500" : "bg-gray-400"}`} />
+      {status}
+    </span>
+  );
+}
 
-  const [member, setMember] = useState(null);
+// ── Compute activity-level status (same logic as controller) ──────────────────
+const computeActivityStatus = (af) => {
+  if (af.paymentStatus !== "Paid") return "Inactive";
+  if (!af.startDate || !af.endDate) return "Inactive";
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date(af.startDate); start.setHours(0, 0, 0, 0);
+  const end   = new Date(af.endDate);   end.setHours(23, 59, 59, 999);
+  return today >= start && today <= end ? "Active" : "Inactive";
+};
+
+// ── Format helpers ────────────────────────────────────────────────────────────
+const formatDate = (dateStr) => {
+  if (!dateStr) return "—";
+  const dt = new Date(dateStr);
+  if (isNaN(dt.getTime())) return "—";
+  return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+const formatCurrency = (amount) => {
+  if (amount === null || amount === undefined || amount === "") return "—";
+  return `₹ ${Number(amount).toLocaleString("en-IN")}`;
+};
+
+// ── Per-activity card ─────────────────────────────────────────────────────────
+function ActivityCard({ af, index }) {
+  const status = computeActivityStatus(af);
+
+  // Future activation indicator
+  const showFutureMsg = af.paymentStatus === "Paid" &&
+    af.startDate &&
+    new Date(af.startDate) > new Date();
+
+  return (
+    <div className="border border-gray-200 rounded-xl p-5 bg-gray-50">
+      {/* Card header */}
+      <div className="flex items-center gap-3 mb-4">
+        <p className="text-xs font-semibold text-[#1a2a5e] uppercase tracking-wide">
+          Activity {index + 1}
+        </p>
+        <StatusBadge status={status} />
+        {showFutureMsg && (
+          <p className="text-amber-600 text-xs flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+            <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            Activates on {new Date(af.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+          </p>
+        )}
+      </div>
+
+      {/* Activity / Fee Type / Plan */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <ReadField
+          label="Activity"
+          value={
+            typeof af.activity === "object"
+              ? af.activity?.name || af.activity?.activityName
+              : af.activity || "—"
+          }
+        />
+        <ReadField
+          label="Fee Type"
+          value={
+            typeof af.feeType === "object"
+              ? af.feeType?.description
+              : af.feeType || "—"
+          }
+        />
+        <ReadField label="Plan" value={af.plan} />
+      </div>
+
+      {/* Fees */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <ReadField label="Plan Fee"      value={formatCurrency(af.planFee)} />
+        <ReadField label="Discount"      value={formatCurrency(af.discount)} />
+        <ReadField label="Final Amount"  value={formatCurrency(af.finalAmount)} />
+      </div>
+
+      {/* Payment */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Payment Status</label>
+          <div className={`w-full border rounded-lg px-3 py-2.5 text-sm font-semibold flex items-center gap-1.5 ${
+            af.paymentStatus === "Paid"
+              ? "bg-green-50 border-green-300 text-green-700"
+              : "bg-amber-50 border-amber-300 text-amber-700"
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${af.paymentStatus === "Paid" ? "bg-green-500" : "bg-amber-400"}`} />
+            {af.paymentStatus || "—"}
+          </div>
+        </div>
+        <ReadField label="Payment Mode" value={af.paymentMode} />
+        <ReadField label="Payment Date" value={formatDate(af.paymentDate)} />
+      </div>
+
+      {/* Dates */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <ReadField label="Start Date" value={formatDate(af.startDate)} />
+        <ReadField label="End Date"   value={formatDate(af.endDate)} />
+      </div>
+
+      {/* Slot + Staff */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <ReadField label="Slot" value={af.slot || "—"} />
+        <ReadField
+          label="Responsible Person"
+          value={
+            typeof af.staff === "object"
+              ? af.staff?.fullName || af.staff?.name
+              : af.staff || "—"
+          }
+        />
+      </div>
+
+      {/* Plan Notes */}
+      {af.planNotes && (
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Plan Notes</label>
+          <div className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-gray-50 whitespace-pre-wrap">
+            {af.planNotes}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+export default function ViewMember() {
+  const { id }    = useParams();
+  const navigate  = useNavigate();
+
+  const [member, setMember]   = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError]     = useState(false);
 
   useEffect(() => {
-    const fetchMember = async () => {
-      if (!id) return;
+    if (!id) return;
+    (async () => {
       setLoading(true);
       setError(false);
-
       try {
-        const response = await api.fitnessMember.getById(id);
-        setMember(response.data);
+        const res = await api.fitnessMember.getById(id);
+        // controller returns the object directly (not wrapped in .data)
+        setMember(res?.data ?? res);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load member details");
@@ -422,54 +804,15 @@ export default function ViewMember() {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchMember();
+    })();
   }, [id]);
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "—";
-    const dt = new Date(dateStr);
-    return dt.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
-  };
-
-  const formatCurrency = (amount) => {
-    if (!amount) return "—";
-    return `₹ ${Number(amount).toLocaleString("en-IN")}`;
-  };
-
-  const formatDateOnly = (dateStr) => {
-    if (!dateStr) return "";
-    const dt = new Date(dateStr);
-    if (isNaN(dt.getTime())) return "";
-    return dt.toISOString().split("T")[0];
-  };
-
-  const getStatusFromDate = (startDate, endDate) => {
-    const formattedStartDate = formatDateOnly(startDate);
-    const formattedEndDate = formatDateOnly(endDate);
-
-    if (!formattedStartDate || !formattedEndDate) return "Inactive";
-
-    const today = new Date().toISOString().split("T")[0];
-
-    if (today >= formattedStartDate && today <= formattedEndDate) {
-      return "Active";
-    }
-
-    return "Inactive";
-  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a2a5e] mx-auto"></div>
-          <p className="text-gray-500 mt-4">Loading member details...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a2a5e] mx-auto" />
+          <p className="text-gray-500 mt-4">Loading member details…</p>
         </div>
       </div>
     );
@@ -480,10 +823,8 @@ export default function ViewMember() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Member not found or failed to load.</p>
-          <button
-            onClick={() => navigate("/fitness/members")}
-            className="bg-[#1a2a5e] text-white px-6 py-2.5 rounded-lg text-sm hover:bg-[#152147]"
-          >
+          <button onClick={() => navigate("/fitness/members")}
+            className="bg-[#1a2a5e] text-white px-6 py-2.5 rounded-lg text-sm hover:bg-[#152147]">
             Back to Members
           </button>
         </div>
@@ -491,91 +832,89 @@ export default function ViewMember() {
     );
   }
 
-  const liveStatus = getStatusFromDate(member.startDate, member.endDate);
+  const activityFees = Array.isArray(member.activityFees) ? member.activityFees : [];
+  const overallStatus = activityFees.some((af) => computeActivityStatus(af) === "Active")
+    ? "Active" : "Inactive";
+
+  const totalFinalAmount = activityFees.reduce(
+    (sum, af) => sum + (Number(af.finalAmount) || 0), 0
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pb-24">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pb-28">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Member Details</h1>
-        <button
-          onClick={() => navigate("/fitness/members")}
-          className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-        >
+        <button onClick={() => navigate("/fitness/members")}
+          className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
           Back to Members
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow p-6 sm:p-8 max-w-5xl mx-auto">
+      <div className="bg-white rounded-xl shadow p-6 sm:p-8 max-w-5xl mx-auto space-y-0">
 
         {/* Personal Information */}
         <SectionTitle>Personal Information</SectionTitle>
 
         <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_1fr] gap-6 mb-6">
-          {/* Profile Photo */}
+          {/* Photo */}
           <div>
             <label className="block text-xs text-gray-500 mb-2">Profile Photo</label>
             <div className="w-32 h-32 border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
               {member.photo ? (
-                <img
-                  src={member.photo}
-                  alt={member.name}
-                  className="w-full h-full object-cover"
-                />
+                <img src={member.photo} alt={member.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                  No Photo
-                </div>
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No Photo</div>
               )}
             </div>
           </div>
 
           <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <ReadField label="Full Name" value={member.name} />
+            <ReadField label="Full Name"     value={member.name} />
             <ReadField label="Mobile Number" value={member.mobile} />
-              <ReadField label="Responsible Staff" value={member.staff?.fullName} />
-
+            <ReadField label="Member ID"     value={member.memberId} />
+            <ReadField label="User ID"       value={member.userId} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <ReadField label="Email" value={member.email} />
-          <ReadField label="Age" value={member.age} />
+          <ReadField label="Email"  value={member.email} />
+          <ReadField label="Age"    value={member.age} />
           <ReadField label="Gender" value={member.gender} />
         </div>
 
         <ReadField label="Address" value={member.address} className="mb-8" />
 
-        {/* Membership & Activity */}
-        <SectionTitle>Membership &amp; Activity</SectionTitle>
+        {/* Activities & Fee Details */}
+        <SectionTitle>Activities &amp; Fee Details</SectionTitle>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <ReadField label="Activity" value={member.activity} />
-          <ReadField label="Membership Status" value={liveStatus} />
-          {/* <ReadField label="Status" value={liveStatus} /> */}
+        {/* Overall status + total */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-gray-700">Overall Membership</span>
+            <StatusBadge status={overallStatus} />
+          </div>
+          {activityFees.length > 1 && (
+            <div className="text-sm font-semibold text-[#1a2a5e]">
+              Total: <span className="text-base">{formatCurrency(totalFinalAmount)}</span>
+              <span className="ml-1 text-xs text-gray-400 font-normal">
+                ({activityFees.length} activities)
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <ReadField label="Start Date" value={formatDate(member.startDate)} />
-          <ReadField label="End Date" value={formatDate(member.endDate)} />
-        </div>
-
-        {/* Membership Plan & Fee Details */}
-        <SectionTitle>Membership Plan &amp; Fee Details</SectionTitle>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          <ReadField label="Plan Duration" value={member.planDuration} />
-          <ReadField label="Plan" value={member.plan} />
-          <ReadField label="Plan Fee" value={formatCurrency(member.planFee)} />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          <ReadField label="Discount" value={formatCurrency(member.discount)} />
-          <ReadField label="Final Amount" value={formatCurrency(member.finalAmount)} />
-          <ReadField label="Payment Date" value={formatDate(member.paymentDate)} />
-        </div>
-
-        <ReadField label="Plan Notes" value={member.planNotes} className="mb-8" />
+        {activityFees.length > 0 ? (
+          <div className="space-y-4 mb-8">
+            {activityFees.map((af, index) => (
+              <ActivityCard key={af._id || index} af={af} index={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400 text-sm mb-8">
+            No activities assigned to this member.
+          </div>
+        )}
 
         {/* Login Details */}
         <SectionTitle>Login Details</SectionTitle>

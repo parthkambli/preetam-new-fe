@@ -219,6 +219,7 @@ export const api = {
       });
     },
     delete: (id) => apiClient.delete(`/fitness/member/${id}`),
+    renew: (id, data) => apiClient.post(`/fitness/member/${id}/renew`, data),
   },
 
 fitnessStaff: {
