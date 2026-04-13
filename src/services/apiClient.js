@@ -106,18 +106,18 @@ export const api = {
       apiClient.delete(`/students/${id}/emergency-contact`),
   },
 
-// ====================== STAFF MANAGEMENT ======================
-  staff: {
+
+// ====================== STAFF MANAGEMENT (SCHOOL) ======================
+staff: {
     getAll: (params = {}) => apiClient.get("/staff", { params }),
     getById: (id) => apiClient.get(`/staff/${id}`),
     create: (formData) => {
       return apiClient.post("/staff", formData, {
         headers: {
-          "Content-Type": "multipart/form-data", // Let axios set it automatically
+          "Content-Type": "multipart/form-data",
         },
       });
     },
-
     update: (id, formData) => {
       return apiClient.put(`/staff/${id}`, formData, {
         headers: {
@@ -127,23 +127,26 @@ export const api = {
     },
     delete: (id) => apiClient.delete(`/staff/${id}`),
 
-    // Roles
+    // === ROLES (School) ===
     roles: {
-      getAll: () => apiClient.get("/fitness/roles"),
-      create: (data) => apiClient.post("/fitness/roles/create", data),
-      delete: (id) => apiClient.delete(`/fitness/roles/${id}`),
+      getAll: () => apiClient.get("/staff/roles"),
+      create: (data) => apiClient.post("/staff/roles", data),
+      update: (id, data) => apiClient.put(`/staff/roles/${id}`, data),   // added
+      delete: (id) => apiClient.delete(`/staff/roles/${id}`),
     },
 
-    // Employment Types
-    getEmploymentTypes: () => apiClient.get("/fitness/types"),
-    createEmploymentType: (data) =>
-      apiClient.post("/fitness/types/create", data),
+    // === EMPLOYMENT TYPES (School) ===
+    employmentTypes: {                    // renamed for clarity
+      getAll: () => apiClient.get("/staff/employment-types"),
+      create: (data) => apiClient.post("/staff/employment-types", data),
+      update: (id, data) => apiClient.put(`/staff/employment-types/${id}`, data), // added
+      delete: (id) => apiClient.delete(`/staff/employment-types/${id}`),
+    },
 
     // Attendance
     getAttendance: (params = {}) =>
       apiClient.get("/staff/attendance", { params }),
   },
-
   // Activities
   activities: {
     // Master Activities
