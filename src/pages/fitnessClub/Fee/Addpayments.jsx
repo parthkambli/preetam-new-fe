@@ -408,7 +408,9 @@ export default function FitnessAddPayments({ onSuccess }) {
   const filteredPayments = payments.filter((p) => {
     const name = p.memberId?.name || p.memberId?.fullName || '';
     const matchesMember = !filterMember || name.toLowerCase().includes(filterMember.toLowerCase());
-    const matchesStatus = filterStatus === 'All' || p.status === filterStatus;
+    const matchesStatus =
+  filterStatus === 'All' ||
+  p.allotmentId?.status === filterStatus;
     const matchesMode = !filterMode || p.paymentMode === filterMode;
 
     return matchesMember && matchesStatus && matchesMode;
@@ -589,12 +591,12 @@ export default function FitnessAddPayments({ onSuccess }) {
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex px-3 py-0.5 rounded-full text-xs font-semibold ${
-                        p.status === 'Paid'
+                        p.allotmentId?.status === 'Paid'
                           ? 'bg-green-100 text-green-700'
                           : 'bg-yellow-100 text-yellow-700'
                       }`}
                     >
-                      {p.status || 'Pending'}
+                      {p.allotmentId?.status || 'Pending'}
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
