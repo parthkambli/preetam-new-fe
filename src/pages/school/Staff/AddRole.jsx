@@ -43,7 +43,7 @@ export default function AddRole() {
     setSuccess(false);
 
     try {
-      await api.staff.createRole({ name: roleName.trim() });
+      await api.staff.roles.create({ name: roleName.trim() });
 
       setSuccess(true);
       toast.success(`Role "${roleName.trim()}" added successfully!`);

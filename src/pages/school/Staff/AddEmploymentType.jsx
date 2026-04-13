@@ -41,7 +41,7 @@ export default function AddEmploymentType() {
     setSuccess(false);
 
     try {
-      await api.staff.createEmploymentType({ name: empType.trim() });
+      await api.staff.employmentTypes.create({ name: empType.trim() });
 
       setSuccess(true);
       toast.success(`"${empType.trim()}" added successfully!`);

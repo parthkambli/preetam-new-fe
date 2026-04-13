@@ -1032,8 +1032,8 @@ export default function AddStaff() {
       setLoadingOptions(true);
       try {
         const [rolesRes, empTypesRes] = await Promise.all([
-          api.staff.getRoles(),
-          api.staff.getEmploymentTypes()
+          api.staff.roles.getAll(),
+          api.staff.employmentTypes.getAll()
         ]);
 
         const roles = rolesRes.data?.data || rolesRes.data || [];
