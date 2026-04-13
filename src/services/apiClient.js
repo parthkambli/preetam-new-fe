@@ -257,6 +257,9 @@ fitnessFees: {
 
   getPayments:     (params = {})  => apiClient.get('/fitness/fees/payments', { params }),
   addPayment:      (data)         => apiClient.post('/fitness/fees/payments', data),
+
+  getStats: () => apiClient.get('/fitness/fees/stats'),
+
 },
 
   // Fitness Events
