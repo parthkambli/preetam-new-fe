@@ -288,6 +288,10 @@ fitnessFees: {
     cancelBooking: (id) => apiClient.delete(`/fitness/activities/bookings/${id}`),
   },
   
+  staffPanel: {
+  getMySchedule: () => apiClient.get('/fitness/staff-panel/my-schedule'),
+  getAvailableActivities: () => apiClient.get('/fitness/staff-panel/available-activities'),
+},
 
   // Fitness Schedules
   fitnessSchedules: {
@@ -316,6 +320,10 @@ fitnessFees: {
   schoolDashboard: {
     getData: () => apiClient.get("/school/dashboard"),
   },
+
+  
+
+  
 
 };
 
