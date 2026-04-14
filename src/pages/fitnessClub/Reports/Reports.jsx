@@ -189,12 +189,13 @@ const fetchParticipants = async () => {
           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
       <input
-        type="date"
-        value={toDate}
-        onChange={(e) => setToDate(e.target.value)}
-        className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
-        placeholder="To"
-      />
+  type="date"
+  value={toDate}
+  min={fromDate}   // 👈 THIS is the key fix
+  onChange={(e) => setToDate(e.target.value)}
+  className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
+  placeholder="To"
+/>
     </div>
 
     <button
@@ -228,7 +229,7 @@ const fetchParticipants = async () => {
 
           {[
   { label: "Total Enquiries", value: stats.totalEnquiries },
-  { label: "Total Admissions", value: stats.totalAdmissions },
+  { label: "Total Members", value: stats.totalAdmissions },
   { label: "Active Participants", value: stats.activeParticipants },
   { label: "Total Revenue", value: stats.totalRevenue, prefix: "₹ " },
 ].map((stat) => (
@@ -245,7 +246,7 @@ const fetchParticipants = async () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
           {/* {STATS.filter((s) => s.wide).map((stat) => ( */}
           {[
-  { label: "Pending Fees", value: stats.pendingFees, prefix: "₹ " },
+  // { label: "Pending Fees", value: stats.pendingFees, prefix: "₹ " },
   { label: "Today's Attendance", value: "118" }, // keep static for now
 ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
