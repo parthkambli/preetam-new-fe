@@ -1327,9 +1327,9 @@ export default function BookActivity() {
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm"
                   >
                     <option value="Cash">Cash</option>
-                    <option value="Online">Online</option>
-                    <option value="UPI">UPI</option>
-                    <option value="Cheque">Cheque</option>
+                    {/* <option value="Online">Online</option> */}
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    {/* <option value="Cheque">Cheque</option> */}
                   </select>
                 </div>
 

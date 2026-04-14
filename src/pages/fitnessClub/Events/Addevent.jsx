@@ -449,7 +449,7 @@ export default function AddEvent() {
                 type="date"
                 name="date"
                 value={form.date}
-                onChange={handleChange}
+                onChange={handleChange}            
                 min={today}                    // ← Only today or future dates
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white transition ${errors.date ? "border-red-400" : "border-gray-300"}`}
               />

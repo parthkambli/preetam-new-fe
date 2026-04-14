@@ -16,7 +16,7 @@ const PLAN_OPTIONS = [
 
 const GENDERS          = ["Male", "Female", "Other"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
-const PAYMENT_MODES    = ["Cash", "Cheque", "Online", "UPI"];
+const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const computeEndDate = (startDate, plan) => {

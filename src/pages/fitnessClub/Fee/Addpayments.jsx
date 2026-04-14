@@ -660,7 +660,7 @@ import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 
 const PAYMENT_MODES = ['Cash', 'Bank Transfer'];
-const STATUS_OPTS = ['All', 'Paid', 'Partially Paid', 'Pending'];
+const STATUS_OPTS = ['All', 'Paid', 'Pending'];
 
 const emptyForm = {
   memberId: '',

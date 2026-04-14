@@ -25,7 +25,7 @@ export default function Viewattendance() {
 
   const handleView = (id) => {
     navigate(`/school/staff/attendance-detail/${id}`);
-  };
+  };  
 
   return (
     <div className="space-y-4">

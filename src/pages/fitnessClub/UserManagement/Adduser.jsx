@@ -3,14 +3,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const ROLES = ["Super Admin", "Admin", "Accountant", "Staff", "Viewer"];
 const STATUSES = ["Active", "Inactive"];
-const MODULES = ["Fees", "Reports", "Participants", "Health Records"];
+const MODULES = ["Fees", "Reports", "Participants", "Health Records","Attendence"];
 
 // Reports has no Edit/Delete — only View
 const MODULE_CAPS = {
   Fees: { view: true, edit: true, delete: true },
+
   Reports: { view: true, edit: false, delete: false },
   Participants: { view: true, edit: true, delete: true },
   "Health Records": { view: true, edit: true, delete: true },
+  Attendence: { view: true, edit: true, delete: true },
 };
 
 const emptyPermissions = () =>

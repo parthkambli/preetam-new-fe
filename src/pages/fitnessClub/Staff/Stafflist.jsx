@@ -299,7 +299,7 @@ export default function StaffList() {
           <option value="">All Status</option>
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>
-          <option value="Terminated">Terminated</option>
+          {/* <option value="Terminated">Terminated</option> */}
         </select>
       </div>
 
