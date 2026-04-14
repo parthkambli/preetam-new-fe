@@ -1,8 +1,8 @@
 // components/layout/fees/FeesTabs.jsx
 
 const TABS = [
-  { key: 'add-payments', label: 'Add Payments' },
-  { key: 'allot-fees',   label: 'Allot Fees'   },
+  { key: 'add-payments', label: 'Transaction Report.' },
+  // { key: 'allot-fees',   label: 'Allot Fees'   },
   { key: 'fee-types',    label: 'Fee Types'    },
 ];
 
