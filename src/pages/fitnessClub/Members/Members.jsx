@@ -1659,6 +1659,12 @@ export default function Members() {
           >
             + Add Member
           </button>
+          <button
+    onClick={() => navigate("/fitness/members/add-pass")}
+    className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
+  >
+   + Add Pass Member
+  </button>
         </div>
       </div>
 
@@ -1690,7 +1696,7 @@ export default function Members() {
               <tr className="bg-[#1a2a5e] text-white">
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Member</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Mobile</th>
-                <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Plant Type</th>
+                <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Plan Type</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Activities</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Overall Status</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Actions</th>

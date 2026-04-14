@@ -226,7 +226,8 @@ import FitnessAdduser from './pages/fitnessClub/UserManagement/Adduser';        
 
 import FitnessStaffDashboard from "./pages/FitnessStaff/Dashboard";
 import FitnessStaffMySchedule from "./pages/FitnessStaff/MySchedule";
-// import FitnessStaffAttendance from "./pages/FitnessStaff/Attendance";
+import AddPassMember from './pages/fitnessClub/Members/AddPassMember';
+
 
 
 
@@ -288,6 +289,7 @@ function App() {
             <Route path="/fitness/follow-ups" element={<FitnessFollowups />} />  {/* Keep if truly shared, otherwise create FitnessFollowups */}
             <Route path="/fitness/members" element={<FitnessMembers />} />
             <Route path="/fitness/members/add-members" element={<Addmember />} />
+            <Route path="/fitness/members/add-pass" element={<AddPassMember />} />
             <Route path="/fitness/members/view-member/:id" element={<Viewmember />} />
             <Route path="/fitness/members/edit-member/:id" element={<Editmember />} />
             <Route path="/fitness/staff" element={<FitnessStaff />} />
