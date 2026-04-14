@@ -347,24 +347,63 @@ export default function FitnessFollowups() {
     }
   };
 
+  // const fetchFollowups = async () => {
+  //   setLoading(true);
+  //   setError('');
+  //   try {
+  //     const params = { enquiryType: 'fitness' };
+  //     if (filters.status) params.status = filters.status;
+  //     if (filters.date) params.date = filters.date;
+  //     if (filters.search) params.search = filters.search;
+
+  //     const response = await api.followups.getAll(params);
+  //     setFollowups(response.data?.data || response.data || []);
+  //   } catch (err) {
+  //     setError('Failed to load followups');
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchFollowups = async () => {
     setLoading(true);
     setError('');
     try {
       const params = { enquiryType: 'fitness' };
+
       if (filters.status) params.status = filters.status;
-      if (filters.date) params.date = filters.date;
       if (filters.search) params.search = filters.search;
 
+      // ❌ date backend ko mat bhejo
+      // if (filters.date) params.date = filters.date;
+
       const response = await api.followups.getAll(params);
-      setFollowups(response.data?.data || response.data || []);
+
+      let data = response.data?.data || response.data || [];
+
+      // ✅ FRONTEND FILTER (Next Visit Date)
+      if (filters.date) {
+        data = data.filter(fp => {
+          if (!fp.nextVisit) return false;
+
+          const nextDate = new Date(fp.nextVisit)
+            .toISOString()
+            .split('T')[0];
+
+          return nextDate === filters.date;
+        });
+      }
+
+      setFollowups(data);
+
     } catch (err) {
       setError('Failed to load followups');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const fetchUpcomingFollowups = async () => {
     try {
@@ -474,11 +513,17 @@ export default function FitnessFollowups() {
           value={filters.search}
           onChange={(e) => handleFilterChange('search', e.target.value)}
         />
-        <input
+        {/* <input
           type="date"
           className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
           onChange={handleRemarkChange}
           min={new Date().toISOString().split('T')[0]}
+        /> */}
+        <input
+          type="date"
+          className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          value={filters.date}
+          onChange={(e) => handleFilterChange('date', e.target.value)}
         />
         <select
           className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
