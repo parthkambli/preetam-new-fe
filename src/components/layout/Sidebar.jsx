@@ -368,7 +368,7 @@ export default function Sidebar({ isOpen, onClose }) {
       { to: "/fitness/follow-ups", label: "Follow-ups", icon: "💬" },
       { to: "/fitness/members", label: "Members", icon: "👥" },
       { to: "/fitness/staff", label: "Staff", icon: "👤" },
-      { to: "/fitness/activities", label: "Booking", icon: "🏃" },
+      { to: "/fitness/activities", label: "Booking", icon: "🗓️" },
       { to: "/fitness/attendance", label: "Attendance", icon: "📅" },
       { to: "/fitness/fee", label: "Fee", icon: "💰" },
       { to: "/fitness/events", label: "Events", icon: "🎉" },

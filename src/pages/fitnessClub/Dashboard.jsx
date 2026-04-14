@@ -89,12 +89,12 @@ export default function FitnessDashboard() {
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow">
+        {/* <div className="bg-white p-6 rounded-xl shadow">
           <h3 className="text-lg font-semibold text-gray-700">Pending Fees</h3>
           <p className="text-4xl font-bold text-red-600 mt-2">
             ₹{data.pendingFees}
           </p>
-        </div>
+        </div> */}
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow">
@@ -125,7 +125,7 @@ export default function FitnessDashboard() {
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow">
+      {/* <div className="bg-white p-6 rounded-xl shadow">
         <h3 className="text-xl font-bold mb-4">Pending Fees Summary</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -167,7 +167,7 @@ export default function FitnessDashboard() {
             </tbody>
           </table>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

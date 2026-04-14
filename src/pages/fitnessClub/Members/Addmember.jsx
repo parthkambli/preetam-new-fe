@@ -15,7 +15,7 @@ const PLAN_OPTIONS = [
 
 const GENDERS          = ["Male", "Female", "Other"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
-const PAYMENT_MODES    = ["Cash", "Cheque", "Online", "UPI"];
+const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
 
 // ── Helper: compute end date from start date + plan ──────────────────────────
 const computeEndDate = (startDate, plan) => {
@@ -55,7 +55,7 @@ const emptyActivityFee = {
   planFee:          "",
   discount:         "",
   finalAmount:      "",
-  paymentStatus:    "Pending",
+  paymentStatus:    "Paid",
   paymentMode:      "",
   paymentDate:      todayString(),   // ← default to today
   planNotes:        "",
@@ -263,14 +263,14 @@ const ActivityFeeRow = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-        <div>
+        {/* <div>
           <label className="block text-xs text-gray-600 mb-1">Payment Status</label>
           <select name="paymentStatus" value={entry.paymentStatus} onChange={handleField}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white">
             <option value="">Select Status</option>
             {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-        </div>
+        </div> */}
         <div>
           <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
           <select name="paymentMode" value={entry.paymentMode} onChange={handleField}
