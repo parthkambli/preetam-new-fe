@@ -1847,6 +1847,122 @@ const DateStrip = ({ selectedDate, setSelectedDate }) => {
 };
 
 // ====================== TODAY SCHEDULE ======================
+// const TodaySchedule = ({ todaySlots, selectedDate, handleSlotClick }) => {
+//   const [expandedActivities, setExpandedActivities] = useState({});
+
+//   const grouped = todaySlots.reduce((acc, slot) => {
+//     if (!acc[slot.activity]) acc[slot.activity] = [];
+//     acc[slot.activity].push(slot);
+//     return acc;
+//   }, {});
+
+//   const toggleExpand = (activity) => {
+//     setExpandedActivities((prev) => ({
+//       ...prev,
+//       [activity]: !prev[activity],
+//     }));
+//   };
+
+//   return (
+//     <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+//       <h2 className="text-xl font-semibold mb-5">
+//         Schedule for {format(selectedDate, "EEEE, dd MMMM yyyy")}
+//       </h2>
+
+//       {todaySlots.length === 0 ? (
+//         <div className="py-16 text-center text-gray-500">
+//           No activities scheduled for this date
+//         </div>
+//       ) : (
+//         <div className="space-y-5">
+//           {Object.entries(grouped).map(([activity, slots]) => {
+//             const isExpanded = expandedActivities[activity];
+//             const visibleSlots = slots.slice(0, 3);
+//             const hasMore = slots.length > 3;
+
+//             return (
+//               <div key={activity} className="border border-gray-200 rounded-xl overflow-hidden">
+//                 <div className="bg-gray-50 px-5 py-4 border-b">
+//                   <h3 className="font-semibold text-lg text-gray-800">{activity}</h3>
+//                 </div>
+
+//                 <div className="divide-y">
+//                   {visibleSlots.map((slot, idx) => (
+//                     <div
+//                       key={idx}
+//                       onClick={() => handleSlotClick(slot)}
+//                       className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 cursor-pointer transition"
+//                     >
+//                       <div>
+//                         <p className="font-medium text-gray-700">{slot.time}</p>
+//                       </div>
+//                       <div>
+//                         <span
+//                           className={`px-4 py-1.5 rounded-full text-sm font-semibold
+//                             ${slot.booked >= slot.capacity ? 'bg-red-100 text-red-600' :
+//                               slot.booked >= slot.capacity - 2 ? 'bg-yellow-100 text-yellow-600' :
+//                               'bg-green-100 text-green-600'}`}
+//                         >
+//                           {slot.booked >= slot.capacity ? 'Full' : `${slot.booked}/${slot.capacity}`}
+//                         </span>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+
+//                 {hasMore && (
+//                   <div
+//                     onClick={() => toggleExpand(activity)}
+//                     className="px-5 py-3 text-[#000359] text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer border-t"
+//                   >
+//                     {isExpanded ? "Show Less" : `View ${slots.length - 3} More Slots`}
+//                     <span className="text-lg transition-transform">{isExpanded ? '↑' : '↓'}</span>
+//                   </div>
+//                 )}
+
+//                 {isExpanded && hasMore && (
+//                   <div className="divide-y">
+//                     {slots.slice(3).map((slot, idx) => (
+//                       <div
+//                         key={idx}
+//                         onClick={() => handleSlotClick(slot)}
+//                         className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 cursor-pointer transition"
+//                       >
+//                         <div>
+//                           <p className="font-medium text-gray-700">{slot.time}</p>
+//                         </div>
+//                         <div>
+//                           <span
+//                             className={`px-4 py-1.5 rounded-full text-sm font-semibold
+//                               ${slot.booked >= slot.capacity ? 'bg-red-100 text-red-600' :
+//                                 slot.booked >= slot.capacity - 2 ? 'bg-yellow-100 text-yellow-600' :
+//                                 'bg-green-100 text-green-600'}`}
+//                           >
+//                             {slot.booked >= slot.capacity ? 'Full' : `${slot.booked}/${slot.capacity}`}
+//                           </span>
+//                         </div>
+//                       </div>
+//                     ))}
+//                   </div>
+//                 )}
+//               </div>
+//             );
+//           })}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+
+
+
+
+
+
+
+
+// ====================== TODAY SCHEDULE (Smaller & Professional) ======================
 const TodaySchedule = ({ todaySlots, selectedDate, handleSlotClick }) => {
   const [expandedActivities, setExpandedActivities] = useState({});
 
@@ -1864,85 +1980,83 @@ const TodaySchedule = ({ todaySlots, selectedDate, handleSlotClick }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-      <h2 className="text-xl font-semibold mb-5">
+    <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm">
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">
         Schedule for {format(selectedDate, "EEEE, dd MMMM yyyy")}
       </h2>
 
       {todaySlots.length === 0 ? (
-        <div className="py-16 text-center text-gray-500">
+        <div className="py-10 text-center text-gray-500 text-base">
           No activities scheduled for this date
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-3">
           {Object.entries(grouped).map(([activity, slots]) => {
             const isExpanded = expandedActivities[activity];
-            const visibleSlots = slots.slice(0, 3);
             const hasMore = slots.length > 3;
+            const visibleSlots = isExpanded ? slots : slots.slice(0, 3);
 
             return (
-              <div key={activity} className="border border-gray-200 rounded-xl overflow-hidden">
-                <div className="bg-gray-50 px-5 py-4 border-b">
-                  <h3 className="font-semibold text-lg text-gray-800">{activity}</h3>
+              <div key={activity} className="border border-gray-200 rounded-2xl overflow-hidden">
+                {/* Compact Header */}
+                <div className="bg-gray-50 px-5 py-2.5 border-b">
+                  <h3 className="text-base font-semibold text-gray-800">{activity}</h3>
                 </div>
 
-                <div className="divide-y">
-                  {visibleSlots.map((slot, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => handleSlotClick(slot)}
-                      className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 cursor-pointer transition"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-700">{slot.time}</p>
-                      </div>
-                      <div>
-                        <span
-                          className={`px-4 py-1.5 rounded-full text-sm font-semibold
-                            ${slot.booked >= slot.capacity ? 'bg-red-100 text-red-600' :
-                              slot.booked >= slot.capacity - 2 ? 'bg-yellow-100 text-yellow-600' :
-                              'bg-green-100 text-green-600'}`}
-                        >
-                          {slot.booked >= slot.capacity ? 'Full' : `${slot.booked}/${slot.capacity}`}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {/* Tight Slots */}
+                <div className="divide-y divide-gray-100 text-sm">
+                  {visibleSlots.map((slot, idx) => {
+                    const isFull = slot.booked >= slot.capacity;
+                    const percentage = Math.min((slot.booked / slot.capacity) * 100, 100);
 
-                {hasMore && (
-                  <div
-                    onClick={() => toggleExpand(activity)}
-                    className="px-5 py-3 text-[#000359] text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer border-t"
-                  >
-                    {isExpanded ? "Show Less" : `View ${slots.length - 3} More Slots`}
-                    <span className="text-lg transition-transform">{isExpanded ? '↑' : '↓'}</span>
-                  </div>
-                )}
-
-                {isExpanded && hasMore && (
-                  <div className="divide-y">
-                    {slots.slice(3).map((slot, idx) => (
+                    return (
                       <div
                         key={idx}
                         onClick={() => handleSlotClick(slot)}
-                        className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 cursor-pointer transition"
+                        className="group flex items-center justify-between px-5 py-3 hover:bg-gray-50 cursor-pointer transition-all"
                       >
-                        <div>
-                          <p className="font-medium text-gray-700">{slot.time}</p>
+                        <div className="flex items-center gap-4">
+                          <div className="font-mono text-xs text-gray-500 w-28">
+                            {slot.time}
+                          </div>
+
+                          <div>
+                            <p className="font-medium text-gray-700">
+                              {isFull ? "Session Full" : "Available"}
+                            </p>
+                            {!isFull && slot.booked > 0 && (
+                              <div className="w-28 h-1 bg-gray-200 rounded-full mt-1">
+                                <div
+                                  className="h-full bg-orange-500 rounded-full"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <span
-                            className={`px-4 py-1.5 rounded-full text-sm font-semibold
-                              ${slot.booked >= slot.capacity ? 'bg-red-100 text-red-600' :
-                                slot.booked >= slot.capacity - 2 ? 'bg-yellow-100 text-yellow-600' :
-                                'bg-green-100 text-green-600'}`}
-                          >
-                            {slot.booked >= slot.capacity ? 'Full' : `${slot.booked}/${slot.capacity}`}
-                          </span>
+
+                        <div className={`px-3.5 py-1 rounded-xl text-xs font-semibold
+                          ${isFull 
+                            ? 'bg-red-100 text-red-700' 
+                            : slot.booked === 0 
+                              ? 'bg-emerald-100 text-emerald-700' 
+                              : 'bg-amber-100 text-amber-700'}`}>
+                          {slot.booked}/{slot.capacity}
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
+                </div>
+
+                {/* Show More / Less Button */}
+                {hasMore && (
+                  <div
+                    onClick={() => toggleExpand(activity)}
+                    className="px-5 py-2.5 text-[#000359] text-sm font-medium flex items-center justify-center hover:bg-gray-50 cursor-pointer border-t"
+                  >
+                    {isExpanded 
+                      ? "Show Less ↑" 
+                      : `View ${slots.length - 3} More Slots ↓`}
                   </div>
                 )}
               </div>
