@@ -15,8 +15,20 @@ export default function FitnessDashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await api.dashboard.get();
+const today = new Date();
 
+// First day of current month
+const fromDate = new Date(today.getFullYear(), today.getMonth(), 1)
+  .toISOString()
+  .split('T')[0];
+
+// Today (or use end of month if you want projection)
+const toDate = today.toISOString().split('T')[0];
+
+const res = await api.dashboard.get({
+  fromDate,
+  toDate,
+});
         const dashboardData = res?.data?.data || res?.data || {};
 
         setData({
