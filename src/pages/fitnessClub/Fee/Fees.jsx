@@ -67,12 +67,12 @@
 import { useEffect, useState } from 'react';
 import FitnessFeesTabs from './Feestabs';
 import AddPayments from './AddPayments';
-import AllotFees from './AllotFees';
+// import AllotFees from './AllotFees';
 import FitnessFeeTypes from './Feetypes';
 import { api } from '../../../services/apiClient';
 
 export default function FitnessFees() {
-  const [activeTab, setActiveTab] = useState('allot-fees');
+ const [activeTab, setActiveTab] = useState('add-payments');
 
   const [stats, setStats] = useState({
     totalMembers: 0,
@@ -138,8 +138,8 @@ export default function FitnessFees() {
 
       </div>
 
-      {activeTab === 'add-payments' && <AddPayments />}
-      {activeTab === 'allot-fees' && <AllotFees />}
+      {activeTab === 'add-payments' && <AddPayments />} 
+      {/* {activeTab === 'allot-fees' && <AllotFees />} */}
       {activeTab === 'fee-types' && <FitnessFeeTypes />}
 
     </div>

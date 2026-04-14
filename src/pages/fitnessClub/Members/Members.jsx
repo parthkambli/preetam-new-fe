@@ -1690,6 +1690,7 @@ export default function Members() {
               <tr className="bg-[#1a2a5e] text-white">
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Member</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Mobile</th>
+                <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Plant Type</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Activities</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Overall Status</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Actions</th>
@@ -1698,7 +1699,7 @@ export default function Members() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
+                  <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]" />
                     </div>
@@ -1707,7 +1708,7 @@ export default function Members() {
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center text-gray-400 text-sm">
+                  <td colSpan={6} className="px-6 py-20 text-center text-gray-400 text-sm">
                     No members found.
                   </td>
                 </tr>
@@ -1715,9 +1716,10 @@ export default function Members() {
                 filteredMembers.map((member, idx) => {
                   const overallStatus = getMemberOverallStatus(member);
                   const activityFees  = member.activityFees || [];
-                  const inactiveCount = activityFees.filter(
-                    (af) => computeActivityStatus(af) !== "Active"
-                  ).length;
+                  const isPassMember = !!member.membershipPass;
+                  const inactiveCount = isPassMember
+  ? 0
+  : activityFees.filter((af) => computeActivityStatus(af) !== "Active").length;
 
                   return (
                     <tr key={member._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
@@ -1733,9 +1735,23 @@ export default function Members() {
                       {/* Mobile */}
                       <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
 
+                      <td className="px-5 py-4">
+  {isPassMember ? (
+    <span className="text-purple-600 font-medium text-xs">Pass</span>
+  ) : (
+    <span className="text-blue-600 font-medium text-xs">Activity</span>
+  )}
+</td>
+
                       {/* Activity pills */}
                       <td className="px-5 py-4 max-w-xs">
-                        <ActivitySummaryPills activityFees={activityFees} />
+                        {isPassMember ? (
+  <span className="inline-flex px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
+    Membership Pass
+  </span>
+) : (
+  <ActivitySummaryPills activityFees={activityFees} />
+)}
                       </td>
 
                       {/* Overall status badge */}
@@ -1767,7 +1783,7 @@ export default function Members() {
                           </button>
 
                           {/* Renew — show if any activity is inactive/expired */}
-                          {inactiveCount > 0 && (
+                          {!isPassMember && inactiveCount > 0 && (
                             <button
                               onClick={() => setRenewMember(member)}
                               className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
