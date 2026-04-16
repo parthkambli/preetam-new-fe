@@ -642,11 +642,12 @@ export default function AddFitnessEnquiry() {
                 value={form.age}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value === '' || Number(value) >= 0) {
+                  if (value === '' || (Number(value) >= 0 && value.length <= 2)) {
                     setForm((prev) => ({ ...prev, age: value }));
                   }
                 }}
                 min={0}
+                max={99}
                 className="w-full px-4 py-3 border rounded-lg"
               />
             </div>
