@@ -786,7 +786,9 @@ export default function AddMember() {
       });
 
       if (form.enquiryId) formData.append("enquiryId", form.enquiryId);
-      if (form.photo instanceof File) formData.append("photo", form.photo);
+      if (form.photo instanceof File) {
+        formData.append('profilePhoto', form.photo);
+      }
 
       const serialized = form.activityFees.map((af, index) => ({
         activity:        af.activity?.value || null,

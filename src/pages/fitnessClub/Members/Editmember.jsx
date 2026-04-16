@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 import Select from "react-select";
 
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api')
+  .replace(/\/api$/, '');
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAN_OPTIONS = [
   { value: "Annual",  label: "Annual",  feeKey: "annual"  },
@@ -458,7 +461,8 @@ export default function EditMember() {
           age:          member.age          || "",
           gender:       member.gender       || "Male",
           address:      member.address      || "",
-          photoPreview: member.photo        || null,
+          // photoPreview: member.photo        || null,
+          photoPreview: member.photo ? `${BASE_URL}${member.photo}` : null,
           photo:        null,
           userId:       member.userId       || member.mobile || "",
           password:     "",
@@ -599,7 +603,9 @@ export default function EditMember() {
           formData.append(key, value);
       });
 
-      if (form.photo instanceof File) formData.append("photo", form.photo);
+      if (form.photo instanceof File) {
+        formData.append('profilePhoto', form.photo);
+      }
 
       const serialized = form.activityFees.map((af, index) => ({
         _id:           af._id        || undefined,

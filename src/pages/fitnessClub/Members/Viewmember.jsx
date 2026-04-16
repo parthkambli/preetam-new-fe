@@ -623,6 +623,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 // ── Small display helpers ─────────────────────────────────────────────────────
 function ReadField({ label, value, className = "" }) {
   return (
@@ -860,11 +862,28 @@ export default function ViewMember() {
           {/* Photo */}
           <div>
             <label className="block text-xs text-gray-500 mb-2">Profile Photo</label>
-            <div className="w-32 h-32 border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
+            {/* <div className="w-32 h-32 border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
               {member.photo ? (
                 <img src={member.photo} alt={member.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No Photo</div>
+              )}
+            </div> */}
+            <div className="w-32 h-32 border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
+              {member.photo ? (
+                <img 
+                  src={`${BASE_URL}${member.photo}`} 
+                  alt={member.name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/placeholder-avatar.jpg'; // optional fallback
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                  No Photo
+                </div>
               )}
             </div>
           </div>
