@@ -1102,6 +1102,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
+import PassRenewModal from "./PassRenewModal";
 
 const PLAN_OPTIONS = [
   { value: "Annual",  label: "Annual",  months: 12 },
@@ -1145,6 +1146,70 @@ const formatDate = (dateStr) => {
     day: "2-digit", month: "short", year: "numeric",
   });
 };
+
+// Remaining Days Logic
+const getNearestEndDate = (member) => {
+  // Pass member
+  if (member.membershipPass?.endDate) {
+    return member.membershipPass.endDate;
+  }
+
+  // Activity member
+  const validDates = (member.activityFees || [])
+    .map((af) => af.endDate)
+    .filter(Boolean);
+
+  if (validDates.length === 0) return null;
+
+  return validDates.reduce((earliest, curr) =>
+    new Date(curr) < new Date(earliest) ? curr : earliest
+  );
+};
+
+const getRemainingDays = (endDate) => {
+  if (!endDate) return { label: "—", type: "normal" };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+  if (diff < 0) return { label: "Expired", type: "expired" };
+  if (diff === 0) return { label: "Last Day", type: "warning" };
+  if (diff <= 3) return { label: `${diff} days`, type: "warning" };
+
+  return { label: `${diff} days`, type: "normal" };
+};
+
+
+const getActivityExpiryDetails = (activityFees = []) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return activityFees
+    .map((af, i) => {
+      if (!af.endDate) return null;
+
+      const end = new Date(af.endDate);
+      const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+      const name =
+        typeof af.activity === "object"
+          ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+          : `Activity ${i + 1}`;
+
+      return `${name}: ${
+        diff < 0 ? "Expired" : diff === 0 ? "Last Day" : `${diff} days`
+      }`;
+    })
+    .filter(Boolean)
+    .join(" | ");
+};
+
+
 
 // ── Activity Summary Pill (used in table row) ─────────────────────────────────
 function ActivitySummaryPills({ activityFees }) {
@@ -1519,7 +1584,7 @@ function RenewModal({ member, onClose, onRenewed }) {
           {selectedCount > 0 && (
             <div className="flex items-center justify-between text-sm mb-3 bg-gray-50 rounded-lg px-3 py-2">
               <span className="text-gray-600">
-                Renewing <span className="font-semibold text-[#1a2a5e]">{selectedCount}</span> activit{selectedCount === 1 ? "y" : "ies"}
+                Renewing <span className="font-semibold text-[#1a2a5e]">{selectedCount}</span> Activity{selectedCount === 1 ? "y" : "ies"}
               </span>
               <span className="font-bold text-[#1a2a5e]">
                 ₹{renewals
@@ -1574,6 +1639,8 @@ export default function Members() {
   const [searchTerm, setSearchTerm]   = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [renewMember, setRenewMember] = useState(null);
+  const [renewPassMember, setRenewPassMember] = useState(null);
+  const [planTypeFilter, setPlanTypeFilter] = useState("");
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -1602,7 +1669,16 @@ export default function Members() {
       member.mobile?.includes(searchTerm);
     const matchesStatus =
       !statusFilter || getMemberOverallStatus(member) === statusFilter;
-    return matchesSearch && matchesStatus;
+
+      //New logic for added Plan type filter
+      const isPassMember = !!member.membershipPass;
+
+  const matchesPlanType =
+    !planTypeFilter ||
+    (planTypeFilter === "Pass" && isPassMember) ||
+    (planTypeFilter === "Activity" && !isPassMember);
+
+  return matchesSearch && matchesStatus && matchesPlanType;
   });
 
   const handleDelete = async (id) => {
@@ -1616,6 +1692,9 @@ export default function Members() {
       toast.error("Failed to delete member");
     }
   };
+
+
+  
 
   // Stats
   const activeCount   = members.filter((m) => getMemberOverallStatus(m) === "Active").length;
@@ -1631,6 +1710,14 @@ export default function Members() {
           onRenewed={fetchMembers}
         />
       )}
+
+      {renewPassMember && (
+  <PassRenewModal
+    member={renewPassMember}
+    onClose={() => setRenewPassMember(null)}
+    onRenewed={fetchMembers}
+  />
+)}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -1677,6 +1764,16 @@ export default function Members() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
         />
+
+        <select
+  value={planTypeFilter}
+  onChange={(e) => setPlanTypeFilter(e.target.value)}
+  className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+>
+  <option value="">All Plans</option>
+  <option value="Pass">Pass</option>
+  <option value="Activity">Activity</option>
+</select>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -1699,6 +1796,7 @@ export default function Members() {
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Plan Type</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Activities</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Overall Status</th>
+                <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Remaining Days</th>
                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Actions</th>
               </tr>
             </thead>
@@ -1723,6 +1821,13 @@ export default function Members() {
                   const overallStatus = getMemberOverallStatus(member);
                   const activityFees  = member.activityFees || [];
                   const isPassMember = !!member.membershipPass;
+
+                  const endDate = getNearestEndDate(member);
+                  const remaining = getRemainingDays(endDate);
+                  
+                  const tooltip = getActivityExpiryDetails(member.activityFees);
+
+
                   const inactiveCount = isPassMember
   ? 0
   : activityFees.filter((af) => computeActivityStatus(af) !== "Active").length;
@@ -1767,10 +1872,74 @@ export default function Members() {
                             ? "bg-green-50 border-green-300 text-green-700"
                             : "bg-red-50 border-red-300 text-red-600"
                         }`}>
+                          
                           <span className={`w-1.5 h-1.5 rounded-full ${overallStatus === "Active" ? "bg-green-500" : "bg-red-400"}`} />
                           {overallStatus}
                         </span>
                       </td>
+
+                      {/* Remaining Days */}
+                      <td className="px-5 py-4">
+  <div className="relative group inline-block">
+    
+    {/* Main Text */}
+    <span
+      className={`text-xs font-semibold cursor-pointer ${
+        remaining.type === "expired"
+          ? "text-red-500"
+          : remaining.type === "warning"
+          ? "text-orange-500"
+          : "text-gray-700"
+      }`}
+    >
+      {remaining.label}
+    </span>
+
+    {/* Tooltip */}
+    {member.activityFees?.length > 0 && (
+      <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50">
+        <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-2 text-xs text-gray-700 whitespace-nowrap">
+          
+          {member.activityFees.map((af, i) => {
+            const end = af.endDate ? new Date(af.endDate) : null;
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            let diff = null;
+            if (end) {
+              diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+            }
+
+            const name =
+              typeof af.activity === "object"
+                ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+                : `Activity ${i + 1}`;
+
+            return (
+              <div key={i} className="flex justify-between gap-4">
+                <span>{name}</span>
+                <span className={
+                  diff < 0
+                    ? "text-red-500"
+                    : diff <= 3
+                    ? "text-orange-500"
+                    : "text-gray-600"
+                }>
+                  {diff < 0
+                    ? "Expired"
+                    : diff === 0
+                    ? "Last Day"
+                    : `${diff} days`}
+                </span>
+              </div>
+            );
+          })}
+
+        </div>
+      </div>
+    )}
+  </div>
+</td>
 
                       {/* Actions */}
                       <td className="px-5 py-4">
@@ -1789,9 +1958,15 @@ export default function Members() {
                           </button>
 
                           {/* Renew — show if any activity is inactive/expired */}
-                          {!isPassMember && inactiveCount > 0 && (
+                          {(isPassMember ? overallStatus !== "Active" : inactiveCount > 0) && (
                             <button
-                              onClick={() => setRenewMember(member)}
+                              onClick={() => {
+                                if (isPassMember) {
+                                  setRenewPassMember(member);
+                                } else {
+                                  setRenewMember(member);
+                                }
+                              }}
                               className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
                               title={`${inactiveCount} activit${inactiveCount === 1 ? "y" : "ies"} need renewal`}
                             >
