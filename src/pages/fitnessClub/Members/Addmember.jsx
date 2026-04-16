@@ -611,45 +611,87 @@ export default function AddMember() {
     reader.readAsDataURL(file);
   };
 
+  // const fetchAvailableSlots = async (index, activityId, startDate, endDate) => {
+  //   if (!activityId || !startDate || !endDate) return;
+
+  //   try {
+  //     const res = await api.fitnessActivities.availability({
+  //       activityId,
+  //       startDate,
+  //       endDate,
+  //     });
+
+  //     const availabilityData = res.data?.data || res.data || [];
+
+  //     const slots = availabilityData
+  //       .filter(slotInfo => slotInfo.membersOnly === true)
+  //       .map((slotInfo) => ({
+  //         value: slotInfo.slotId,
+  //         label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays}/${slotInfo.totalDays} days - ${slotInfo.availabilityPercentage}%)`,
+  //         disabled: slotInfo.fullyAvailableDays === 0,
+  //       }));
+
+  //     setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
+
+  //     setForm((prev) => {
+  //       const current = prev.activityFees[index];
+  //       if (!current.slot && slots.length > 0) {
+  //         const firstAvailable = slots.find((s) => !s.disabled);
+  //         if (firstAvailable) {
+  //           const updated = [...prev.activityFees];
+  //           updated[index] = { ...updated[index], slot: firstAvailable };
+  //           return { ...prev, activityFees: updated };
+  //         }
+  //       }
+  //       return prev;
+  //     });
+  //   } catch (err) {
+  //     console.error("Failed to fetch slot availability", err);
+  //     toast.error("Could not load available slots for the selected date range");
+  //   }
+  // };
+
   const fetchAvailableSlots = async (index, activityId, startDate, endDate) => {
-    if (!activityId || !startDate || !endDate) return;
+  if (!activityId || !startDate || !endDate) return;
 
-    try {
-      const res = await api.fitnessActivities.availability({
-        activityId,
-        startDate,
-        endDate,
-      });
+  try {
+    const res = await api.fitnessActivities.availability({
+      activityId,
+      startDate,
+      endDate,
+    });
 
-      const availabilityData = res.data?.data || res.data || [];
+    const availabilityData = res.data?.data || res.data || [];
 
-      const slots = availabilityData
-        .filter(slotInfo => slotInfo.membersOnly === true)
-        .map((slotInfo) => ({
-          value: slotInfo.slotId,
-          label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays}/${slotInfo.totalDays} days - ${slotInfo.availabilityPercentage}%)`,
-          disabled: slotInfo.fullyAvailableDays === 0,
-        }));
+    const slots = availabilityData
+      .map((slotInfo) => ({
+        value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+        label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays || 0}/${slotInfo.totalDays || 0} days - ${slotInfo.availabilityPercentage || 0}%)`,
+        disabled: (slotInfo.fullyAvailableDays || 0) === 0,
+      }))
+      // Removed strict membersOnly filter - show all returned slots
+      // (Backend should already return relevant ones)
 
-      setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
+    setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
 
-      setForm((prev) => {
-        const current = prev.activityFees[index];
-        if (!current.slot && slots.length > 0) {
-          const firstAvailable = slots.find((s) => !s.disabled);
-          if (firstAvailable) {
-            const updated = [...prev.activityFees];
-            updated[index] = { ...updated[index], slot: firstAvailable };
-            return { ...prev, activityFees: updated };
-          }
+    // Auto-select first available slot
+    setForm((prev) => {
+      const current = prev.activityFees[index];
+      if (!current.slot && slots.length > 0) {
+        const firstAvailable = slots.find((s) => !s.disabled);
+        if (firstAvailable) {
+          const updated = [...prev.activityFees];
+          updated[index] = { ...updated[index], slot: firstAvailable };
+          return { ...prev, activityFees: updated };
         }
-        return prev;
-      });
-    } catch (err) {
-      console.error("Failed to fetch slot availability", err);
-      toast.error("Could not load available slots for the selected date range");
-    }
-  };
+      }
+      return prev;
+    });
+  } catch (err) {
+    console.error("Failed to fetch slot availability", err);
+    toast.error("Could not load available slots for the selected date range");
+  }
+};
 
   const handleActivityFeeChange = (index, field, value) => {
     setForm((prev) => {

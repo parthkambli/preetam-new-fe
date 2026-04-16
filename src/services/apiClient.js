@@ -247,6 +247,17 @@ fitnessStaff: {
   deleteEmploymentType: (id) => apiClient.delete(`/fitness/types/${id}`),
 },
 
+// ====================== FITNESS ATTENDANCE ======================
+  attendance: {
+    // For main Attendance listing page
+    getSummary: (params = {}) => 
+      apiClient.get('/attendance/summary', { params }),
+
+    // For detailed student list
+    getStudentAttendance: (activityId, date) => 
+      apiClient.get(`/attendance/details/${activityId}/${date}`),
+  },
+
 // ====================== FITNESS FEES ======================
 fitnessFees: {
   getTypes:        ()             => apiClient.get('/fitness/fees/types'),
