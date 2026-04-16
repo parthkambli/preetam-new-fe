@@ -298,7 +298,7 @@ function App() {
             <Route path="/fitness/staff/attendance-detail/:id" element={<FitnessStaffAttendanceDetail />} />
             <Route path="/fitness/activities" element={<FitnessActivities />} />
             <Route path="/fitness/attendance" element={<FitnessAttendance />} />
-            <Route path="/fitness/student-attendance/:id" element={<FitnessViewStudentAttendance />} />
+            <Route path="/fitness/attendance/:activityid" element={<FitnessViewStudentAttendance />} />
             <Route path="/fitness/fee" element={<FitnessFee />} />
             <Route path="/fitness/events" element={<FitnessEvents />} />
             <Route path="/fitness/Addevent" element={<FitnessAddevent />} />
