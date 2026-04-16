@@ -1115,6 +1115,10 @@ const PLAN_OPTIONS = [
 const PAYMENT_MODES    = ["Cash", "Cheque", "Online", "UPI"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
 
+const isPassMemberFn = (member) => {
+  return member.membershipPass !== null;
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const todayString = () => new Date().toISOString().split("T")[0];
 
@@ -1670,8 +1674,10 @@ export default function Members() {
     const matchesStatus =
       !statusFilter || getMemberOverallStatus(member) === statusFilter;
 
-      //New logic for added Plan type filter
-      const isPassMember = !!member.membershipPass;
+      //New logic for added Plan type
+      // const isPassMember = !!member.membershipPass;
+
+      const isPassMember = isPassMemberFn(member);
 
   const matchesPlanType =
     !planTypeFilter ||
@@ -1820,7 +1826,8 @@ export default function Members() {
                 filteredMembers.map((member, idx) => {
                   const overallStatus = getMemberOverallStatus(member);
                   const activityFees  = member.activityFees || [];
-                  const isPassMember = !!member.membershipPass;
+                  // const isPassMember = !!member.membershipPass;
+                  const isPassMember = isPassMemberFn(member);
 
                   const endDate = getNearestEndDate(member);
                   const remaining = getRemainingDays(endDate);
@@ -1945,13 +1952,25 @@ export default function Members() {
                       <td className="px-5 py-4">
                         <div className="flex gap-2 flex-wrap">
                           <button
-                            onClick={() => navigate(`/fitness/members/view-member/${member._id}`)}
+                            onClick={() => {
+  if (isPassMemberFn(member)) {
+    navigate(`/fitness/members/view-pass/${member._id}`);
+  } else {
+    navigate(`/fitness/members/view-member/${member._id}`);
+  }
+}}
                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
                           >
                             View
                           </button>
                           <button
-                            onClick={() => navigate(`/fitness/members/edit-member/${member._id}`)}
+                            onClick={() => {
+  if (isPassMemberFn(member)) {
+    navigate(`/fitness/members/edit-pass/${member._id}`);
+  } else {
+    navigate(`/fitness/members/edit-member/${member._id}`);
+  }
+}}
                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
                           >
                             Edit
