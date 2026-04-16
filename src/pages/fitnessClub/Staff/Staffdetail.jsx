@@ -1182,71 +1182,73 @@ export default function FitnessStaffDetail() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const errors = validateEditForm(form);
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      toast.error(Object.values(errors)[0]);
-      return;
+  const errors = validateEditForm(form);
+  if (Object.keys(errors).length > 0) {
+    setFieldErrors(errors);
+    toast.error(Object.values(errors)[0]);
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+
+    // Text fields
+    formData.append('fullName', form.fullName?.trim() || '');
+    formData.append('role', form.role || '');
+    formData.append('employmentType', form.employmentType || '');
+    formData.append('mobileNumber', form.mobileNumber?.trim() || '');
+    formData.append('emailId', form.emailId?.trim() || '');
+    formData.append('gender', form.gender || '');
+    formData.append('dateOfBirth', form.dateOfBirth || '');
+    formData.append('joiningDate', form.joiningDate || '');
+    formData.append('status', form.status || 'Active');
+    formData.append('salary', form.salary ?? '');
+    formData.append('fullAddress', form.fullAddress?.trim() || '');
+    formData.append('emergencyContactName', form.emergencyContactName?.trim() || '');
+    formData.append('emergencyRelation', form.emergencyContactRelation?.trim() || '');
+    formData.append('emergencyContactMobile', form.emergencyContactMobile?.trim() || '');
+
+    if (form.password?.trim()) {
+      formData.append('password', form.password.trim());
     }
 
-    try {
-      const formData = new FormData();
-
-      formData.append('fullName', form.fullName?.trim() || '');
-      formData.append('role', form.role || '');
-      formData.append('employmentType', form.employmentType || '');
-      formData.append('mobileNumber', form.mobileNumber?.trim() || '');
-      formData.append('emailId', form.emailId?.trim() || '');
-      formData.append('gender', form.gender || '');
-      formData.append('dateOfBirth', form.dateOfBirth || '');
-      formData.append('joiningDate', form.joiningDate || '');
-      formData.append('status', form.status || 'Active');
-      formData.append('salary', form.salary ?? '');
-      formData.append('fullAddress', form.fullAddress?.trim() || '');
-      formData.append('emergencyContactName', form.emergencyContactName?.trim() || '');
-      formData.append('emergencyRelation', form.emergencyContactRelation?.trim() || '');
-      formData.append('emergencyContactMobile', form.emergencyContactMobile?.trim() || '');
-
-      if (form.password?.trim()) {
-        formData.append('password', form.password.trim());
-      }
-
-      if (photoFile) {
-        formData.append('photo', photoFile);
-      }
-
-      const saveToast = toast.loading('Saving changes...');
-
-      await api.fitnessStaff.update(id, formData);
-
-      toast.dismiss(saveToast);
-      toast.success('Staff updated successfully!');
-
-      const res = await api.fitnessStaff.getById(id);
-      const updatedData = res.data?.data || res.data;
-
-      setStaff(updatedData);
-      setForm(normalizeStaffForm(updatedData));
-      setPhotoPreview(getFullPhotoUrl(updatedData.profilePhoto || updatedData.photo));
-      setPhotoFile(null);
-      setFieldErrors({});
-      if (fileRef.current) fileRef.current.value = '';
-      setIsEditing(false);
-
-      setTimeout(() => navigate('/fitness/staff'), 1200);
-    } catch (err) {
-      console.log('UPDATE ERROR =>', err.response?.data);
-
-      toast.error(
-        err.response?.data?.data?.errors?.[0] ||
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.message ||
-        'Failed to update staff.'
-      );
+    // ✅ FIXED: Use 'profilePhoto' to match the multer middleware and create form
+    if (photoFile) {
+      formData.append('profilePhoto', photoFile);
     }
-  };
+
+    const saveToast = toast.loading('Saving changes...');
+
+    await api.fitnessStaff.update(id, formData);
+
+    toast.dismiss(saveToast);
+    toast.success('Staff updated successfully!');
+
+    // Refresh data
+    const res = await api.fitnessStaff.getById(id);
+    const updatedData = res.data?.data || res.data;
+
+    setStaff(updatedData);
+    setForm(normalizeStaffForm(updatedData));
+    setPhotoPreview(getFullPhotoUrl(updatedData.profilePhoto || updatedData.photo));
+    setPhotoFile(null);
+    setFieldErrors({});
+    if (fileRef.current) fileRef.current.value = '';
+    setIsEditing(false);
+
+    setTimeout(() => navigate('/fitness/staff'), 1500);
+  } catch (err) {
+    console.error('UPDATE ERROR =>', err.response?.data);
+    toast.error(
+      err.response?.data?.message ||
+      err.response?.data?.errors?.[0] ||
+      err.response?.data?.data?.errors?.[0] ||
+      'Failed to update staff.'
+    );
+  }
+};
 
   const handleCancelEdit = () => {
     setForm(normalizeStaffForm(staff));
