@@ -749,14 +749,21 @@ export default function AddFitnessEnquiry() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5">Enquiry Date</label>
-              <input
-                type="date"
-                name="enquiryDate"
-                value={form.enquiryDate}
-                onChange={handleChange}
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 border rounded-lg"
-              />
+             <input
+  type="date"
+  name="enquiryDate"
+  value={form.enquiryDate}
+  onChange={(e) => {
+    const value = e.target.value;
+    const year = value.split("-")[0];
+
+    if (year.length > 4) return; // block invalid year
+    handleChange(e);
+  }}
+  min={new Date().toISOString().split('T')[0]}
+  max="9999-12-31"
+  className="w-full px-4 py-3 border rounded-lg"
+/>
             </div>
           </div>
 

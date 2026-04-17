@@ -283,7 +283,7 @@ const PassFeeRow = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
-          <select disabled={isView} name="paymentMode" value={entry.paymentMode} onChange={handleField}
+          <select disabled={isView} name="paymentMode" value={entry.paymentMode || "Cash"} onChange={handleField}
             className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white ${errors["activityFees_0_paymentMode"] ? "border-red-400" : "border-gray-300"}`}>
             <option value="">Select Mode</option>
             {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
