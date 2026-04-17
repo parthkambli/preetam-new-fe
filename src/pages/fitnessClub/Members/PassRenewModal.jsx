@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
-const PAYMENT_MODES = ["Cash", "Cheque", "Online", "UPI"];
+const PAYMENT_MODES = ["Cash", "Bank Transfer"];
 
 const todayString = () => new Date().toISOString().split("T")[0];
 
@@ -41,10 +41,18 @@ useEffect(() => {
     try {
       const res = await api.fitnessStaff.getAll();
 
-      console.log("Staff API:", res.data);
+      console.log("FULL API:", res.data);
 
-      const data = res.data?.data?.staff || [];
-      setStaffList(data);
+      const data =
+        res.data?.data?.staff ||
+        res.data?.data ||
+        res.data?.staff ||
+        res.data ||
+        [];
+
+        console.log(res.data)
+
+      setStaffList(Array.isArray(data) ? data : []);
 
     } catch (err) {
       console.error("Failed to fetch staff:", err);
@@ -57,7 +65,6 @@ useEffect(() => {
 
 
 
-
   const [form, setForm] = useState({
     plan: af?.plan || "Monthly",
     startDate: todayString(),
@@ -67,8 +74,7 @@ useEffect(() => {
     finalAmount: af?.planFee || "",
     paymentMode: "",
     paymentDate: todayString(),
-    noOfPersons: af?.noOfPersons, 
-  });
+    noOfPersons: af?.noOfPersons ?? member?.numberOfPersons ?? 1,  });
 
   // auto end date
   useEffect(() => {
@@ -288,15 +294,20 @@ useEffect(() => {
           Responsible Staff
         </label>
         <select
-          value={form.staffId}
-          onChange={(e) => handleChange("staffId", e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-        >
+  value={form.staffId || ""}
+  onChange={(e) => handleChange("staffId", e.target.value)}
+  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+>
           <option value="">Select Staff</option>
           {staffList.map((staff) => (
   <option key={staff._id} value={staff._id}>
-    {staff.name || staff.fullName || staff.user?.name || "Unnamed"}
-  </option>
+  {staff.name 
+    || staff.fullName 
+    || staff.user?.name
+    || `${staff.firstName || ""} ${staff.lastName || ""}`.trim()
+    || staff.mobile
+    || "Unnamed"}
+</option>
 ))}
         </select>
       </div>
@@ -326,7 +337,8 @@ useEffect(() => {
   </div>
 </div>
 
-
+  );
+}
 
 
 
@@ -467,5 +479,5 @@ useEffect(() => {
 
     //   </div>
     // </div>
-  );
-}
+//   );
+// }

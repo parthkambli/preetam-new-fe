@@ -147,6 +147,10 @@ const ActivityFeeRow = ({
     });
   };
 
+  const filteredFeeTypeOptions = feeTypeOptions.filter(
+  (opt) => opt.data?.type !== "Membership Pass"
+);
+
   const handlePlanChange = (e) => {
     const newPlan = e.target.value;
     const planMeta = PLAN_OPTIONS.find((p) => p.value === newPlan);
@@ -225,7 +229,8 @@ const ActivityFeeRow = ({
         <div>
           <label className="block text-xs text-gray-600 mb-1">Fee Type</label>
           <Select
-            options={feeTypeOptions}
+            options={filteredFeeTypeOptions}
+            // options={feeTypeOptions}
             value={entry.feeType}
             onChange={handleFeeTypeChange}
             placeholder={loadingFeeTypes ? "Loading…" : "Select fee type"}
@@ -477,7 +482,9 @@ export default function AddMember() {
         const res = await api.fitnessFees.getTypes();
         const fullList = res?.data || [];
         setFeeTypes(fullList);
-        setFeeTypeOptions(fullList.map((ft) => ({
+        setFeeTypeOptions(fullList
+          .filter((ft) => ft.type !=="Membership Pass")
+          .map((ft) => ({
           value: ft._id,
           label: ft.description,
           data: ft,

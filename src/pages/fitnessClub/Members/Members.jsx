@@ -1112,7 +1112,7 @@ const PLAN_OPTIONS = [
   { value: "Hourly",  label: "Hourly",  days: 1    },
 ];
 
-const PAYMENT_MODES    = ["Cash", "Cheque", "Online", "UPI"];
+const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
 
 const isPassMemberFn = (member) => {
@@ -1249,7 +1249,7 @@ function ActivitySummaryPills({ activityFees }) {
 }
 
 // ── Single Activity Renewal Row (inside modal) ────────────────────────────────
-function ActivityRenewRow({ af, index, renewal, onChange, activityName }) {
+function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffList }) {
   const currentStatus = computeActivityStatus(af);
 
   // Auto-compute end date when start or plan changes
@@ -1416,6 +1416,25 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName }) {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
             />
           </div>
+          <div>
+  <label className="block text-xs text-gray-600 mb-1">
+    Responsible Staff
+  </label>
+
+  <select
+    value={renewal.staffId || ""}
+    onChange={(e) => onChange(index, "staffId", e.target.value)}
+    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+  >
+    <option value="">Select Staff</option>
+
+    {(staffList || []).map((staff) => (
+      <option key={staff._id} value={staff._id}>
+        {staff.name || staff.fullName || "Unnamed"}
+      </option>
+    ))}
+  </select>
+</div>
         </div>
       )}
     </div>
@@ -1424,6 +1443,29 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName }) {
 
 // ── Renew Modal ───────────────────────────────────────────────────────────────
 function RenewModal({ member, onClose, onRenewed }) {
+
+  const [staffList, setStaffList] = useState([]);
+
+useEffect(() => {
+  const fetchStaff = async () => {
+    try {
+      const res = await api.fitnessStaff.getAll();
+
+      console.log("STAFF API:", res.data);
+
+      const staff = res.data?.data?.staff || [];
+
+      setStaffList(staff);
+
+    } catch (err) {
+      console.error("Error fetching fitness staff:", err);
+      setStaffList([]);
+    }
+  };
+
+  fetchStaff();
+}, []);
+
   // Build initial renewal state for each activityFee
   const buildInitialRenewals = () =>
     (member.activityFees || []).map((af) => {
@@ -1454,6 +1496,11 @@ function RenewModal({ member, onClose, onRenewed }) {
   const [renewals, setRenewals] = useState(buildInitialRenewals);
   const [loading, setLoading]   = useState(false);
   const [errors, setErrors]     = useState({});
+  
+
+
+
+  
 
   const handleChange = (index, field, value) => {
     setRenewals((prev) => {
@@ -1578,6 +1625,7 @@ function RenewModal({ member, onClose, onRenewed }) {
               renewal={renewals[i]}
               onChange={handleChange}
               activityName={getActivityName(af, i)}
+              staffList={staffList}   
             />
           ))}
         </div>
@@ -1976,7 +2024,7 @@ export default function Members() {
                             Edit
                           </button>
 
-                          {/* Renew — show if any activity is inactive/expired */}
+                          {/* w — show if any activity is inactive/expired */}
                           {(isPassMember ? overallStatus !== "Active" : inactiveCount > 0) && (
                             <button
                               onClick={() => {
