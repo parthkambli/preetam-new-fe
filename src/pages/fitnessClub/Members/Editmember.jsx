@@ -21,6 +21,26 @@ const GENDERS          = ["Male", "Female", "Other"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
 const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
 
+
+const validatePhoto = (file) => {
+  if (!file) return null;
+
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const maxSize = 5 * 1024 * 1024; // 5MB
+
+  if (!allowedTypes.includes(file.type)) {
+    return "Only JPG, JPEG, PNG, WEBP allowed";
+  }
+
+  if (file.size > maxSize) {
+    return "File size must be less than 5MB";
+  }
+
+  return null;
+};
+
+
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const computeEndDate = (startDate, plan) => {
   if (!startDate || !plan) return "";
@@ -362,6 +382,25 @@ export default function EditMember() {
     (af) => computeActivityStatus(af) === "Active"
   ) ? "Active" : "Inactive";
 
+const validatePhoto = (file) => {
+  if (!file) return null;
+
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const maxSize = 5 * 1024 * 1024;
+
+  if (!allowedTypes.includes(file.type)) {
+    return "Only JPG, JPEG, PNG, WEBP allowed";
+  }
+
+  if (file.size > maxSize) {
+    return "File size must be less than 5MB";
+  }
+
+  return null;
+};
+
+
+
   // ── Load dropdowns ────────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
@@ -584,6 +623,10 @@ export default function EditMember() {
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
+    if (errors.photo) {
+  toast.error("Fix photo error before saving");
+  return;
+}
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
@@ -633,9 +676,40 @@ export default function EditMember() {
       toast.success("Member updated successfully!");
       setTimeout(() => navigate("/fitness/members"), 1200);
     } catch (err) {
-      console.error("Update Error:", err?.response?.data || err);
-      toast.error(err?.response?.data?.message || err?.message || "Failed to update member.");
-    } finally {
+  console.error("Update Error:", err?.response?.data || err);
+
+  const msg =
+    err?.response?.data?.message ||
+    err?.message ||
+    "Failed to update member.";
+
+  const code = err?.response?.data?.code;
+
+  // ✅ FILE ERRORS (most important for your case)
+  if (code === "FILE_TOO_LARGE" || code === "INVALID_FILE_TYPE") {
+    setErrors((prev) => ({ ...prev, photo: msg }));
+
+    if (fileRef.current) {
+      fileRef.current.value = null; // reset file input
+    }
+
+    return;
+  }
+
+  // ✅ COMMON FIELD ERRORS (basic mapping)
+  if (msg.toLowerCase().includes("mobile")) {
+    setErrors((prev) => ({ ...prev, mobile: msg }));
+    return;
+  }
+
+  if (msg.toLowerCase().includes("name")) {
+    setErrors((prev) => ({ ...prev, name: msg }));
+    return;
+  }
+
+  // ✅ FALLBACK
+  toast.error(msg);
+} finally {
       setSaving(false);
     }
   };
@@ -700,7 +774,27 @@ export default function EditMember() {
                   </div>
                 )}
               </div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+  const file = e.target.files[0];
+
+  const error = validatePhoto(file);
+  if (error) {
+    setErrors((prev) => ({ ...prev, photo: error }));
+    e.target.value = null;
+    return;
+  }
+
+  setErrors((prev) => ({ ...prev, photo: null }));
+
+  setForm((prev) => ({
+    ...prev,
+    photo: file,
+    photoPreview: URL.createObjectURL(file),
+  }));
+}} />
+{errors.photo && (
+  <p className="mt-1 text-xs text-red-500">{errors.photo}</p>
+)}
               {form.photoPreview && (
                 <button onClick={() => setForm((p) => ({ ...p, photo: null, photoPreview: null }))}
                   className="mt-1 text-xs text-red-500 hover:text-red-600">Remove Photo</button>
