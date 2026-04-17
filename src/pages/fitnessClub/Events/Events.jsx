@@ -290,11 +290,19 @@ export default function Events() {
           ))}
         </select>
         <input
-          type="date"
-          value={searchDate}
-          onChange={(e) => setSearchDate(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white"
-        />
+  type="date"
+  value={searchDate}
+  onChange={(e) => {
+    const value = e.target.value;
+    const year = value.split("-")[0];
+
+    if (year.length > 4) return; // block invalid year
+    setSearchDate(value);
+  }}
+  min={new Date().toISOString().split('T')[0]}
+  max="9999-12-31"
+  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white"
+/>
       </div>
 
       <div className="bg-white rounded-xl shadow overflow-hidden">

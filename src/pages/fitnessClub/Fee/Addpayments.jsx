@@ -892,7 +892,7 @@ export default function TransactionReport({ onSuccess }) {
         <table className="w-full min-w-[900px] border-collapse">
           <thead>
             <tr className="bg-[#1e3a8a]">
-              {['Member', 'Description', 'Amount Paid', 'Status', 'Payment Date', 'Payment Mode'].map((h) => (
+              {['Member', 'Description', 'Amount Paid', 'Status', 'Payment Date','Responsible Staff', 'Payment Mode',].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-semibold text-white whitespace-nowrap"
@@ -923,7 +923,7 @@ export default function TransactionReport({ onSuccess }) {
                     }`}
                 >
                   <td className="px-4 py-3 font-medium">
-                    {p.memberId?.name || p.memberId?.fullName || 'N/A'}
+                    {p.memberId?.name || p.memberId?.fullName || p.customerName || 'N/A'}
                   </td>
                   <td className="px-4 py-3">
                     {p.description || p.allotmentId?.description || p.feeTypeId?.description || '—'}
@@ -942,11 +942,19 @@ export default function TransactionReport({ onSuccess }) {
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {p.paymentDate
-                      ? new Date(p.paymentDate).toLocaleDateString('en-IN')
-                      : '—'}
-                  </td>
-                  <td className="px-4 py-3">{p.paymentMode}</td>
+  {p.paymentDate
+    ? new Date(p.paymentDate).toLocaleDateString('en-IN')
+    : '—'}
+</td>
+
+{/* ✅ ADD THIS BLOCK */}
+<td className="px-4 py-3">
+  {p.allotmentId?.responsibleStaff?.fullName ||
+   p.allotmentId?.responsibleStaff?.name ||
+   'N/A'}
+</td>
+
+<td className="px-4 py-3">{p.paymentMode}</td>
                 </tr>
               ))
             )}
