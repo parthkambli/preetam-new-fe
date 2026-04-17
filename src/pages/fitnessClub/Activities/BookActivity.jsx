@@ -993,9 +993,31 @@ export default function BookActivity() {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
 
+  const [staffList, setStaffList] = useState([]);
+const [selectedStaff, setSelectedStaff] = useState(null);
+
   /* =========================
      FETCH DATA
   ========================= */
+
+  const fetchStaff = async () => {
+  try {
+    const res = await api.fitnessStaff.getAll(); // adjust if your api path differs
+    const data = res.data?.data?.staff || [];
+
+    setStaffList(
+      data.map((s) => ({
+        value: s._id,
+        label: s.fullName || s.name || "Unnamed Staff",
+        data: s
+      }))
+    );
+  } catch (err) {
+    console.error("STAFF FETCH ERROR:", err);
+  }
+};
+
+
   const fetchActivities = async () => {
     const res = await api.fitnessActivities.getAll();
     setActivities(res.data.data || []);
@@ -1091,6 +1113,7 @@ export default function BookActivity() {
         paymentStatus: paymentStatus,
         paymentMode: paymentMode,
         paymentDate: paymentDate,
+        staffId: selectedStaff?.value || null
       });
 
       toast.success("Booked successfully");
@@ -1104,6 +1127,7 @@ export default function BookActivity() {
       setPaymentStatus('Paid');
       setPaymentMode('Cash');
       setPaymentDate(new Date().toISOString().split('T')[0]);
+      setSelectedStaff(null); 
     } catch (err) {
       toast.error(err?.response?.data?.message || err?.message || "Booking failed");
     }
@@ -1128,6 +1152,7 @@ export default function BookActivity() {
     fetchFeeTypes();
     fetchBookings();
     fetchMembers();
+    fetchStaff();
   }, []);
 
   useEffect(() => {
@@ -1342,6 +1367,19 @@ export default function BookActivity() {
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm"
                   />
                 </div>
+                <div>
+  <label className="block text-xs text-gray-600 mb-1.5">
+    Responsible Staff
+  </label>
+  <Select
+    options={staffList}
+    value={selectedStaff}
+    onChange={setSelectedStaff}
+    placeholder="Select staff"
+    isClearable
+    classNamePrefix="react-select"
+  />
+</div>
               </div>
             </div>
           </div>

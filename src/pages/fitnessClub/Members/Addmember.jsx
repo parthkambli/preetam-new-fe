@@ -17,6 +17,7 @@ const GENDERS          = ["Male", "Female", "Other"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
 const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
 
+
 // ── Helper: compute end date from start date + plan ──────────────────────────
 const computeEndDate = (startDate, plan) => {
   if (!startDate || !plan) return "";
@@ -278,7 +279,7 @@ const ActivityFeeRow = ({
         </div> */}
         <div>
           <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
-          <select name="paymentMode" value={entry.paymentMode} onChange={handleField}
+          <select name="paymentMode" value={entry.paymentMode ||"Cash"} onChange={handleField}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white">
             <option value="">Select Mode</option>
             {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -408,6 +409,27 @@ export default function AddMember() {
   const [loadingFeeTypes, setLoadingFeeTypes] = useState(false);
 
   const [availableSlots, setAvailableSlots] = useState({});
+
+
+
+  //Photo Validatation
+
+const validatePhoto = (file) => {
+  if (!file) return null;
+
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const maxSize = 5 * 1024 * 1024;
+
+  if (!allowedTypes.includes(file.type)) {
+    return "Only JPG, JPEG, PNG, WEBP allowed";
+  }
+
+  if (file.size > maxSize) {
+    return "File size must be less than 5MB";
+  }
+
+  return null;
+};
 
   // ── Derive overall membership status from activity fees ──────────────────
   const overallMembershipStatus = form.activityFees.some(
@@ -796,6 +818,10 @@ export default function AddMember() {
       if (form.photo instanceof File) {
         formData.append('profilePhoto', form.photo);
       }
+      if (errors.photo) {
+  toast.error("Fix photo error before submitting");
+  return;
+}
 
       const serialized = form.activityFees.map((af, index) => ({
         activity:        af.activity?.value || null,
@@ -829,9 +855,35 @@ export default function AddMember() {
       setSaved(true);
       setTimeout(() => navigate("/fitness/members"), 1500);
     } catch (err) {
-      console.error("Save Error:", err?.response?.data || err);
-      toast.error(err?.response?.data?.message || err?.message || "Failed to save member.");
-    } finally {
+  console.error("Save Error:", err?.response?.data || err);
+
+  const msg =
+    err?.response?.data?.message ||
+    err?.message ||
+    "Failed to save member.";
+
+  const code = err?.response?.data?.code;
+
+  // 🎯 Handle file-specific errors properly
+  if (code === "FILE_TOO_LARGE" || code === "INVALID_FILE_TYPE") {
+    setErrors((prev) => ({ ...prev, photo: msg }));
+    return;
+  }
+
+  // 🎯 Handle validation errors (backend field errors)
+  if (msg.toLowerCase().includes("mobile")) {
+    setErrors((prev) => ({ ...prev, mobile: msg }));
+    return;
+  }
+
+  if (msg.toLowerCase().includes("name")) {
+    setErrors((prev) => ({ ...prev, name: msg }));
+    return;
+  }
+
+  // fallback
+  toast.error(msg);
+} finally {
       setLoading(false);
     }
   };
@@ -902,7 +954,26 @@ export default function AddMember() {
                   </div>
                 )}
               </div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+  const file = e.target.files[0];
+
+  const error = validatePhoto(file);
+  if (error) {
+    setErrors((prev) => ({ ...prev, photo: error }));
+    e.target.value = null;
+    return;
+  }
+
+  setErrors((prev) => ({ ...prev, photo: null }));
+
+  setForm((prev) => ({
+    ...prev,
+    photo: file,
+    photoPreview: URL.createObjectURL(file),
+  }));
+}} />{errors.photo && (
+  <p className="mt-1 text-xs text-red-500">{errors.photo}</p>
+)}
             </div>
             <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Full Name" name="name" placeholder="Enter full name" required {...fieldProps} />
@@ -911,8 +982,17 @@ export default function AddMember() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <Field label="Email" name="email" type="email" placeholder="email@example.com" {...fieldProps} />
-            <Field label="Age" name="age" type="number" placeholder="Age" {...fieldProps} />
-            <Field label="Gender" name="gender" options={GENDERS} {...fieldProps} />
+<Field
+  label="Age"
+  name="age"
+  type="text"
+  placeholder="Age"
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 2);
+    fieldProps.onChange({ target: { name: "age", value } });
+  }}
+  {...fieldProps}
+/>            <Field label="Gender" name="gender" options={GENDERS} {...fieldProps} />
           </div>
           <div>
             <label className="block text-xs text-gray-600 mb-1">Address</label>

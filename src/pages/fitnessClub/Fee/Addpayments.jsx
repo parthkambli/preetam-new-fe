@@ -923,7 +923,7 @@ export default function TransactionReport({ onSuccess }) {
                     }`}
                 >
                   <td className="px-4 py-3 font-medium">
-                    {p.memberId?.name || p.memberId?.fullName || p.memberId?.customerName|| 'N/A'}
+                    {p.memberId?.name || p.memberId?.fullName || p.customerName || 'N/A'}
                   </td>
                   <td className="px-4 py-3">
                     {p.description || p.allotmentId?.description || p.feeTypeId?.description || '—'}
