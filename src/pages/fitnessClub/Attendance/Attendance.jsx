@@ -578,10 +578,11 @@ export default function Attendance() {
       if (toDate) params.toDate = toDate;
 
       const response = await api.attendance.getSummary(params);
-      setAttendanceData(response.data || []);
+      // setAttendanceData(response.data || []);
+      setAttendanceData(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Failed to fetch attendance:", error.response?.data || error.message);
-      setAttendanceData([]);
+       setAttendanceData([]);
     } finally {
       setLoading(false);
     }
