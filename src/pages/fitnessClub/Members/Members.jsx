@@ -1164,10 +1164,16 @@ const getNearestEndDate = (member) => {
     .filter(Boolean);
 
   if (validDates.length === 0) return null;
+  // this block shows which activity membership going "end first"
+  // return validDates.reduce((earliest, curr) =>
+  //   new Date(curr) < new Date(earliest) ? curr : earliest
+  // );
 
-  return validDates.reduce((earliest, curr) =>
-    new Date(curr) < new Date(earliest) ? curr : earliest
-  );
+  // this block shows which activity membership is going to "end last"
+   // this is what client want...
+    return validDates.reduce((latest, curr) =>
+  new Date(curr) > new Date(latest) ? curr : latest
+);
 };
 
 const getRemainingDays = (endDate) => {
