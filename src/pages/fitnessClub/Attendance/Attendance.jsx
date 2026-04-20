@@ -269,7 +269,7 @@ export default function Attendance() {
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const activities = ["All Activities", "Yoga", "Music", "Art", "Meditation", "Group Exercise"];
+  const [activities, setActivities] = useState(["All Activities"]);
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -289,12 +289,20 @@ export default function Attendance() {
   };
 
   useEffect(() => {
-    fetchAttendance();
-  }, [fromDate, toDate]);
+  const fetchActivities = async () => {
+    try {
+      const res = await api.fitnessActivities.getAll();
 
-  const filtered = attendanceData.filter((row) =>
-    selectedActivity === "All Activities" || row.activity === selectedActivity
-  );
+      const activityNames = res.data?.data?.map((a) => a.name) || [];
+
+      setActivities(["All Activities", ...activityNames]);
+    } catch (err) {
+      console.error("Failed to fetch activities", err);
+    }
+  };  
+
+  fetchActivities();
+}, []);
 
   return (
     <div className="p-6 min-h-screen bg-white font-sans">
