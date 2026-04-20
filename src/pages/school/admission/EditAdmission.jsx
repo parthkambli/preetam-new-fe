@@ -502,6 +502,8 @@ export default function EditAdmission() {
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+const [healthFiles, setHealthFiles] = useState([]);
 
   useEffect(() => {
     fetchAdmission();
@@ -553,15 +555,45 @@ export default function EditAdmission() {
     setError('');
 
     try {
-      const submissionData = { ...formData };
+      const formDataToSend = new FormData();
 
-      if (submissionData.dob) submissionData.dob = new Date(submissionData.dob).toISOString();
-      if (submissionData.declarationDate) submissionData.declarationDate = new Date(submissionData.declarationDate).toISOString();
-      if (submissionData.registrationDate) submissionData.registrationDate = new Date(submissionData.registrationDate).toISOString();
-      if (submissionData.paymentDate) submissionData.paymentDate = new Date(submissionData.paymentDate).toISOString();
-      if (submissionData.nextDueDate) submissionData.nextDueDate = new Date(submissionData.nextDueDate).toISOString();
+// Append all normal fields
+Object.keys(formData).forEach(key => {
+  const value = formData[key];
 
-      await api.schoolAdmission.update(id, submissionData);
+  if (key === 'enquiryId' && !value) return;
+  if (key === 'photo' || key === 'medicalReports') return;
+  
+
+if (Array.isArray(value)) {
+  const cleaned = value.filter(v => v && v.trim() !== '');
+  formDataToSend.append(key, JSON.stringify(cleaned));
+} else {
+  if (value !== null && value !== '') {
+    formDataToSend.append(key, value);
+  }
+}
+});
+
+// Convert dates
+if (formData.dob) formDataToSend.set('dob', new Date(formData.dob).toISOString());
+if (formData.registrationDate) formDataToSend.set('registrationDate', new Date(formData.registrationDate).toISOString());
+if (formData.paymentDate) formDataToSend.set('paymentDate', new Date(formData.paymentDate).toISOString());
+if (formData.nextDueDate) formDataToSend.set('nextDueDate', new Date(formData.nextDueDate).toISOString());
+
+// Append photo if selected
+if (photoFile) {
+  formDataToSend.append('photo', photoFile);
+}
+
+// Append health files
+if (healthFiles.length > 0) {
+  healthFiles.forEach(file => {
+    formDataToSend.append('healthRecord', file);
+  });
+}
+
+await api.schoolAdmission.update(id, formDataToSend);
       alert('Changes saved successfully!');
       navigate('/school/admission');
     } catch (err) {
@@ -676,6 +708,29 @@ export default function EditAdmission() {
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#000359]"
               />
             </div>
+            <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+    Upload Photo
+  </label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => setPhotoFile(e.target.files[0])}
+    className="w-full px-3 py-2 border rounded-lg"
+  />
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+    Upload Medical Reports
+  </label>
+  <input
+    type="file"
+    multiple
+    onChange={(e) => setHealthFiles([...e.target.files])}
+    className="w-full px-3 py-2 border rounded-lg"
+  />
+</div>
             <div className="col-span-1 sm:col-span-2 lg:col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Address</label>
               <textarea

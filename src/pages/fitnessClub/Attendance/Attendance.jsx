@@ -257,9 +257,119 @@
 
 
 
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { api } from "../../../services/apiClient";   // ← Use curly braces
+
+// export default function Attendance() {
+//   const navigate = useNavigate();
+//   const [selectedActivity, setSelectedActivity] = useState("All Activities");
+//   const [fromDate, setFromDate] = useState("");
+//   const [toDate, setToDate] = useState("");
+//   const [attendanceData, setAttendanceData] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const activities = ["All Activities", "Yoga", "Music", "Art", "Meditation", "Group Exercise"];
+
+//   const fetchAttendance = async () => {
+//     setLoading(true);
+//     try {
+//       const params = {};
+//       if (fromDate) params.fromDate = fromDate;
+//       if (toDate) params.toDate = toDate;
+
+//       const response = await api.attendance.getSummary(params);
+//       setAttendanceData(response.data || []);
+//     } catch (error) {
+//       console.error("Failed to fetch attendance:", error.response?.data || error.message);
+//       setAttendanceData([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchAttendance();
+//   }, [fromDate, toDate]);
+
+//   const filtered = attendanceData.filter((row) =>
+//     selectedActivity === "All Activities" || row.activity === selectedActivity
+//   );
+
+//   return (
+//     <div className="p-6 min-h-screen bg-white font-sans">
+//       <h2 className="text-xl font-bold text-[#1a1a2e] mb-5">Attendance</h2>
+
+//       {/* Filters - unchanged */}
+//       <div className="flex flex-wrap gap-3 mb-6">
+//         <select value={selectedActivity} onChange={(e) => setSelectedActivity(e.target.value)} className="...">
+//           {activities.map((a) => <option key={a} value={a}>{a}</option>)}
+//         </select>
+
+//         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+//         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+//       </div>
+
+//       {/* Table */}
+//       <div className="overflow-x-auto rounded-lg border border-gray-200">
+//         <table className="w-full min-w-[700px] border-collapse">
+//           <thead>
+//             <tr className="bg-[#1e3a8a]">
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Activity Name</th>
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Date</th>
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Time</th>
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Total Participants</th>
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Present</th>
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Absent</th>
+//               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Action</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {loading ? (
+//               <tr><td colSpan={7} className="px-4 py-8 text-center">Loading...</td></tr>
+//             ) : filtered.length === 0 ? (
+//               <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No records found</td></tr>
+//             ) : (
+//               filtered.map((row, idx) => (
+//                 <tr key={row._id || idx} className={`border-b ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}>
+//                   <td className="px-4 py-3">{row.activity}</td>
+//                   <td className="px-4 py-3">{new Date(row.date).toLocaleDateString('en-IN')}</td>
+//                   <td className="px-4 py-3">{row.time || "-"}</td>
+//                   <td className="px-4 py-3">{row.total}</td>
+//                   <td className="px-4 py-3"><span className="bg-green-100 text-green-700 px-3 py-0.5 rounded-full text-xs">{row.present}</span></td>
+//                   <td className="px-4 py-3"><span className="bg-red-100 text-red-500 px-3 py-0.5 rounded-full text-xs">{row.absent}</span></td>
+//                   <td className="px-4 py-3">
+//                     <button
+//                       onClick={() => navigate(`/fitness/attendance/${row.activityId}`)}   // ← Changed as per your route
+//                       className="bg-[#1e3a8a] hover:bg-[#1a2f72] text-white text-xs font-semibold px-4 py-1.5 rounded-md"
+//                     >
+//                       View
+//                     </button>
+//                   </td>
+//                 </tr>
+//               ))
+//             )}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../../services/apiClient";   // ← Use curly braces
+import { api } from "../../../services/apiClient";
 
 export default function Attendance() {
   const navigate = useNavigate();
@@ -269,7 +379,9 @@ export default function Attendance() {
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const activities = ["All Activities", "Yoga", "Music", "Art", "Meditation", "Group Exercise"];
+  // New states for Activity dropdown from API
+  const [activities, setActivities] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -288,6 +400,25 @@ export default function Attendance() {
     }
   };
 
+  // Fetch Activities for Dropdown using fitnessActivities.getAll
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        setActivityLoading(true);
+        const response = await api.fitnessActivities.getAll();
+        const data = response?.data?.data || response?.data || [];
+        setActivities(data);
+      } catch (error) {
+        console.error("Failed to fetch activities:", error);
+        setActivities([]);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    fetchActivities();
+  }, []);
+
   useEffect(() => {
     fetchAttendance();
   }, [fromDate, toDate]);
@@ -300,17 +431,38 @@ export default function Attendance() {
     <div className="p-6 min-h-screen bg-white font-sans">
       <h2 className="text-xl font-bold text-[#1a1a2e] mb-5">Attendance</h2>
 
-      {/* Filters - unchanged */}
+      {/* Filters - unchanged except dropdown */}
       <div className="flex flex-wrap gap-3 mb-6">
-        <select value={selectedActivity} onChange={(e) => setSelectedActivity(e.target.value)} className="...">
-          {activities.map((a) => <option key={a} value={a}>{a}</option>)}
+        <select 
+          value={selectedActivity} 
+          onChange={(e) => setSelectedActivity(e.target.value)} 
+          className="..."
+          disabled={activityLoading}
+        >
+          <option value="All Activities">All Activities</option>
+          
+          {activityLoading ? (
+            <option disabled>Loading activities...</option>
+          ) : (
+            activities.map((act) => {
+              const activityName = act.title || act.activityName || act.name || "Unknown";
+              return (
+                <option 
+                  key={act._id || act.id || activityName} 
+                  value={activityName}
+                >
+                  {activityName}
+                </option>
+              );
+            })
+          )}
         </select>
 
         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
       </div>
 
-      {/* Table */}
+      {/* Table - completely unchanged */}
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full min-w-[700px] border-collapse">
           <thead>
@@ -340,7 +492,7 @@ export default function Attendance() {
                   <td className="px-4 py-3"><span className="bg-red-100 text-red-500 px-3 py-0.5 rounded-full text-xs">{row.absent}</span></td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => navigate(`/fitness/attendance/${row.activityId}`)}   // ← Changed as per your route
+                      onClick={() => navigate(`/fitness/attendance/${row.activityId}`)}
                       className="bg-[#1e3a8a] hover:bg-[#1a2f72] text-white text-xs font-semibold px-4 py-1.5 rounded-md"
                     >
                       View

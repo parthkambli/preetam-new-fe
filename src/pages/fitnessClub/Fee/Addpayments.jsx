@@ -659,6 +659,10 @@ import Select from 'react-select';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 const PAYMENT_MODES = ['Cash', 'Bank Transfer'];
 const STATUS_OPTS = ['All', 'Paid', 'Pending'];
 
@@ -677,27 +681,38 @@ export default function TransactionReport({ onSuccess }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [staffList, setStaffList] = useState([]);
+  const [fromDate, setFromDate] = useState('');
+const [toDate, setToDate] = useState('');
+
 
   // Filters
   const [filterMember, setFilterMember] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterMode, setFilterMode] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  
+  const [filterStaff, setFilterStaff] = useState('');
 
   // ── Load Initial Data ─────────────────────────────────────
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [paymentsRes, allotmentsRes, membersRes] = await Promise.all([
+        const [paymentsRes, allotmentsRes, membersRes, staffRes] = await Promise.all([
           api.fitnessFees.getPayments(),
           api.fitnessFees.getAllotments(),
           api.fitnessMember.getAll(),
+          api.fitnessStaff.getAll(),
         ]);
 
         setPayments(Array.isArray(paymentsRes.data) ? paymentsRes.data : []);
         setAllotments(Array.isArray(allotmentsRes.data) ? allotmentsRes.data : []);
         setMembers(Array.isArray(membersRes.data) ? membersRes.data : []);
+        setStaffList(
+  Array.isArray(staffRes.data?.data?.staff)
+    ? staffRes.data.data.staff
+    : []
+);
       } catch (err) {
         console.error(err);
         toast.error('Failed to load data');
@@ -817,15 +832,115 @@ export default function TransactionReport({ onSuccess }) {
     const matchesMode =
       !filterMode ||   p.paymentMode?.toLowerCase().includes(filterMode.toLowerCase());
 
-    const paymentDateValue = p.paymentDate
-      ? new Date(p.paymentDate).toISOString().split('T')[0]
-      : '';
+    // const paymentDateValue = p.paymentDate
+    //   ? new Date(p.paymentDate).toISOString().split('T')[0]
+    //   : '';
 
-    const matchesDate =
-      !filterDate || paymentDateValue === filterDate;
+    // const matchesDate =
+    //   !filterDate || paymentDateValue === filterDate;
 
-    return matchesMember && matchesStatus && matchesMode && matchesDate;
+    const staffId = p.allotmentId?.responsibleStaff?._id;
+
+const matchesStaff =
+  !filterStaff || staffId === filterStaff;
+
+  const paymentDate = p.paymentDate ? new Date(p.paymentDate) : null;
+
+// normalize times (VERY IMPORTANT)
+const from = fromDate ? new Date(fromDate) : null;
+const to = toDate ? new Date(toDate) : null;
+
+if (to) {
+  to.setHours(23, 59, 59, 999); // include full day
+}
+
+const matchesDateRange =
+  (!from || (paymentDate && paymentDate >= from)) &&
+  (!to || (paymentDate && paymentDate <= to));
+
+    return matchesMember && matchesStatus && matchesMode  && matchesStaff &&
+  matchesDateRange;
   });
+
+  const staffOptions = staffList.map((staff) => ({
+  value: staff._id,
+  label: staff.fullName || staff.name,
+}));
+
+    const handleExportExcel = () => {
+  if (!filteredPayments.length) {
+    toast.error('No data to export');
+    return;
+  }
+
+  const data = filteredPayments.map((p) => ({
+    Member: p.memberId?.name || p.memberId?.fullName || 'N/A',
+    Description:
+      p.description ||
+      p.allotmentId?.description ||
+      p.feeTypeId?.description ||
+      '-',
+    Amount: p.amount,
+    Status: p.allotmentId?.status || 'Pending',
+    Date: p.paymentDate
+      ? new Date(p.paymentDate).toLocaleDateString('en-IN')
+      : '',
+    Staff:
+      p.allotmentId?.responsibleStaff?.fullName ||
+      p.allotmentId?.responsibleStaff?.name ||
+      'N/A',
+    Mode: p.paymentMode,
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Payments');
+
+  XLSX.writeFile(wb, 'Payment_Report.xlsx');
+};
+
+
+const handleExportPDF = () => {
+  if (!filteredPayments.length) {
+    toast.error('No data to export');
+    return;
+  }
+
+  const doc = new jsPDF();
+
+  doc.text('Payment Report', 14, 15);
+
+  if (fromDate || toDate) {
+  doc.text(`Date: ${fromDate || 'Start'} to ${toDate || 'End'}`, 14, 22);
+}
+
+  const rows = filteredPayments.map((p) => [
+    p.memberId?.name || p.memberId?.fullName || 'N/A',
+    p.description ||
+      p.allotmentId?.description ||
+      p.feeTypeId?.description ||
+      '-',
+    `Rs. ${Number(p.amount).toLocaleString('en-IN')}`,
+    p.allotmentId?.status || 'Pending',
+    p.paymentDate
+      ? new Date(p.paymentDate).toLocaleDateString('en-IN')
+      : '',
+    p.allotmentId?.responsibleStaff?.fullName ||
+      p.allotmentId?.responsibleStaff?.name ||
+      'N/A',
+    p.paymentMode,
+  ]);
+
+  autoTable(doc, {
+    head: [['Member', 'Description', 'Amount', 'Status', 'Date', 'Staff', 'Mode']],
+    body: rows,
+    startY: 30,
+  });
+
+  doc.save('Payment_Report.pdf');
+};
+
+
 
   return (
     <div className="space-y-5">
@@ -874,17 +989,51 @@ export default function TransactionReport({ onSuccess }) {
             </option>
           ))}
         </select>
-        <input
-          type="date"
-          value={filterDate || ''}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (value.length <= 10) {
-              setFilterDate(value);
-            }
-          }}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
-        />
+
+          <select
+  value={filterStaff}
+  onChange={(e) => setFilterStaff(e.target.value)}
+  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
+>
+  <option value="">All Staff</option>
+  {staffOptions.map((s) => (
+    <option key={s.value} value={s.value}>
+      {s.label}
+    </option>
+  ))}
+</select>
+
+<input
+  type="date"
+  value={fromDate}
+  onChange={(e) => setFromDate(e.target.value)}
+  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
+/>
+
+<input
+  type="date"
+  value={toDate}
+  onChange={(e) => setToDate(e.target.value)}
+  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
+/>
+
+
+
+       
+<button
+  onClick={handleExportExcel}
+  className="bg-green-600 text-white px-4 py-2 rounded-md text-sm"
+>
+  Excel
+</button>
+
+<button
+  onClick={handleExportPDF}
+  className="bg-red-600 text-white px-4 py-2 rounded-md text-sm"
+>
+  PDF
+</button>
+
       </div>
 
       {/* Payments Table - Now matching School style */}
