@@ -472,6 +472,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { api } from '../../../services/apiClient';
+import { toast } from 'sonner';// added by aadi
 
 export default function AddFitnessEnquiry() {
   const navigate = useNavigate();
@@ -555,13 +556,47 @@ export default function AddFitnessEnquiry() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   setError('');
+
+  //   if (!form.responsibleStaff) {
+  //     setError('Please select a Responsible Staff');
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const payload = {
+  //       ...form,
+  //       age: form.age !== '' ? Number(form.age) : '',
+  //       interestedActivity: form.interestedActivity || null,
+  //       responsibleStaff: form.responsibleStaff || null,
+  //     };
+
+  //     await api.fitnessEnquiry.create(payload);
+  //     alert('Enquiry saved successfully!');
+  //     navigate('/fitness/enquiry');
+  //   } catch (err) {
+  //     console.error('SAVE ENQUIRY ERROR:', err?.response?.data || err.message);
+  //     setError(err.response?.data?.message || 'Failed to save enquiry');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+
+
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     if (!form.responsibleStaff) {
       setError('Please select a Responsible Staff');
+      toast.error('Please select a Responsible Staff');
       setLoading(false);
       return;
     }
@@ -575,11 +610,37 @@ export default function AddFitnessEnquiry() {
       };
 
       await api.fitnessEnquiry.create(payload);
-      alert('Enquiry saved successfully!');
-      navigate('/fitness/enquiry');
+
+      // Success Toast
+      toast.success('Enquiry submitted successfully!', {
+        description: 'Your enquiry has been saved.',
+        duration: 5000,
+      });
+
+      // Reset form after success
+      setForm({
+        fullName: '',
+        age: '',
+        gender: '',
+        mobile: '',
+        interestedActivity: '',
+        source: 'Walk-in',
+        enquiryDate: new Date().toISOString().split('T')[0],
+        notes: '',
+        responsibleStaff: '',
+      });
+
+      // Navigate after showing toast
+      setTimeout(() => {
+        navigate('/fitness/enquiry');
+      }, 1200);
+
     } catch (err) {
       console.error('SAVE ENQUIRY ERROR:', err?.response?.data || err.message);
-      setError(err.response?.data?.message || 'Failed to save enquiry');
+      
+      const errorMsg = err.response?.data?.message || 'Failed to save enquiry';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
