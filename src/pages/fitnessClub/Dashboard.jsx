@@ -425,14 +425,14 @@ export default function FitnessDashboard() {
 
         const todayStr = formatLocalDate(new Date());
 
-        console.log('All booking data:', bookingData);
-        console.log('Today local date:', todayStr);
+        // console.log('All booking data:', bookingData);
+        // console.log('Today local date:', todayStr);
 
         const filteredSchedules = Array.isArray(bookingData)
           ? bookingData
               .filter((item) => {
                 const itemDate = formatLocalDate(item?.date);
-                console.log('Booking item date:', item?.date, '=>', itemDate);
+                // console.log('Booking item date:', item?.date, '=>', itemDate);
 
                 return itemDate === todayStr;
               })
@@ -441,7 +441,7 @@ export default function FitnessDashboard() {
               )
           : [];
 
-        console.log('Filtered today bookings:', filteredSchedules);
+        // console.log('Filtered today bookings:', filteredSchedules);
 
         setSchedules(filteredSchedules);
       } catch (err) {
