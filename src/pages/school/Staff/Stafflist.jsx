@@ -293,7 +293,8 @@ export default function StaffList() {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const res = await api.staff.getRoles();
+        // const res = await api.staff.getRoles();
+        const res = await api.staff.roles.getAll();
         // Backend returns plain array of roles
         setRoles(Array.isArray(res.data) ? res.data : res.data?.data || []);
       } catch (err) {

@@ -545,7 +545,7 @@ export default function AddUpdateHealthRecord() {
       formData.append('status', form.status);
 
       if (form.reportFile) {
-        formData.append('reportFile', form.reportFile);
+        formData.append('healthRecord', form.reportFile);
       }
 
       if (isEdit) {

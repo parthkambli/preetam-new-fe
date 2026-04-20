@@ -1639,22 +1639,69 @@ useEffect(() => {
     setLoading(true);
 
     try {
-      const submissionData = { ...formData };
+      // const submissionData = { ...formData };
 
-      if (!submissionData.enquiryId) delete submissionData.enquiryId;
+      // if (!submissionData.enquiryId) delete submissionData.enquiryId;
 
-      // Handle files
-      if (submissionData.photo && typeof submissionData.photo === 'object' && !(submissionData.photo instanceof File)) submissionData.photo = '';
-      if (submissionData.medicalReports && typeof submissionData.medicalReports === 'object' && !(submissionData.medicalReports instanceof File)) submissionData.medicalReports = '';
+      // // Handle files
+      // if (submissionData.photo && typeof submissionData.photo === 'object' && !(submissionData.photo instanceof File)) submissionData.photo = '';
+      // if (submissionData.medicalReports && typeof submissionData.medicalReports === 'object' && !(submissionData.medicalReports instanceof File)) submissionData.medicalReports = '';
 
-      // Convert dates
-      if (submissionData.dob)              submissionData.dob              = new Date(submissionData.dob).toISOString();
-      if (submissionData.declarationDate)  submissionData.declarationDate  = new Date(submissionData.declarationDate).toISOString();
-      if (submissionData.registrationDate) submissionData.registrationDate = new Date(submissionData.registrationDate).toISOString();
-      if (submissionData.paymentDate)      submissionData.paymentDate      = new Date(submissionData.paymentDate).toISOString();
-      if (submissionData.nextDueDate)      submissionData.nextDueDate      = new Date(submissionData.nextDueDate).toISOString();
+      // // Convert dates
+      // if (submissionData.dob)              submissionData.dob              = new Date(submissionData.dob).toISOString();
+      // if (submissionData.declarationDate)  submissionData.declarationDate  = new Date(submissionData.declarationDate).toISOString();
+      // if (submissionData.registrationDate) submissionData.registrationDate = new Date(submissionData.registrationDate).toISOString();
+      // if (submissionData.paymentDate)      submissionData.paymentDate      = new Date(submissionData.paymentDate).toISOString();
+      // if (submissionData.nextDueDate)      submissionData.nextDueDate      = new Date(submissionData.nextDueDate).toISOString();
 
-      await api.schoolAdmission.create(submissionData);
+      // await api.schoolAdmission.create(submissionData);
+
+      const formDataToSend = new FormData();
+
+      formDataToSend.append('fullName', formData.fullName || '');
+formDataToSend.append('mobile', formData.mobile || '');
+formDataToSend.append('gender', formData.gender || '');
+formDataToSend.append('age', formData.age || '');
+
+// Append normal fields
+Object.keys(formData).forEach(key => {
+  if (['fullName', 'mobile', 'gender', 'age'].includes(key)) return;
+  if (key === 'enquiryId' && !formData[key]) {
+  return; // skip empty enquiryId
+}
+  if (key === 'photo' || key === 'medicalReports') return;
+
+  const value = formData[key];
+
+if (Array.isArray(value)) {
+  const cleaned = value.filter(v => v && v.trim() !== '');
+  formDataToSend.append(key, JSON.stringify(cleaned));
+}else {
+  if (value !== null && value !== '') {
+    formDataToSend.append(key, value);
+  }
+}
+});
+
+// Append photo
+if (formData.photo) {
+  formDataToSend.append('photo', formData.photo);
+}
+
+// Append medical reports
+if (formData.medicalReports) {
+  formDataToSend.append('healthRecord', formData.medicalReports);
+}
+
+// Convert dates
+if (formData.dob) formDataToSend.set('dob', new Date(formData.dob).toISOString());
+if (formData.registrationDate) formDataToSend.set('registrationDate', new Date(formData.registrationDate).toISOString());
+if (formData.paymentDate) formDataToSend.set('paymentDate', new Date(formData.paymentDate).toISOString());
+if (formData.nextDueDate) formDataToSend.set('nextDueDate', new Date(formData.nextDueDate).toISOString());
+
+await api.schoolAdmission.create(formDataToSend);
+
+
       toast.success('Admission submitted successfully!');
       navigate('/school/admission');
     } catch (err) {
@@ -1858,7 +1905,13 @@ useEffect(() => {
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">Upload Medical Reports</label>
-              <input type="file" name="medicalReports" onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+              <input type="file" name="medicalReports" multiple
+  onChange={(e) =>
+    setFormData(prev => ({
+      ...prev,
+      medicalReports: e.target.files[0]   // keep single for now (safe)
+    }))
+  } className="w-full px-3 py-2 border rounded-lg" />
             </div>
           </>
         )}

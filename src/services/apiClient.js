@@ -6,9 +6,9 @@ const API_BASE_URL =
 // services/apiClient.js
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // headers: {
+  //   "Content-Type": "application/json",
+  // },
 });
 
 // Request interceptor — attach auth token + org ID
@@ -79,8 +79,22 @@ export const api = {
   schoolAdmission: {
     getAll: (params) => apiClient.get("/school/admission", { params }),
     getById: (id) => apiClient.get(`/school/admission/${id}`),
-    create: (data) => apiClient.post("/school/admission", data),
-    update: (id, data) => apiClient.put(`/school/admission/${id}`, data),
+    // create: (data) => apiClient.post("/school/admission", data),
+    create: (data) => {
+  return apiClient.post("/school/admission", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+},
+    // update: (id, data) => apiClient.put(`/school/admission/${id}`, data),
+    update: (id, data) => {
+  return apiClient.put(`/school/admission/${id}`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+},
     delete: (id) => apiClient.delete(`/school/admission/${id}`),
   },
 

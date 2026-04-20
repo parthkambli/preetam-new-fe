@@ -81,7 +81,7 @@ const emptyActivityFee = {
   planFee:       "",
   discount:      "",
   finalAmount:   "",
-  paymentStatus: "Pending",
+  paymentStatus: "Paid",
   paymentMode:   "",
   paymentDate:   todayString(),
   planNotes:     "",
@@ -255,17 +255,17 @@ const ActivityFeeRow = ({
 
       {/* Row 3: Payment */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-        <div>
+        {/* <div>
           <label className="block text-xs text-gray-600 mb-1">Payment Status</label>
           <select name="paymentStatus" value={entry.paymentStatus} onChange={handleField}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white">
             <option value="">Select Status</option>
             {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-        </div>
+        </div> */}
         <div>
           <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
-          <select name="paymentMode" value={entry.paymentMode} onChange={handleField}
+          <select name="paymentMode" value={entry.paymentMode || "Cash"} onChange={handleField}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white">
             <option value="">Select Mode</option>
             {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -439,7 +439,9 @@ const validatePhoto = (file) => {
         const res = await api.fitnessFees.getTypes();
         const fullList = res?.data || [];
         setFeeTypes(fullList);
-        setFeeTypeOptions(fullList.map((ft) => ({
+        setFeeTypeOptions(fullList
+          .filter((ft) => ft.type !== "Membership Pass")
+          .map((ft) => ({
           value: ft._id,
           label: ft.description,
           data: ft,
