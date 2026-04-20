@@ -199,8 +199,11 @@
 // }
 
 
+
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';           // ← Already imported
 import api from '../../../services/api';
 
 export default function StaffList() {
@@ -227,8 +230,6 @@ export default function StaffList() {
       setError(null);
 
       const response = await api.fitnessStaff.getAll();
-      
-      // Response shape: { data: { success, message, data: { staff: [], pagination: {} } } }
       const staffData = response.data?.data?.staff || [];
       setStaff(staffData);
 
@@ -265,9 +266,61 @@ export default function StaffList() {
 
   const uniqueRoles = [...new Set(staff.map(s => s.role).filter(Boolean))];
 
+  // ==================== DELETE FUNCTION (Updated with Toast Confirmation) ====================
+  const handleDelete = async (staffMember) => {
+    // Show toast confirmation
+    const confirmed = await new Promise((resolve) => {
+      toast.custom(
+        (t) => (
+          <div className="bg-white border border-gray-200 shadow-xl rounded-xl p-5 w-80">
+            <p className="text-gray-800 font-medium mb-4">
+              Are you sure you want to delete <span className="font-semibold">{staffMember.fullName}</span>?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  toast.dismiss(t);
+                  resolve(false);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(t);
+                  resolve(true);
+                }}
+                className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          duration: Infinity,   // Keep until user clicks
+          position: 'top-center',
+        }
+      );
+    });
+
+    if (!confirmed) return;
+
+    // Proceed with deletion
+    try {
+      await api.fitnessStaff.delete(staffMember._id);
+      toast.success('Staff deleted successfully');
+      fetchStaff(); // Refresh list
+    } catch (err) {
+      toast.error('Failed to delete staff');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      {/* Filters - Unchanged */}
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
         <input
           type="text"
@@ -299,11 +352,10 @@ export default function StaffList() {
           <option value="">All Status</option>
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>
-          {/* <option value="Terminated">Terminated</option> */}
         </select>
       </div>
 
-      {/* Table */}
+      {/* Table - Unchanged */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
@@ -378,6 +430,13 @@ export default function StaffList() {
                           className="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
                         >
                           Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(s)}
+                          className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+                        >
+                          Delete
                         </button>
                       </div>
                     </td>
