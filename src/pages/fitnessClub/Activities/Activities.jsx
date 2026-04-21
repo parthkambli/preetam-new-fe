@@ -1532,10 +1532,14 @@ export default function Activities() {
       const isSameDate = (date) =>
         format(new Date(date), "yyyy-MM-dd") === selected;
 
+      // const [activitiesRes, bookingsRes] = await Promise.all([
+      //   api.fitnessActivities.getAll(),
+      //   api.fitnessActivities.getBookings(),
+      // ]);
       const [activitiesRes, bookingsRes] = await Promise.all([
-        api.fitnessActivities.getAll(),
-        api.fitnessActivities.getBookings(),
-      ]);
+  api.fitnessActivities.getAll(),
+  api.fitnessActivities.getAllBookings(),
+]);
 
       const activities = activitiesRes.data.data || [];
       const bookings = bookingsRes.data.data || [];
@@ -1598,7 +1602,7 @@ export default function Activities() {
       const isSameDate = (date) =>
         format(new Date(date), "yyyy-MM-dd") === selected;
 
-      const res = await api.fitnessActivities.getBookings();
+      const res = await api.fitnessActivities.getAllBookings();
       const bookings = res.data.data || [];
 
       const filtered = bookings.filter(

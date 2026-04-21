@@ -309,7 +309,12 @@ fitnessFees: {
 
     bookSlot: (data) => apiClient.post("/fitness/activities/book", data),
 
-    getBookings: () => apiClient.get("/fitness/activities/bookings"),
+    // getBookings: () => apiClient.get("/fitness/activities/bookings"),
+    getBookings: (params) =>
+  apiClient.get('/fitness/activities/bookings', { params }),
+
+    getAllBookings: () => apiClient.get("/fitness/activities/bookings/all"), // for bookings dashboard only..
+
     cancelBooking: (id) => apiClient.delete(`/fitness/activities/bookings/${id}`),
   },
   
