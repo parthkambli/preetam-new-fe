@@ -1097,998 +1097,6 @@
 
 
 
-// // Members.jsx — updated for multi-activity members
-// import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { toast } from "sonner";
-// import { api } from "../../../services/apiClient";
-// import PassRenewModal from "./PassRenewModal";
-
-// const PLAN_OPTIONS = [
-//   { value: "Annual",  label: "Annual",  months: 12 },
-//   { value: "Monthly", label: "Monthly", months: 1  },
-//   { value: "Weekly",  label: "Weekly",  days: 7    },
-//   { value: "Daily",   label: "Daily",   days: 1    },
-//   { value: "Hourly",  label: "Hourly",  days: 1    },
-// ];
-
-// const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
-// const PAYMENT_STATUSES = ["Paid", "Pending"];
-
-// const isPassMemberFn = (member) => {
-//   return member.membershipPass !== null;
-// };
-
-// // ── Helpers ───────────────────────────────────────────────────────────────────
-// const todayString = () => new Date().toISOString().split("T")[0];
-
-// const computeActivityStatus = (af) => {
-//   if (af.paymentStatus !== "Paid") return "Inactive";
-//   if (!af.startDate || !af.endDate) return "Inactive";
-//   const today = new Date(); today.setHours(0, 0, 0, 0);
-//   const start = new Date(af.startDate); start.setHours(0, 0, 0, 0);
-//   const end   = new Date(af.endDate);   end.setHours(23, 59, 59, 999);
-//   return today >= start && today <= end ? "Active" : "Inactive";
-// };
-
-// const computeEndDate = (startDate, plan) => {
-//   if (!startDate || !plan) return "";
-//   const d = new Date(startDate);
-//   if (isNaN(d.getTime())) return "";
-//   switch (plan) {
-//     case "Annual":  d.setFullYear(d.getFullYear() + 1); d.setDate(d.getDate() - 1); break;
-//     case "Monthly": d.setMonth(d.getMonth() + 1);       d.setDate(d.getDate() - 1); break;
-//     case "Weekly":  d.setDate(d.getDate() + 6); break;
-//     default: break; // Daily/Hourly = same day
-//   }
-//   return d.toISOString().split("T")[0];
-// };
-
-// const formatDate = (dateStr) => {
-//   if (!dateStr) return "—";
-//   return new Date(dateStr).toLocaleDateString("en-GB", {
-//     day: "2-digit", month: "short", year: "numeric",
-//   });
-// };
-
-// // Remaining Days Logic
-// const getNearestEndDate = (member) => {
-//   // Pass member
-//   if (member.membershipPass?.endDate) {
-//     return member.membershipPass.endDate;
-//   }
-
-//   // Activity member
-//   const validDates = (member.activityFees || [])
-//     .map((af) => af.endDate)
-//     .filter(Boolean);
-
-//   if (validDates.length === 0) return null;
-//   // this block shows which activity membership going "end first"
-//   // return validDates.reduce((earliest, curr) =>
-//   //   new Date(curr) < new Date(earliest) ? curr : earliest
-//   // );
-
-//   // this block shows which activity membership is going to "end last"
-//    // this is what client want...
-//     return validDates.reduce((latest, curr) =>
-//   new Date(curr) > new Date(latest) ? curr : latest
-// );
-// };
-
-// const getRemainingDays = (endDate) => {
-//   if (!endDate) return { label: "—", type: "normal" };
-
-//   const today = new Date();
-//   today.setHours(0, 0, 0, 0);
-
-//   const end = new Date(endDate);
-//   end.setHours(23, 59, 59, 999);
-
-//   const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-
-//   if (diff < 0) return { label: "Expired", type: "expired" };
-//   if (diff === 0) return { label: "Last Day", type: "warning" };
-//   if (diff <= 3) return { label: `${diff} days`, type: "warning" };
-
-//   return { label: `${diff} days`, type: "normal" };
-// };
-
-
-// const getActivityExpiryDetails = (activityFees = []) => {
-//   const today = new Date();
-//   today.setHours(0, 0, 0, 0);
-
-//   return activityFees
-//     .map((af, i) => {
-//       if (!af.endDate) return null;
-
-//       const end = new Date(af.endDate);
-//       const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-
-//       const name =
-//         typeof af.activity === "object"
-//           ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
-//           : `Activity ${i + 1}`;
-
-//       return `${name}: ${
-//         diff < 0 ? "Expired" : diff === 0 ? "Last Day" : `${diff} days`
-//       }`;
-//     })
-//     .filter(Boolean)
-//     .join(" | ");
-// };
-
-
-
-// // ── Activity Summary Pill (used in table row) ─────────────────────────────────
-// function ActivitySummaryPills({ activityFees }) {
-//   if (!Array.isArray(activityFees) || activityFees.length === 0) {
-//     return <span className="text-gray-400 text-xs">—</span>;
-//   }
-
-//   return (
-//     <div className="flex flex-wrap gap-1">
-//       {activityFees.map((af, i) => {
-//         const status = computeActivityStatus(af);
-//         const name =
-//           typeof af.activity === "object"
-//             ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
-//             : `Activity ${i + 1}`;
-//         return (
-//           <span
-//             key={af._id || i}
-//             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
-//               status === "Active"
-//                 ? "bg-green-50 border-green-300 text-green-700"
-//                 : "bg-gray-100 border-gray-300 text-gray-500"
-//             }`}
-//             title={`${name} • ${af.plan || ""} • Ends ${formatDate(af.endDate)}`}
-//           >
-//             <span className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-green-500" : "bg-gray-400"}`} />
-//             {name}
-//           </span>
-//         );
-//       })}
-//     </div>
-//   );
-// }
-
-// // ── Single Activity Renewal Row (inside modal) ────────────────────────────────
-// function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffList }) {
-//   const currentStatus = computeActivityStatus(af);
-
-//   // Auto-compute end date when start or plan changes
-//   useEffect(() => {
-//     if (renewal.startDate && renewal.plan) {
-//       const end = computeEndDate(renewal.startDate, renewal.plan);
-//       if (end && end !== renewal.endDate) {
-//         onChange(index, "endDate", end);
-//       }
-//     }
-//   }, [renewal.startDate, renewal.plan]);
-
-//   // Auto-compute final amount
-//   const computedFinal =
-//     parseFloat(renewal.planFee) > 0
-//       ? Math.max(0, (parseFloat(renewal.planFee) || 0) - (parseFloat(renewal.discount) || 0))
-//       : "";
-
-//   return (
-//     <div className={`rounded-xl border p-4 ${
-//       renewal.selected
-//         ? "border-[#1a2a5e] bg-blue-50/40"
-//         : "border-gray-200 bg-gray-50 opacity-60"
-//     }`}>
-//       {/* Header: checkbox + activity name + current status */}
-//       <div className="flex items-center gap-3 mb-3">
-//         <input
-//           type="checkbox"
-//           checked={renewal.selected}
-//           onChange={(e) => onChange(index, "selected", e.target.checked)}
-//           className="w-4 h-4 accent-[#1a2a5e] cursor-pointer"
-//           id={`renew-check-${index}`}
-//         />
-//         <label htmlFor={`renew-check-${index}`} className="font-semibold text-sm text-gray-800 cursor-pointer flex-1">
-//           {activityName}
-//         </label>
-//         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
-//           currentStatus === "Active"
-//             ? "bg-green-50 border-green-300 text-green-700"
-//             : "bg-red-50 border-red-300 text-red-600"
-//         }`}>
-//           <span className={`w-1.5 h-1.5 rounded-full ${currentStatus === "Active" ? "bg-green-500" : "bg-red-400"}`} />
-//           {currentStatus}
-//         </span>
-//       </div>
-
-//       {/* Current expiry info */}
-//       <p className="text-xs text-gray-500 mb-3">
-//         Current period: <span className="font-medium text-gray-700">{formatDate(af.startDate)}</span>
-//         {" → "}
-//         <span className="font-medium text-gray-700">{formatDate(af.endDate)}</span>
-//       </p>
-
-//       {/* Renewal fields — only interactive when selected */}
-//       {renewal.selected && (
-//         <div className="space-y-3">
-//           {/* Plan + Start Date */}
-//           <div className="grid grid-cols-2 gap-3">
-//             <div>
-//               <label className="block text-xs text-gray-600 mb-1">Plan</label>
-//               <select
-//                 value={renewal.plan}
-//                 onChange={(e) => onChange(index, "plan", e.target.value)}
-//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//               >
-//                 {PLAN_OPTIONS.map((p) => (
-//                   <option key={p.value} value={p.value}>{p.label}</option>
-//                 ))}
-//               </select>
-//             </div>
-//             <div>
-//               <label className="block text-xs text-gray-600 mb-1">
-//                 New Start Date <span className="text-red-400">*</span>
-//               </label>
-//               <input
-//                 type="date"
-//                 value={renewal.startDate}
-//                 onChange={(e) => onChange(index, "startDate", e.target.value)}
-//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//               />
-//             </div>
-//           </div>
-
-//           {/* End Date */}
-//           <div>
-//             <label className="block text-xs text-gray-600 mb-1">
-//               New End Date
-//               <span className="ml-1 text-[10px] text-gray-400">(auto-filled)</span>
-//             </label>
-//             <input
-//               type="date"
-//               value={renewal.endDate}
-//               onChange={(e) => onChange(index, "endDate", e.target.value)}
-//               min={renewal.startDate || "1900-01-01"}
-//               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//             />
-//           </div>
-
-//           {/* Fees */}
-//           <div className="grid grid-cols-3 gap-2">
-//             <div>
-//               <label className="block text-xs text-gray-600 mb-1">Plan Fee (₹)</label>
-//               <input
-//                 type="number" min="0"
-//                 value={renewal.planFee}
-//                 onChange={(e) => onChange(index, "planFee", e.target.value)}
-//                 placeholder="0"
-//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//               />
-//             </div>
-//             <div>
-//               <label className="block text-xs text-gray-600 mb-1">Discount (₹)</label>
-//               <input
-//                 type="number" min="0"
-//                 value={renewal.discount}
-//                 onChange={(e) => onChange(index, "discount", e.target.value)}
-//                 placeholder="0"
-//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//               />
-//             </div>
-//             <div>
-//               <label className="block text-xs text-gray-600 mb-1">Final (₹)</label>
-//               <input
-//                 type="text" readOnly
-//                 value={computedFinal !== "" ? computedFinal : ""}
-//                 placeholder="Auto"
-//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-500 focus:outline-none"
-//               />
-//             </div>
-//           </div>
-
-//           {/* Payment */}
-//           <div className="grid grid-cols-2 gap-3">
-//             <div>
-//               <label className="block text-xs text-gray-600 mb-1">Payment Status</label>
-//               <select
-//                 value={renewal.paymentStatus}
-//                 onChange={(e) => onChange(index, "paymentStatus", e.target.value)}
-//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//               >
-//                 {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-//               </select>
-//             </div>
-//             <div>
-//               <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
-//               <select
-//                 value={renewal.paymentMode}
-//                 onChange={(e) => onChange(index, "paymentMode", e.target.value)}
-//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//               >
-//                 <option value="">Select</option>
-//                 {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
-//               </select>
-//             </div>
-//           </div>
-
-//           <div>
-//             <label className="block text-xs text-gray-600 mb-1">Payment Date</label>
-//             <input
-//               type="date"
-//               value={renewal.paymentDate}
-//               max={todayString()}
-//               onChange={(e) => onChange(index, "paymentDate", e.target.value)}
-//               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//             />
-//           </div>
-//           <div>
-//   <label className="block text-xs text-gray-600 mb-1">
-//     Responsible Staff
-//   </label>
-
-//   <select
-//     value={renewal.staffId || ""}
-//     onChange={(e) => onChange(index, "staffId", e.target.value)}
-//     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//   >
-//     <option value="">Select Staff</option>
-
-//     {(staffList || []).map((staff) => (
-//       <option key={staff._id} value={staff._id}>
-//         {staff.name || staff.fullName || "Unnamed"}
-//       </option>
-//     ))}
-//   </select>
-// </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// // ── Renew Modal ───────────────────────────────────────────────────────────────
-// function RenewModal({ member, onClose, onRenewed }) {
-
-//   const [staffList, setStaffList] = useState([]);
-
-// useEffect(() => {
-//   const fetchStaff = async () => {
-//     try {
-//       const res = await api.fitnessStaff.getAll();
-
-//       console.log("STAFF API:", res.data);
-
-//       const staff = res.data?.data?.staff || [];
-
-//       setStaffList(staff);
-
-//     } catch (err) {
-//       console.error("Error fetching fitness staff:", err);
-//       setStaffList([]);
-//     }
-//   };
-
-//   fetchStaff();
-// }, []);
-
-//   // Build initial renewal state for each activityFee
-//   const buildInitialRenewals = () =>
-//     (member.activityFees || []).map((af) => {
-//       // Default start = day after current end date (or today if expired)
-//       const afterEnd = af.endDate
-//         ? new Date(new Date(af.endDate).getTime() + 86400000).toISOString().split("T")[0]
-//         : todayString();
-//       const startDate = afterEnd < todayString() ? todayString() : afterEnd;
-//       const plan = af.plan || "Monthly";
-//       return {
-//         selected:      computeActivityStatus(af) !== "Active", // pre-select inactive ones
-//         plan,
-//         startDate,
-//         endDate:       computeEndDate(startDate, plan),
-//         planFee:       String(af.planFee || ""),
-//         discount:      "0",
-//         paymentStatus: "Paid",
-//         paymentMode:   af.paymentMode || "",
-//         paymentDate:   todayString(),
-//         // carry through for the API
-//         activityFeeId:    af._id,
-//         activityId:       typeof af.activity === "object" ? af.activity?._id : af.activity,
-//         feeTypeId:        typeof af.feeType   === "object" ? af.feeType?._id  : af.feeType,
-//         staffId:          typeof af.staff     === "object" ? af.staff?._id    : af.staff,
-//       };
-//     });
-
-//   const [renewals, setRenewals] = useState(buildInitialRenewals);
-//   const [loading, setLoading]   = useState(false);
-//   const [errors, setErrors]     = useState({});
-  
-
-
-
-  
-
-//   const handleChange = (index, field, value) => {
-//     setRenewals((prev) => {
-//       const updated = [...prev];
-//       updated[index] = { ...updated[index], [field]: value };
-//       // Recompute final amount on fee/discount change
-//       if (field === "planFee" || field === "discount") {
-//         const f = parseFloat(field === "planFee" ? value : updated[index].planFee) || 0;
-//         const d = parseFloat(field === "discount" ? value : updated[index].discount) || 0;
-//         updated[index].finalAmount = f > 0 ? String(Math.max(0, f - d)) : "";
-//       }
-//       return updated;
-//     });
-//     // Clear related error
-//     const errKey = `${index}_${field}`;
-//     if (errors[errKey]) setErrors((p) => ({ ...p, [errKey]: "" }));
-//   };
-
-//   const validate = () => {
-//     const e = {};
-//     const selected = renewals.filter((r) => r.selected);
-//     if (selected.length === 0) {
-//       e.global = "Please select at least one activity to renew.";
-//       return e;
-//     }
-//     renewals.forEach((r, i) => {
-//       if (!r.selected) return;
-//       if (!r.startDate) e[`${i}_startDate`] = "Start date required";
-//       if (!r.endDate)   e[`${i}_endDate`]   = "End date required";
-//       if (r.startDate && r.endDate && r.endDate < r.startDate)
-//         e[`${i}_endDate`] = "End date cannot be before start date";
-//     });
-//     return e;
-//   };
-
-//   const handleRenew = async () => {
-//     const errs = validate();
-//     if (Object.keys(errs).length) { setErrors(errs); return; }
-
-//     const selectedRenewals = renewals
-//       .map((r, i) => ({ ...r, originalIndex: i }))
-//       .filter((r) => r.selected)
-//       .map((r) => ({
-//         activityFeeId:  r.activityFeeId,
-//         activityId:     r.activityId,
-//         feeTypeId:      r.feeTypeId,
-//         staffId:        r.staffId,
-//         plan:           r.plan,
-//         startDate:      r.startDate,
-//         endDate:        r.endDate,
-//         planFee:        Number(r.planFee)    || 0,
-//         discount:       Number(r.discount)   || 0,
-//         finalAmount:    Number(r.planFee) > 0
-//                           ? Math.max(0, (Number(r.planFee) || 0) - (Number(r.discount) || 0))
-//                           : 0,
-//         paymentStatus:  r.paymentStatus,
-//         paymentMode:    r.paymentMode || "",
-//         paymentDate:    r.paymentDate || null,
-//       }));
-
-//     setLoading(true);
-//     try {
-//       await api.fitnessMember.renew(member._id, { renewals: selectedRenewals });
-//       const count = selectedRenewals.length;
-//       toast.success(`${member.name}'s ${count} activit${count === 1 ? "y" : "ies"} renewed successfully!`);
-//       onRenewed();
-//       onClose();
-//     } catch (err) {
-//       toast.error(err?.response?.data?.message || "Renewal failed. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const selectedCount = renewals.filter((r) => r.selected).length;
-
-//   // Get activity display name for each row
-//   const getActivityName = (af, i) =>
-//     typeof af.activity === "object"
-//       ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
-//       : `Activity ${i + 1}`;
-
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-//       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-
-//         {/* Header */}
-//         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-//           <div>
-//             <h2 className="text-lg font-bold text-[#1a2a5e]">Renew Membership</h2>
-//             <p className="text-xs text-gray-500 mt-0.5">
-//               {member.name} &bull; {member.mobile}
-//             </p>
-//           </div>
-//           <button
-//             onClick={onClose}
-//             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
-//           >
-//             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-//             </svg>
-//           </button>
-//         </div>
-
-//         {/* Instruction */}
-//         <div className="px-6 pt-4 pb-2 flex-shrink-0">
-//           <p className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-//             Select the activities you want to renew. Inactive ones are pre-selected. Each activity can have its own plan and dates.
-//           </p>
-//           {errors.global && (
-//             <p className="mt-2 text-xs text-red-500 font-medium">{errors.global}</p>
-//           )}
-//         </div>
-
-//         {/* Scrollable activity list */}
-//         <div className="px-6 py-3 overflow-y-auto flex-1 space-y-3">
-//           {(member.activityFees || []).map((af, i) => (
-//             <ActivityRenewRow
-//               key={af._id || i}
-//               af={af}
-//               index={i}
-//               renewal={renewals[i]}
-//               onChange={handleChange}
-//               activityName={getActivityName(af, i)}
-//               staffList={staffList}   
-//             />
-//           ))}
-//         </div>
-
-//         {/* Footer */}
-//         <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0">
-//           {/* Total summary */}
-//           {selectedCount > 0 && (
-//             <div className="flex items-center justify-between text-sm mb-3 bg-gray-50 rounded-lg px-3 py-2">
-//               <span className="text-gray-600">
-//                 Renewing <span className="font-semibold text-[#1a2a5e]">{selectedCount}</span> Activity{selectedCount === 1 ? "y" : "ies"}
-//               </span>
-//               <span className="font-bold text-[#1a2a5e]">
-//                 ₹{renewals
-//                     .filter((r) => r.selected)
-//                     .reduce((sum, r) => {
-//                       const f = parseFloat(r.planFee)   || 0;
-//                       const d = parseFloat(r.discount)  || 0;
-//                       return sum + (f > 0 ? Math.max(0, f - d) : 0);
-//                     }, 0)
-//                     .toLocaleString("en-IN")}
-//               </span>
-//             </div>
-//           )}
-
-//           <div className="flex gap-3">
-//             <button
-//               onClick={onClose}
-//               className="flex-1 border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               onClick={handleRenew}
-//               disabled={loading || selectedCount === 0}
-//               className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-//             >
-//               {loading ? (
-//                 <>
-//                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-//                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-//                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-//                   </svg>
-//                   Renewing…
-//                 </>
-//               ) : (
-//                 `Renew ${selectedCount > 0 ? `(${selectedCount})` : ""}`
-//               )}
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // ── Main Members Component ────────────────────────────────────────────────────
-// export default function Members() {
-//   const navigate = useNavigate();
-
-//   const [members, setMembers]         = useState([]);
-//   const [loading, setLoading]         = useState(true);
-//   const [searchTerm, setSearchTerm]   = useState("");
-//   const [statusFilter, setStatusFilter] = useState("");
-//   const [renewMember, setRenewMember] = useState(null);
-//   const [renewPassMember, setRenewPassMember] = useState(null);
-//   const [planTypeFilter, setPlanTypeFilter] = useState("");
-
-//   const fetchMembers = async () => {
-//     setLoading(true);
-//     try {
-//       const response = await api.fitnessMember.getAll();
-//       // backend returns array directly (applyComputedStatuses is run server-side)
-//       const raw = response?.data ?? response;
-//       setMembers(Array.isArray(raw) ? raw : []);
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Failed to load members");
-//       setMembers([]);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => { fetchMembers(); }, []);
-
-//   // Overall status is driven by the computed membershipStatus from backend
-//   const getMemberOverallStatus = (member) => member.membershipStatus || "Inactive";
-
-//   const filteredMembers = members.filter((member) => {
-//     const matchesSearch =
-//       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       member.mobile?.includes(searchTerm);
-//     const matchesStatus =
-//       !statusFilter || getMemberOverallStatus(member) === statusFilter;
-
-//       //New logic for added Plan type
-//       // const isPassMember = !!member.membershipPass;
-
-//       const isPassMember = isPassMemberFn(member);
-
-//   const matchesPlanType =
-//     !planTypeFilter ||
-//     (planTypeFilter === "Pass" && isPassMember) ||
-//     (planTypeFilter === "Activity" && !isPassMember);
-
-//   return matchesSearch && matchesStatus && matchesPlanType;
-//   });
-
-//   const handleDelete = async (id) => {
-//     if (!window.confirm("Are you sure you want to delete this member?")) return;
-//     try {
-//       await api.fitnessMember.delete(id);
-//       toast.success("Member deleted successfully");
-//       fetchMembers();
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Failed to delete member");
-//     }
-//   };
-
-
-  
-
-//   // Stats
-//   const activeCount   = members.filter((m) => getMemberOverallStatus(m) === "Active").length;
-//   const inactiveCount = members.length - activeCount;
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-
-//       {renewMember && (
-//         <RenewModal
-//           member={renewMember}
-//           onClose={() => setRenewMember(null)}
-//           onRenewed={fetchMembers}
-//         />
-//       )}
-
-//       {renewPassMember && (
-//   <PassRenewModal
-//     member={renewPassMember}
-//     onClose={() => setRenewPassMember(null)}
-//     onRenewed={fetchMembers}
-//   />
-// )}
-
-//       {/* Header */}
-//       <div className="flex items-center justify-between mb-6">
-//         <div>
-//           <h1 className="text-2xl font-bold text-gray-800">Fitness Members</h1>
-//           {!loading && (
-//             <p className="text-xs text-gray-500 mt-0.5">
-//               {members.length} total &bull;{" "}
-//               <span className="text-green-600 font-medium">{activeCount} active</span>
-//               {" "}
-//               &bull;{" "}
-//               <span className="text-gray-400">{inactiveCount} inactive</span>
-//             </p>
-//           )}
-//         </div>
-//         <div className="flex gap-3">
-//           <button
-//             onClick={fetchMembers}
-//             className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
-//           >
-//             ↻ Refresh
-//           </button>
-//           <button
-//             onClick={() => navigate("/fitness/members/add-members")}
-//             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
-//           >
-//             + Add Member
-//           </button>
-//           <button
-//     onClick={() => navigate("/fitness/members/add-pass")}
-//     className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
-//   >
-//    + Add Pass Member
-//   </button>
-//         </div>
-//       </div>
-
-//       {/* Filters */}
-//       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-//         <input
-//           type="text"
-//           placeholder="Search by Name or Mobile"
-//           value={searchTerm}
-//           onChange={(e) => setSearchTerm(e.target.value)}
-//           className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//         />
-
-//         <select
-//   value={planTypeFilter}
-//   onChange={(e) => setPlanTypeFilter(e.target.value)}
-//   className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-// >
-//   <option value="">All Plans</option>
-//   <option value="Pass">Pass</option>
-//   <option value="Activity">Activity</option>
-// </select>
-//         <select
-//           value={statusFilter}
-//           onChange={(e) => setStatusFilter(e.target.value)}
-//           className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-//         >
-//           <option value="">All Status</option>
-//           <option value="Active">Active</option>
-//           <option value="Inactive">Inactive</option>
-//         </select>
-//       </div>
-
-//       {/* Table */}
-//       <div className="bg-white rounded-xl shadow overflow-hidden">
-//         <div className="overflow-x-auto">
-//           <table className="min-w-full text-sm">
-//             <thead>
-//               <tr className="bg-[#1a2a5e] text-white">
-//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Member</th>
-//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Mobile</th>
-//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Plan Type</th>
-//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Activities</th>
-//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Overall Status</th>
-//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Remaining Days</th>
-//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {loading ? (
-//                 <tr>
-//                   <td colSpan={6} className="px-6 py-20 text-center">
-//                     <div className="flex justify-center">
-//                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]" />
-//                     </div>
-//                     <p className="text-gray-500 mt-3 text-sm">Loading members…</p>
-//                   </td>
-//                 </tr>
-//               ) : filteredMembers.length === 0 ? (
-//                 <tr>
-//                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 text-sm">
-//                     No members found.
-//                   </td>
-//                 </tr>
-//               ) : (
-//                 filteredMembers.map((member, idx) => {
-//                   const overallStatus = getMemberOverallStatus(member);
-//                   const activityFees  = member.activityFees || [];
-//                   // const isPassMember = !!member.membershipPass;
-//                   const isPassMember = isPassMemberFn(member);
-
-//                   const endDate = getNearestEndDate(member);
-//                   const remaining = getRemainingDays(endDate);
-                  
-//                   const tooltip = getActivityExpiryDetails(member.activityFees);
-
-
-//                   const inactiveCount = isPassMember
-//   ? 0
-//   : activityFees.filter((af) => computeActivityStatus(af) !== "Active").length;
-
-//                   return (
-//                     <tr key={member._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-
-//                       {/* Member name + ID */}
-//                       <td className="px-5 py-4">
-//                         <div className="font-medium text-gray-800">{member.name}</div>
-//                         {member.memberId && (
-//                           <div className="text-xs text-gray-400 mt-0.5">{member.memberId}</div>
-//                         )}
-//                       </td>
-
-//                       {/* Mobile */}
-//                       <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
-
-//                       <td className="px-5 py-4">
-//   {isPassMember ? (
-//     <span className="text-purple-600 font-medium text-xs">Pass</span>
-//   ) : (
-//     <span className="text-blue-600 font-medium text-xs">Activity</span>
-//   )}
-// </td>
-
-//                       {/* Activity pills */}
-//                       <td className="px-5 py-4 max-w-xs">
-//                         {isPassMember ? (
-//   <span className="inline-flex px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
-//     Membership Pass
-//   </span>
-// ) : (
-//   <ActivitySummaryPills activityFees={activityFees} />
-// )}
-//                       </td>
-
-//                       {/* Overall status badge */}
-//                       <td className="px-5 py-4">
-//                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-//                           overallStatus === "Active"
-//                             ? "bg-green-50 border-green-300 text-green-700"
-//                             : "bg-red-50 border-red-300 text-red-600"
-//                         }`}>
-                          
-//                           <span className={`w-1.5 h-1.5 rounded-full ${overallStatus === "Active" ? "bg-green-500" : "bg-red-400"}`} />
-//                           {overallStatus}
-//                         </span>
-//                       </td>
-
-//                       {/* Remaining Days */}
-//                       <td className="px-5 py-4">
-//   <div className="relative group inline-block">
-    
-//     {/* Main Text */}
-//     <span
-//       className={`text-xs font-semibold cursor-pointer ${
-//         remaining.type === "expired"
-//           ? "text-red-500"
-//           : remaining.type === "warning"
-//           ? "text-orange-500"
-//           : "text-gray-700"
-//       }`}
-//     >
-//       {remaining.label}
-//     </span>
-
-//     {/* Tooltip */}
-//     {member.activityFees?.length > 0 && (
-//       <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50">
-//         <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-2 text-xs text-gray-700 whitespace-nowrap">
-          
-//           {member.activityFees.map((af, i) => {
-//             const end = af.endDate ? new Date(af.endDate) : null;
-//             const today = new Date();
-//             today.setHours(0,0,0,0);
-
-//             let diff = null;
-//             if (end) {
-//               diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-//             }
-
-//             const name =
-//               typeof af.activity === "object"
-//                 ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
-//                 : `Activity ${i + 1}`;
-
-//             return (
-//               <div key={i} className="flex justify-between gap-4">
-//                 <span>{name}</span>
-//                 <span className={
-//                   diff < 0
-//                     ? "text-red-500"
-//                     : diff <= 3
-//                     ? "text-orange-500"
-//                     : "text-gray-600"
-//                 }>
-//                   {diff < 0
-//                     ? "Expired"
-//                     : diff === 0
-//                     ? "Last Day"
-//                     : `${diff} days`}
-//                 </span>
-//               </div>
-//             );
-//           })}
-
-//         </div>
-//       </div>
-//     )}
-//   </div>
-// </td>
-
-//                       {/* Actions */}
-//                       <td className="px-5 py-4">
-//                         <div className="flex gap-2 flex-wrap">
-//                           <button
-//                             onClick={() => {
-//   if (isPassMemberFn(member)) {
-//     navigate(`/fitness/members/view-pass/${member._id}`);
-//   } else {
-//     navigate(`/fitness/members/view-member/${member._id}`);
-//   }
-// }}
-//                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-//                           >
-//                             View
-//                           </button>
-//                           <button
-//                             onClick={() => {
-//   if (isPassMemberFn(member)) {
-//     navigate(`/fitness/members/edit-pass/${member._id}`);
-//   } else {
-//     navigate(`/fitness/members/edit-member/${member._id}`);
-//   }
-// }}
-//                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-//                           >
-//                             Edit
-//                           </button>
-
-//                           {/* w — show if any activity is inactive/expired */}
-//                           {(isPassMember ? overallStatus !== "Active" : inactiveCount > 0) && (
-//                             <button
-//                               onClick={() => {
-//                                 if (isPassMember) {
-//                                   setRenewPassMember(member);
-//                                 } else {
-//                                   setRenewMember(member);
-//                                 }
-//                               }}
-//                               className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-//                               title={`${inactiveCount} activit${inactiveCount === 1 ? "y" : "ies"} need renewal`}
-//                             >
-//                               Renew{inactiveCount > 1 ? ` (${inactiveCount})` : ""}
-//                             </button>
-//                           )}
-
-//                           <button
-//                             onClick={() => handleDelete(member._id)}
-//                             className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-//                           >
-//                             Delete
-//                           </button>
-//                         </div>
-//                       </td>
-//                     </tr>
-//                   );
-//                 })
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-
-//       <p className="text-xs text-gray-400 mt-4 text-center">
-//         Showing {filteredMembers.length} of {members.length} members
-//       </p>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Members.jsx — updated for multi-activity members
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -2097,14 +1105,14 @@ import { api } from "../../../services/apiClient";
 import PassRenewModal from "./PassRenewModal";
 
 const PLAN_OPTIONS = [
-  { value: "Annual", label: "Annual", months: 12 },
-  { value: "Monthly", label: "Monthly", months: 1 },
-  { value: "Weekly", label: "Weekly", days: 7 },
-  { value: "Daily", label: "Daily", days: 1 },
-  { value: "Hourly", label: "Hourly", days: 1 },
+  { value: "Annual",  label: "Annual",  months: 12 },
+  { value: "Monthly", label: "Monthly", months: 1  },
+  { value: "Weekly",  label: "Weekly",  days: 7    },
+  { value: "Daily",   label: "Daily",   days: 1    },
+  { value: "Hourly",  label: "Hourly",  days: 1    },
 ];
 
-const PAYMENT_MODES = ["Cash", "Bank Transfer"];
+const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
 
 const isPassMemberFn = (member) => {
@@ -2117,12 +1125,9 @@ const todayString = () => new Date().toISOString().split("T")[0];
 const computeActivityStatus = (af) => {
   if (af.paymentStatus !== "Paid") return "Inactive";
   if (!af.startDate || !af.endDate) return "Inactive";
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const start = new Date(af.startDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(af.endDate);
-  end.setHours(23, 59, 59, 999);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date(af.startDate); start.setHours(0, 0, 0, 0);
+  const end   = new Date(af.endDate);   end.setHours(23, 59, 59, 999);
   return today >= start && today <= end ? "Active" : "Inactive";
 };
 
@@ -2131,19 +1136,10 @@ const computeEndDate = (startDate, plan) => {
   const d = new Date(startDate);
   if (isNaN(d.getTime())) return "";
   switch (plan) {
-    case "Annual":
-      d.setFullYear(d.getFullYear() + 1);
-      d.setDate(d.getDate() - 1);
-      break;
-    case "Monthly":
-      d.setMonth(d.getMonth() + 1);
-      d.setDate(d.getDate() - 1);
-      break;
-    case "Weekly":
-      d.setDate(d.getDate() + 6);
-      break;
-    default:
-      break;
+    case "Annual":  d.setFullYear(d.getFullYear() + 1); d.setDate(d.getDate() - 1); break;
+    case "Monthly": d.setMonth(d.getMonth() + 1);       d.setDate(d.getDate() - 1); break;
+    case "Weekly":  d.setDate(d.getDate() + 6); break;
+    default: break; // Daily/Hourly = same day
   }
   return d.toISOString().split("T")[0];
 };
@@ -2151,26 +1147,33 @@ const computeEndDate = (startDate, plan) => {
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+    day: "2-digit", month: "short", year: "numeric",
   });
 };
 
+// Remaining Days Logic
 const getNearestEndDate = (member) => {
+  // Pass member
   if (member.membershipPass?.endDate) {
     return member.membershipPass.endDate;
   }
 
+  // Activity member
   const validDates = (member.activityFees || [])
     .map((af) => af.endDate)
     .filter(Boolean);
 
   if (validDates.length === 0) return null;
+  // this block shows which activity membership going "end first"
+  // return validDates.reduce((earliest, curr) =>
+  //   new Date(curr) < new Date(earliest) ? curr : earliest
+  // );
 
-  return validDates.reduce((latest, curr) =>
-    new Date(curr) > new Date(latest) ? curr : latest
-  );
+  // this block shows which activity membership is going to "end last"
+   // this is what client want...
+    return validDates.reduce((latest, curr) =>
+  new Date(curr) > new Date(latest) ? curr : latest
+);
 };
 
 const getRemainingDays = (endDate) => {
@@ -2190,6 +1193,7 @@ const getRemainingDays = (endDate) => {
 
   return { label: `${diff} days`, type: "normal" };
 };
+
 
 const getActivityExpiryDetails = (activityFees = []) => {
   const today = new Date();
@@ -2215,6 +1219,8 @@ const getActivityExpiryDetails = (activityFees = []) => {
     .join(" | ");
 };
 
+
+
 // ── Activity Summary Pill (used in table row) ─────────────────────────────────
 function ActivitySummaryPills({ activityFees }) {
   if (!Array.isArray(activityFees) || activityFees.length === 0) {
@@ -2239,11 +1245,7 @@ function ActivitySummaryPills({ activityFees }) {
             }`}
             title={`${name} • ${af.plan || ""} • Ends ${formatDate(af.endDate)}`}
           >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                status === "Active" ? "bg-green-500" : "bg-gray-400"
-              }`}
-            />
+            <span className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-green-500" : "bg-gray-400"}`} />
             {name}
           </span>
         );
@@ -2256,6 +1258,7 @@ function ActivitySummaryPills({ activityFees }) {
 function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffList }) {
   const currentStatus = computeActivityStatus(af);
 
+  // Auto-compute end date when start or plan changes
   useEffect(() => {
     if (renewal.startDate && renewal.plan) {
       const end = computeEndDate(renewal.startDate, renewal.plan);
@@ -2265,22 +1268,19 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
     }
   }, [renewal.startDate, renewal.plan]);
 
+  // Auto-compute final amount
   const computedFinal =
     parseFloat(renewal.planFee) > 0
-      ? Math.max(
-          0,
-          (parseFloat(renewal.planFee) || 0) - (parseFloat(renewal.discount) || 0)
-        )
+      ? Math.max(0, (parseFloat(renewal.planFee) || 0) - (parseFloat(renewal.discount) || 0))
       : "";
 
   return (
-    <div
-      className={`rounded-xl border p-4 ${
-        renewal.selected
-          ? "border-[#1a2a5e] bg-blue-50/40"
-          : "border-gray-200 bg-gray-50 opacity-60"
-      }`}
-    >
+    <div className={`rounded-xl border p-4 ${
+      renewal.selected
+        ? "border-[#1a2a5e] bg-blue-50/40"
+        : "border-gray-200 bg-gray-50 opacity-60"
+    }`}>
+      {/* Header: checkbox + activity name + current status */}
       <div className="flex items-center gap-3 mb-3">
         <input
           type="checkbox"
@@ -2289,37 +1289,30 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
           className="w-4 h-4 accent-[#1a2a5e] cursor-pointer"
           id={`renew-check-${index}`}
         />
-        <label
-          htmlFor={`renew-check-${index}`}
-          className="font-semibold text-sm text-gray-800 cursor-pointer flex-1"
-        >
+        <label htmlFor={`renew-check-${index}`} className="font-semibold text-sm text-gray-800 cursor-pointer flex-1">
           {activityName}
         </label>
-        <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
-            currentStatus === "Active"
-              ? "bg-green-50 border-green-300 text-green-700"
-              : "bg-red-50 border-red-300 text-red-600"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              currentStatus === "Active" ? "bg-green-500" : "bg-red-400"
-            }`}
-          />
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
+          currentStatus === "Active"
+            ? "bg-green-50 border-green-300 text-green-700"
+            : "bg-red-50 border-red-300 text-red-600"
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${currentStatus === "Active" ? "bg-green-500" : "bg-red-400"}`} />
           {currentStatus}
         </span>
       </div>
 
+      {/* Current expiry info */}
       <p className="text-xs text-gray-500 mb-3">
-        Current period:{" "}
-        <span className="font-medium text-gray-700">{formatDate(af.startDate)}</span>
+        Current period: <span className="font-medium text-gray-700">{formatDate(af.startDate)}</span>
         {" → "}
         <span className="font-medium text-gray-700">{formatDate(af.endDate)}</span>
       </p>
 
+      {/* Renewal fields — only interactive when selected */}
       {renewal.selected && (
         <div className="space-y-3">
+          {/* Plan + Start Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Plan</label>
@@ -2329,9 +1322,7 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
               >
                 {PLAN_OPTIONS.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
+                  <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
               </select>
             </div>
@@ -2348,6 +1339,7 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
             </div>
           </div>
 
+          {/* End Date */}
           <div>
             <label className="block text-xs text-gray-600 mb-1">
               New End Date
@@ -2362,12 +1354,12 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
             />
           </div>
 
+          {/* Fees */}
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Plan Fee (₹)</label>
               <input
-                type="number"
-                min="0"
+                type="number" min="0"
                 value={renewal.planFee}
                 onChange={(e) => onChange(index, "planFee", e.target.value)}
                 placeholder="0"
@@ -2377,8 +1369,7 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
             <div>
               <label className="block text-xs text-gray-600 mb-1">Discount (₹)</label>
               <input
-                type="number"
-                min="0"
+                type="number" min="0"
                 value={renewal.discount}
                 onChange={(e) => onChange(index, "discount", e.target.value)}
                 placeholder="0"
@@ -2388,8 +1379,7 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
             <div>
               <label className="block text-xs text-gray-600 mb-1">Final (₹)</label>
               <input
-                type="text"
-                readOnly
+                type="text" readOnly
                 value={computedFinal !== "" ? computedFinal : ""}
                 placeholder="Auto"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-500 focus:outline-none"
@@ -2397,6 +1387,7 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
             </div>
           </div>
 
+          {/* Payment */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Payment Status</label>
@@ -2405,11 +1396,7 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
                 onChange={(e) => onChange(index, "paymentStatus", e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
               >
-                {PAYMENT_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
+                {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
@@ -2420,11 +1407,7 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
               >
                 <option value="">Select</option>
-                {PAYMENT_MODES.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
+                {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
           </div>
@@ -2439,24 +1422,25 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
             />
           </div>
-
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Responsible Staff</label>
+  <label className="block text-xs text-gray-600 mb-1">
+    Responsible Staff
+  </label>
 
-            <select
-              value={renewal.staffId || ""}
-              onChange={(e) => onChange(index, "staffId", e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-            >
-              <option value="">Select Staff</option>
+  <select
+    value={renewal.staffId || ""}
+    onChange={(e) => onChange(index, "staffId", e.target.value)}
+    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+  >
+    <option value="">Select Staff</option>
 
-              {(staffList || []).map((staff) => (
-                <option key={staff._id} value={staff._id}>
-                  {staff.name || staff.fullName || "Unnamed"}
-                </option>
-              ))}
-            </select>
-          </div>
+    {(staffList || []).map((staff) => (
+      <option key={staff._id} value={staff._id}>
+        {staff.name || staff.fullName || "Unnamed"}
+      </option>
+    ))}
+  </select>
+</div>
         </div>
       )}
     </div>
@@ -2465,59 +1449,70 @@ function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffLis
 
 // ── Renew Modal ───────────────────────────────────────────────────────────────
 function RenewModal({ member, onClose, onRenewed }) {
+
   const [staffList, setStaffList] = useState([]);
 
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        const res = await api.fitnessStaff.getAll();
-        const staff = res.data?.data?.staff || [];
-        setStaffList(staff);
-      } catch (err) {
-        console.error("Error fetching fitness staff:", err);
-        setStaffList([]);
-      }
-    };
+useEffect(() => {
+  const fetchStaff = async () => {
+    try {
+      const res = await api.fitnessStaff.getAll();
 
-    fetchStaff();
-  }, []);
+      console.log("STAFF API:", res.data);
 
+      const staff = res.data?.data?.staff || [];
+
+      setStaffList(staff);
+
+    } catch (err) {
+      console.error("Error fetching fitness staff:", err);
+      setStaffList([]);
+    }
+  };
+
+  fetchStaff();
+}, []);
+
+  // Build initial renewal state for each activityFee
   const buildInitialRenewals = () =>
     (member.activityFees || []).map((af) => {
+      // Default start = day after current end date (or today if expired)
       const afterEnd = af.endDate
-        ? new Date(new Date(af.endDate).getTime() + 86400000)
-            .toISOString()
-            .split("T")[0]
+        ? new Date(new Date(af.endDate).getTime() + 86400000).toISOString().split("T")[0]
         : todayString();
-
       const startDate = afterEnd < todayString() ? todayString() : afterEnd;
       const plan = af.plan || "Monthly";
-
       return {
-        selected: computeActivityStatus(af) !== "Active",
+        selected:      computeActivityStatus(af) !== "Active", // pre-select inactive ones
         plan,
         startDate,
-        endDate: computeEndDate(startDate, plan),
-        planFee: String(af.planFee || ""),
-        discount: "0",
+        endDate:       computeEndDate(startDate, plan),
+        planFee:       String(af.planFee || ""),
+        discount:      "0",
         paymentStatus: "Paid",
-        paymentMode: af.paymentMode || "",
-        paymentDate: todayString(),
-        activityFeeId: af._id,
-        activityId: typeof af.activity === "object" ? af.activity?._id : af.activity,
-        feeTypeId: typeof af.feeType === "object" ? af.feeType?._id : af.feeType,
-        staffId: typeof af.staff === "object" ? af.staff?._id : af.staff,
+        paymentMode:   af.paymentMode || "",
+        paymentDate:   todayString(),
+        // carry through for the API
+        activityFeeId:    af._id,
+        activityId:       typeof af.activity === "object" ? af.activity?._id : af.activity,
+        feeTypeId:        typeof af.feeType   === "object" ? af.feeType?._id  : af.feeType,
+        staffId:          typeof af.staff     === "object" ? af.staff?._id    : af.staff,
       };
     });
 
   const [renewals, setRenewals] = useState(buildInitialRenewals);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [loading, setLoading]   = useState(false);
+  const [errors, setErrors]     = useState({});
+  
+
+
+
+  
 
   const handleChange = (index, field, value) => {
     setRenewals((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
+      // Recompute final amount on fee/discount change
       if (field === "planFee" || field === "discount") {
         const f = parseFloat(field === "planFee" ? value : updated[index].planFee) || 0;
         const d = parseFloat(field === "discount" ? value : updated[index].discount) || 0;
@@ -2525,7 +1520,7 @@ function RenewModal({ member, onClose, onRenewed }) {
       }
       return updated;
     });
-
+    // Clear related error
     const errKey = `${index}_${field}`;
     if (errors[errKey]) setErrors((p) => ({ ...p, [errKey]: "" }));
   };
@@ -2540,50 +1535,43 @@ function RenewModal({ member, onClose, onRenewed }) {
     renewals.forEach((r, i) => {
       if (!r.selected) return;
       if (!r.startDate) e[`${i}_startDate`] = "Start date required";
-      if (!r.endDate) e[`${i}_endDate`] = "End date required";
-      if (r.startDate && r.endDate && r.endDate < r.startDate) {
+      if (!r.endDate)   e[`${i}_endDate`]   = "End date required";
+      if (r.startDate && r.endDate && r.endDate < r.startDate)
         e[`${i}_endDate`] = "End date cannot be before start date";
-      }
     });
     return e;
   };
 
   const handleRenew = async () => {
     const errs = validate();
-    if (Object.keys(errs).length) {
-      setErrors(errs);
-      return;
-    }
+    if (Object.keys(errs).length) { setErrors(errs); return; }
 
     const selectedRenewals = renewals
       .map((r, i) => ({ ...r, originalIndex: i }))
       .filter((r) => r.selected)
       .map((r) => ({
-        activityFeeId: r.activityFeeId,
-        activityId: r.activityId,
-        feeTypeId: r.feeTypeId,
-        staffId: r.staffId,
-        plan: r.plan,
-        startDate: r.startDate,
-        endDate: r.endDate,
-        planFee: Number(r.planFee) || 0,
-        discount: Number(r.discount) || 0,
-        finalAmount:
-          Number(r.planFee) > 0
-            ? Math.max(0, (Number(r.planFee) || 0) - (Number(r.discount) || 0))
-            : 0,
-        paymentStatus: r.paymentStatus,
-        paymentMode: r.paymentMode || "",
-        paymentDate: r.paymentDate || null,
+        activityFeeId:  r.activityFeeId,
+        activityId:     r.activityId,
+        feeTypeId:      r.feeTypeId,
+        staffId:        r.staffId,
+        plan:           r.plan,
+        startDate:      r.startDate,
+        endDate:        r.endDate,
+        planFee:        Number(r.planFee)    || 0,
+        discount:       Number(r.discount)   || 0,
+        finalAmount:    Number(r.planFee) > 0
+                          ? Math.max(0, (Number(r.planFee) || 0) - (Number(r.discount) || 0))
+                          : 0,
+        paymentStatus:  r.paymentStatus,
+        paymentMode:    r.paymentMode || "",
+        paymentDate:    r.paymentDate || null,
       }));
 
     setLoading(true);
     try {
       await api.fitnessMember.renew(member._id, { renewals: selectedRenewals });
       const count = selectedRenewals.length;
-      toast.success(
-        `${member.name}'s ${count} activit${count === 1 ? "y" : "ies"} renewed successfully!`
-      );
+      toast.success(`${member.name}'s ${count} activit${count === 1 ? "y" : "ies"} renewed successfully!`);
       onRenewed();
       onClose();
     } catch (err) {
@@ -2595,6 +1583,7 @@ function RenewModal({ member, onClose, onRenewed }) {
 
   const selectedCount = renewals.filter((r) => r.selected).length;
 
+  // Get activity display name for each row
   const getActivityName = (af, i) =>
     typeof af.activity === "object"
       ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
@@ -2603,6 +1592,8 @@ function RenewModal({ member, onClose, onRenewed }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold text-[#1a2a5e]">Renew Membership</h2>
@@ -2620,6 +1611,7 @@ function RenewModal({ member, onClose, onRenewed }) {
           </button>
         </div>
 
+        {/* Instruction */}
         <div className="px-6 pt-4 pb-2 flex-shrink-0">
           <p className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
             Select the activities you want to renew. Inactive ones are pre-selected. Each activity can have its own plan and dates.
@@ -2629,6 +1621,7 @@ function RenewModal({ member, onClose, onRenewed }) {
           )}
         </div>
 
+        {/* Scrollable activity list */}
         <div className="px-6 py-3 overflow-y-auto flex-1 space-y-3">
           {(member.activityFees || []).map((af, i) => (
             <ActivityRenewRow
@@ -2638,29 +1631,28 @@ function RenewModal({ member, onClose, onRenewed }) {
               renewal={renewals[i]}
               onChange={handleChange}
               activityName={getActivityName(af, i)}
-              staffList={staffList}
+              staffList={staffList}   
             />
           ))}
         </div>
 
+        {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0">
+          {/* Total summary */}
           {selectedCount > 0 && (
             <div className="flex items-center justify-between text-sm mb-3 bg-gray-50 rounded-lg px-3 py-2">
               <span className="text-gray-600">
-                Renewing{" "}
-                <span className="font-semibold text-[#1a2a5e]">{selectedCount}</span>{" "}
-                Activity{selectedCount === 1 ? "y" : "ies"}
+                Renewing <span className="font-semibold text-[#1a2a5e]">{selectedCount}</span> Activity{selectedCount === 1 ? "y" : "ies"}
               </span>
               <span className="font-bold text-[#1a2a5e]">
-                ₹
-                {renewals
-                  .filter((r) => r.selected)
-                  .reduce((sum, r) => {
-                    const f = parseFloat(r.planFee) || 0;
-                    const d = parseFloat(r.discount) || 0;
-                    return sum + (f > 0 ? Math.max(0, f - d) : 0);
-                  }, 0)
-                  .toLocaleString("en-IN")}
+                ₹{renewals
+                    .filter((r) => r.selected)
+                    .reduce((sum, r) => {
+                      const f = parseFloat(r.planFee)   || 0;
+                      const d = parseFloat(r.discount)  || 0;
+                      return sum + (f > 0 ? Math.max(0, f - d) : 0);
+                    }, 0)
+                    .toLocaleString("en-IN")}
               </span>
             </div>
           )}
@@ -2680,14 +1672,7 @@ function RenewModal({ member, onClose, onRenewed }) {
               {loading ? (
                 <>
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
                   Renewing…
@@ -2707,79 +1692,53 @@ function RenewModal({ member, onClose, onRenewed }) {
 export default function Members() {
   const navigate = useNavigate();
 
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [members, setMembers]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [searchTerm, setSearchTerm]   = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [renewMember, setRenewMember] = useState(null);
   const [renewPassMember, setRenewPassMember] = useState(null);
   const [planTypeFilter, setPlanTypeFilter] = useState("");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState(10);
-  const [totalMembers, setTotalMembers] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-
-  const fetchMembers = async (page = currentPage) => {
+  const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await api.fitnessMember.getAll({
-        page,
-        limit,
-        search: searchTerm,
-        status: statusFilter,
-        plan: planTypeFilter === "Pass" ? "" : "",
-      });
-
-      const payload = response?.data || {};
-      const membersData = Array.isArray(payload.data) ? payload.data : [];
-      const pagination = payload.pagination || {};
-
-      setMembers(membersData);
-      setTotalMembers(Number(pagination.total || 0));
-      setTotalPages(Number(pagination.totalPages || 1));
-      setCurrentPage(Number(pagination.page || page));
+      const response = await api.fitnessMember.getAll();
+      // backend returns array directly (applyComputedStatuses is run server-side)
+      const raw = response?.data ?? response;
+      setMembers(Array.isArray(raw) ? raw : []);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load members");
       setMembers([]);
-      setTotalMembers(0);
-      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchMembers(currentPage);
-  }, [currentPage]);
+  useEffect(() => { fetchMembers(); }, []);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, planTypeFilter]);
-
-  useEffect(() => {
-    fetchMembers(1);
-  }, [searchTerm, statusFilter, planTypeFilter]);
-
+  // Overall status is driven by the computed membershipStatus from backend
   const getMemberOverallStatus = (member) => member.membershipStatus || "Inactive";
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.mobile?.includes(searchTerm);
-
     const matchesStatus =
       !statusFilter || getMemberOverallStatus(member) === statusFilter;
 
-    const isPassMember = isPassMemberFn(member);
+      //New logic for added Plan type
+      // const isPassMember = !!member.membershipPass;
 
-    const matchesPlanType =
-      !planTypeFilter ||
-      (planTypeFilter === "Pass" && isPassMember) ||
-      (planTypeFilter === "Activity" && !isPassMember);
+      const isPassMember = isPassMemberFn(member);
 
-    return matchesSearch && matchesStatus && matchesPlanType;
+  const matchesPlanType =
+    !planTypeFilter ||
+    (planTypeFilter === "Pass" && isPassMember) ||
+    (planTypeFilter === "Activity" && !isPassMember);
+
+  return matchesSearch && matchesStatus && matchesPlanType;
   });
 
   const handleDelete = async (id) => {
@@ -2787,52 +1746,56 @@ export default function Members() {
     try {
       await api.fitnessMember.delete(id);
       toast.success("Member deleted successfully");
-
-      const newPage =
-        members.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
-      fetchMembers(newPage);
+      fetchMembers();
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete member");
     }
   };
 
-  const activeCount = members.filter((m) => getMemberOverallStatus(m) === "Active").length;
-  const inactiveCount = totalMembers - activeCount;
+
+  
+
+  // Stats
+  const activeCount   = members.filter((m) => getMemberOverallStatus(m) === "Active").length;
+  const inactiveCount = members.length - activeCount;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+
       {renewMember && (
         <RenewModal
           member={renewMember}
           onClose={() => setRenewMember(null)}
-          onRenewed={() => fetchMembers(currentPage)}
+          onRenewed={fetchMembers}
         />
       )}
 
       {renewPassMember && (
-        <PassRenewModal
-          member={renewPassMember}
-          onClose={() => setRenewPassMember(null)}
-          onRenewed={() => fetchMembers(currentPage)}
-        />
-      )}
+  <PassRenewModal
+    member={renewPassMember}
+    onClose={() => setRenewPassMember(null)}
+    onRenewed={fetchMembers}
+  />
+)}
 
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Fitness Members</h1>
           {!loading && (
             <p className="text-xs text-gray-500 mt-0.5">
-              {totalMembers} total &bull;{" "}
+              {members.length} total &bull;{" "}
               <span className="text-green-600 font-medium">{activeCount} active</span>
-              {" "}&bull;{" "}
-              <span className="text-gray-400">{inactiveCount < 0 ? 0 : inactiveCount} inactive</span>
+              {" "}
+              &bull;{" "}
+              <span className="text-gray-400">{inactiveCount} inactive</span>
             </p>
           )}
         </div>
         <div className="flex gap-3">
           <button
-            onClick={() => fetchMembers(currentPage)}
+            onClick={fetchMembers}
             className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
           >
             ↻ Refresh
@@ -2844,14 +1807,15 @@ export default function Members() {
             + Add Member
           </button>
           <button
-            onClick={() => navigate("/fitness/members/add-pass")}
-            className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
-          >
-            + Add Pass Member
-          </button>
+    onClick={() => navigate("/fitness/members/add-pass")}
+    className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
+  >
+   + Add Pass Member
+  </button>
         </div>
       </div>
 
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <input
           type="text"
@@ -2862,15 +1826,14 @@ export default function Members() {
         />
 
         <select
-          value={planTypeFilter}
-          onChange={(e) => setPlanTypeFilter(e.target.value)}
-          className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-        >
-          <option value="">All Plans</option>
-          <option value="Pass">Pass</option>
-          <option value="Activity">Activity</option>
-        </select>
-
+  value={planTypeFilter}
+  onChange={(e) => setPlanTypeFilter(e.target.value)}
+  className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+>
+  <option value="">All Plans</option>
+  <option value="Pass">Pass</option>
+  <option value="Activity">Activity</option>
+</select>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -2882,6 +1845,7 @@ export default function Members() {
         </select>
       </div>
 
+      {/* Table */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -2899,7 +1863,7 @@ export default function Members() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center">
+                  <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]" />
                     </div>
@@ -2908,25 +1872,31 @@ export default function Members() {
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center text-gray-400 text-sm">
+                  <td colSpan={6} className="px-6 py-20 text-center text-gray-400 text-sm">
                     No members found.
                   </td>
                 </tr>
               ) : (
                 filteredMembers.map((member, idx) => {
                   const overallStatus = getMemberOverallStatus(member);
-                  const activityFees = member.activityFees || [];
+                  const activityFees  = member.activityFees || [];
+                  // const isPassMember = !!member.membershipPass;
                   const isPassMember = isPassMemberFn(member);
 
                   const endDate = getNearestEndDate(member);
                   const remaining = getRemainingDays(endDate);
+                  
+                  const tooltip = getActivityExpiryDetails(member.activityFees);
 
-                  const inactiveActivitiesCount = isPassMember
-                    ? 0
-                    : activityFees.filter((af) => computeActivityStatus(af) !== "Active").length;
+
+                  const inactiveCount = isPassMember
+  ? 0
+  : activityFees.filter((af) => computeActivityStatus(af) !== "Active").length;
 
                   return (
                     <tr key={member._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+
+                      {/* Member name + ID */}
                       <td className="px-5 py-4">
                         <div className="font-medium text-gray-800">{member.name}</div>
                         {member.memberId && (
@@ -2934,133 +1904,134 @@ export default function Members() {
                         )}
                       </td>
 
+                      {/* Mobile */}
                       <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
 
                       <td className="px-5 py-4">
-                        {isPassMember ? (
-                          <span className="text-purple-600 font-medium text-xs">Pass</span>
-                        ) : (
-                          <span className="text-blue-600 font-medium text-xs">Activity</span>
-                        )}
-                      </td>
+  {isPassMember ? (
+    <span className="text-purple-600 font-medium text-xs">Pass</span>
+  ) : (
+    <span className="text-blue-600 font-medium text-xs">Activity</span>
+  )}
+</td>
 
+                      {/* Activity pills */}
                       <td className="px-5 py-4 max-w-xs">
                         {isPassMember ? (
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
-                            Membership Pass
-                          </span>
-                        ) : (
-                          <ActivitySummaryPills activityFees={activityFees} />
-                        )}
+  <span className="inline-flex px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
+    Membership Pass
+  </span>
+) : (
+  <ActivitySummaryPills activityFees={activityFees} />
+)}
                       </td>
 
+                      {/* Overall status badge */}
                       <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                            overallStatus === "Active"
-                              ? "bg-green-50 border-green-300 text-green-700"
-                              : "bg-red-50 border-red-300 text-red-600"
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              overallStatus === "Active" ? "bg-green-500" : "bg-red-400"
-                            }`}
-                          />
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                          overallStatus === "Active"
+                            ? "bg-green-50 border-green-300 text-green-700"
+                            : "bg-red-50 border-red-300 text-red-600"
+                        }`}>
+                          
+                          <span className={`w-1.5 h-1.5 rounded-full ${overallStatus === "Active" ? "bg-green-500" : "bg-red-400"}`} />
                           {overallStatus}
                         </span>
                       </td>
 
+                      {/* Remaining Days */}
                       <td className="px-5 py-4">
-                        <div className="relative group inline-block">
-                          <span
-                            className={`text-xs font-semibold cursor-pointer ${
-                              remaining.type === "expired"
-                                ? "text-red-500"
-                                : remaining.type === "warning"
-                                ? "text-orange-500"
-                                : "text-gray-700"
-                            }`}
-                          >
-                            {remaining.label}
-                          </span>
+  <div className="relative group inline-block">
+    
+    {/* Main Text */}
+    <span
+      className={`text-xs font-semibold cursor-pointer ${
+        remaining.type === "expired"
+          ? "text-red-500"
+          : remaining.type === "warning"
+          ? "text-orange-500"
+          : "text-gray-700"
+      }`}
+    >
+      {remaining.label}
+    </span>
 
-                          {member.activityFees?.length > 0 && (
-                            <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50">
-                              <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-2 text-xs text-gray-700 whitespace-nowrap">
-                                {member.activityFees.map((af, i) => {
-                                  const end = af.endDate ? new Date(af.endDate) : null;
-                                  const today = new Date();
-                                  today.setHours(0, 0, 0, 0);
+    {/* Tooltip */}
+    {member.activityFees?.length > 0 && (
+      <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50">
+        <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-2 text-xs text-gray-700 whitespace-nowrap">
+          
+          {member.activityFees.map((af, i) => {
+            const end = af.endDate ? new Date(af.endDate) : null;
+            const today = new Date();
+            today.setHours(0,0,0,0);
 
-                                  let diff = null;
-                                  if (end) {
-                                    diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-                                  }
+            let diff = null;
+            if (end) {
+              diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+            }
 
-                                  const name =
-                                    typeof af.activity === "object"
-                                      ? af.activity?.name ||
-                                        af.activity?.activityName ||
-                                        `Activity ${i + 1}`
-                                      : `Activity ${i + 1}`;
+            const name =
+              typeof af.activity === "object"
+                ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+                : `Activity ${i + 1}`;
 
-                                  return (
-                                    <div key={i} className="flex justify-between gap-4">
-                                      <span>{name}</span>
-                                      <span
-                                        className={
-                                          diff < 0
-                                            ? "text-red-500"
-                                            : diff <= 3
-                                            ? "text-orange-500"
-                                            : "text-gray-600"
-                                        }
-                                      >
-                                        {diff < 0
-                                          ? "Expired"
-                                          : diff === 0
-                                          ? "Last Day"
-                                          : `${diff} days`}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </td>
+            return (
+              <div key={i} className="flex justify-between gap-4">
+                <span>{name}</span>
+                <span className={
+                  diff < 0
+                    ? "text-red-500"
+                    : diff <= 3
+                    ? "text-orange-500"
+                    : "text-gray-600"
+                }>
+                  {diff < 0
+                    ? "Expired"
+                    : diff === 0
+                    ? "Last Day"
+                    : `${diff} days`}
+                </span>
+              </div>
+            );
+          })}
 
+        </div>
+      </div>
+    )}
+  </div>
+</td>
+
+                      {/* Actions */}
                       <td className="px-5 py-4">
                         <div className="flex gap-2 flex-wrap">
                           <button
                             onClick={() => {
-                              if (isPassMemberFn(member)) {
-                                navigate(`/fitness/members/view-pass/${member._id}`);
-                              } else {
-                                navigate(`/fitness/members/view-member/${member._id}`);
-                              }
-                            }}
+  if (isPassMemberFn(member)) {
+    navigate(`/fitness/members/view-pass/${member._id}`);
+  } else {
+    navigate(`/fitness/members/view-member/${member._id}`);
+  }
+}}
                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
                           >
                             View
                           </button>
-
                           <button
                             onClick={() => {
-                              if (isPassMemberFn(member)) {
-                                navigate(`/fitness/members/edit-pass/${member._id}`);
-                              } else {
-                                navigate(`/fitness/members/edit-member/${member._id}`);
-                              }
-                            }}
+  if (isPassMemberFn(member)) {
+    navigate(`/fitness/members/edit-pass/${member._id}`);
+  } else {
+    navigate(`/fitness/members/edit-member/${member._id}`);
+  }
+}}
                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
                           >
                             Edit
                           </button>
 
-                          {(isPassMember ? overallStatus !== "Active" : inactiveActivitiesCount > 0) && (
+                          {/* w — show if any activity is inactive/expired */}
+                          {(isPassMember ? overallStatus !== "Active" : inactiveCount > 0) && (
                             <button
                               onClick={() => {
                                 if (isPassMember) {
@@ -3070,14 +2041,9 @@ export default function Members() {
                                 }
                               }}
                               className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                              title={`${inactiveActivitiesCount} activit${
-                                inactiveActivitiesCount === 1 ? "y" : "ies"
-                              } need renewal`}
+                              title={`${inactiveCount} activit${inactiveCount === 1 ? "y" : "ies"} need renewal`}
                             >
-                              Renew
-                              {inactiveActivitiesCount > 1
-                                ? ` (${inactiveActivitiesCount})`
-                                : ""}
+                              Renew{inactiveCount > 1 ? ` (${inactiveCount})` : ""}
                             </button>
                           )}
 
@@ -3098,35 +2064,1069 @@ export default function Members() {
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-xs text-gray-400">
-          Showing {filteredMembers.length} of {totalMembers} members
-        </p>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => currentPage > 1 && setCurrentPage((prev) => prev - 1)}
-            disabled={currentPage === 1 || loading}
-            className="px-3 py-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
-            Prev
-          </button>
-
-          <span className="text-xs text-gray-500">
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <button
-            onClick={() =>
-              currentPage < totalPages && setCurrentPage((prev) => prev + 1)
-            }
-            disabled={currentPage === totalPages || loading}
-            className="px-3 py-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <p className="text-xs text-gray-400 mt-4 text-center">
+        Showing {filteredMembers.length} of {members.length} members
+      </p>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // Members.jsx — updated for multi-activity members
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { toast } from "sonner";
+// import { api } from "../../../services/apiClient";
+// import PassRenewModal from "./PassRenewModal";
+
+// const PLAN_OPTIONS = [
+//   { value: "Annual", label: "Annual", months: 12 },
+//   { value: "Monthly", label: "Monthly", months: 1 },
+//   { value: "Weekly", label: "Weekly", days: 7 },
+//   { value: "Daily", label: "Daily", days: 1 },
+//   { value: "Hourly", label: "Hourly", days: 1 },
+// ];
+
+// const PAYMENT_MODES = ["Cash", "Bank Transfer"];
+// const PAYMENT_STATUSES = ["Paid", "Pending"];
+
+// const isPassMemberFn = (member) => {
+//   return member.membershipPass !== null;
+// };
+
+// // ── Helpers ───────────────────────────────────────────────────────────────────
+// const todayString = () => new Date().toISOString().split("T")[0];
+
+// const computeActivityStatus = (af) => {
+//   if (af.paymentStatus !== "Paid") return "Inactive";
+//   if (!af.startDate || !af.endDate) return "Inactive";
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+//   const start = new Date(af.startDate);
+//   start.setHours(0, 0, 0, 0);
+//   const end = new Date(af.endDate);
+//   end.setHours(23, 59, 59, 999);
+//   return today >= start && today <= end ? "Active" : "Inactive";
+// };
+
+// const computeEndDate = (startDate, plan) => {
+//   if (!startDate || !plan) return "";
+//   const d = new Date(startDate);
+//   if (isNaN(d.getTime())) return "";
+//   switch (plan) {
+//     case "Annual":
+//       d.setFullYear(d.getFullYear() + 1);
+//       d.setDate(d.getDate() - 1);
+//       break;
+//     case "Monthly":
+//       d.setMonth(d.getMonth() + 1);
+//       d.setDate(d.getDate() - 1);
+//       break;
+//     case "Weekly":
+//       d.setDate(d.getDate() + 6);
+//       break;
+//     default:
+//       break;
+//   }
+//   return d.toISOString().split("T")[0];
+// };
+
+// const formatDate = (dateStr) => {
+//   if (!dateStr) return "—";
+//   return new Date(dateStr).toLocaleDateString("en-GB", {
+//     day: "2-digit",
+//     month: "short",
+//     year: "numeric",
+//   });
+// };
+
+// const getNearestEndDate = (member) => {
+//   if (member.membershipPass?.endDate) {
+//     return member.membershipPass.endDate;
+//   }
+
+//   const validDates = (member.activityFees || [])
+//     .map((af) => af.endDate)
+//     .filter(Boolean);
+
+//   if (validDates.length === 0) return null;
+
+//   return validDates.reduce((latest, curr) =>
+//     new Date(curr) > new Date(latest) ? curr : latest
+//   );
+// };
+
+// const getRemainingDays = (endDate) => {
+//   if (!endDate) return { label: "—", type: "normal" };
+
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+
+//   const end = new Date(endDate);
+//   end.setHours(23, 59, 59, 999);
+
+//   const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+//   if (diff < 0) return { label: "Expired", type: "expired" };
+//   if (diff === 0) return { label: "Last Day", type: "warning" };
+//   if (diff <= 3) return { label: `${diff} days`, type: "warning" };
+
+//   return { label: `${diff} days`, type: "normal" };
+// };
+
+// const getActivityExpiryDetails = (activityFees = []) => {
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+
+//   return activityFees
+//     .map((af, i) => {
+//       if (!af.endDate) return null;
+
+//       const end = new Date(af.endDate);
+//       const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+//       const name =
+//         typeof af.activity === "object"
+//           ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+//           : `Activity ${i + 1}`;
+
+//       return `${name}: ${
+//         diff < 0 ? "Expired" : diff === 0 ? "Last Day" : `${diff} days`
+//       }`;
+//     })
+//     .filter(Boolean)
+//     .join(" | ");
+// };
+
+// // ── Activity Summary Pill (used in table row) ─────────────────────────────────
+// function ActivitySummaryPills({ activityFees }) {
+//   if (!Array.isArray(activityFees) || activityFees.length === 0) {
+//     return <span className="text-gray-400 text-xs">—</span>;
+//   }
+
+//   return (
+//     <div className="flex flex-wrap gap-1">
+//       {activityFees.map((af, i) => {
+//         const status = computeActivityStatus(af);
+//         const name =
+//           typeof af.activity === "object"
+//             ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+//             : `Activity ${i + 1}`;
+//         return (
+//           <span
+//             key={af._id || i}
+//             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
+//               status === "Active"
+//                 ? "bg-green-50 border-green-300 text-green-700"
+//                 : "bg-gray-100 border-gray-300 text-gray-500"
+//             }`}
+//             title={`${name} • ${af.plan || ""} • Ends ${formatDate(af.endDate)}`}
+//           >
+//             <span
+//               className={`w-1.5 h-1.5 rounded-full ${
+//                 status === "Active" ? "bg-green-500" : "bg-gray-400"
+//               }`}
+//             />
+//             {name}
+//           </span>
+//         );
+//       })}
+//     </div>
+//   );
+// }
+
+// // ── Single Activity Renewal Row (inside modal) ────────────────────────────────
+// function ActivityRenewRow({ af, index, renewal, onChange, activityName, staffList }) {
+//   const currentStatus = computeActivityStatus(af);
+
+//   useEffect(() => {
+//     if (renewal.startDate && renewal.plan) {
+//       const end = computeEndDate(renewal.startDate, renewal.plan);
+//       if (end && end !== renewal.endDate) {
+//         onChange(index, "endDate", end);
+//       }
+//     }
+//   }, [renewal.startDate, renewal.plan]);
+
+//   const computedFinal =
+//     parseFloat(renewal.planFee) > 0
+//       ? Math.max(
+//           0,
+//           (parseFloat(renewal.planFee) || 0) - (parseFloat(renewal.discount) || 0)
+//         )
+//       : "";
+
+//   return (
+//     <div
+//       className={`rounded-xl border p-4 ${
+//         renewal.selected
+//           ? "border-[#1a2a5e] bg-blue-50/40"
+//           : "border-gray-200 bg-gray-50 opacity-60"
+//       }`}
+//     >
+//       <div className="flex items-center gap-3 mb-3">
+//         <input
+//           type="checkbox"
+//           checked={renewal.selected}
+//           onChange={(e) => onChange(index, "selected", e.target.checked)}
+//           className="w-4 h-4 accent-[#1a2a5e] cursor-pointer"
+//           id={`renew-check-${index}`}
+//         />
+//         <label
+//           htmlFor={`renew-check-${index}`}
+//           className="font-semibold text-sm text-gray-800 cursor-pointer flex-1"
+//         >
+//           {activityName}
+//         </label>
+//         <span
+//           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
+//             currentStatus === "Active"
+//               ? "bg-green-50 border-green-300 text-green-700"
+//               : "bg-red-50 border-red-300 text-red-600"
+//           }`}
+//         >
+//           <span
+//             className={`w-1.5 h-1.5 rounded-full ${
+//               currentStatus === "Active" ? "bg-green-500" : "bg-red-400"
+//             }`}
+//           />
+//           {currentStatus}
+//         </span>
+//       </div>
+
+//       <p className="text-xs text-gray-500 mb-3">
+//         Current period:{" "}
+//         <span className="font-medium text-gray-700">{formatDate(af.startDate)}</span>
+//         {" → "}
+//         <span className="font-medium text-gray-700">{formatDate(af.endDate)}</span>
+//       </p>
+
+//       {renewal.selected && (
+//         <div className="space-y-3">
+//           <div className="grid grid-cols-2 gap-3">
+//             <div>
+//               <label className="block text-xs text-gray-600 mb-1">Plan</label>
+//               <select
+//                 value={renewal.plan}
+//                 onChange={(e) => onChange(index, "plan", e.target.value)}
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//               >
+//                 {PLAN_OPTIONS.map((p) => (
+//                   <option key={p.value} value={p.value}>
+//                     {p.label}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+//             <div>
+//               <label className="block text-xs text-gray-600 mb-1">
+//                 New Start Date <span className="text-red-400">*</span>
+//               </label>
+//               <input
+//                 type="date"
+//                 value={renewal.startDate}
+//                 onChange={(e) => onChange(index, "startDate", e.target.value)}
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//               />
+//             </div>
+//           </div>
+
+//           <div>
+//             <label className="block text-xs text-gray-600 mb-1">
+//               New End Date
+//               <span className="ml-1 text-[10px] text-gray-400">(auto-filled)</span>
+//             </label>
+//             <input
+//               type="date"
+//               value={renewal.endDate}
+//               onChange={(e) => onChange(index, "endDate", e.target.value)}
+//               min={renewal.startDate || "1900-01-01"}
+//               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//             />
+//           </div>
+
+//           <div className="grid grid-cols-3 gap-2">
+//             <div>
+//               <label className="block text-xs text-gray-600 mb-1">Plan Fee (₹)</label>
+//               <input
+//                 type="number"
+//                 min="0"
+//                 value={renewal.planFee}
+//                 onChange={(e) => onChange(index, "planFee", e.target.value)}
+//                 placeholder="0"
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//               />
+//             </div>
+//             <div>
+//               <label className="block text-xs text-gray-600 mb-1">Discount (₹)</label>
+//               <input
+//                 type="number"
+//                 min="0"
+//                 value={renewal.discount}
+//                 onChange={(e) => onChange(index, "discount", e.target.value)}
+//                 placeholder="0"
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//               />
+//             </div>
+//             <div>
+//               <label className="block text-xs text-gray-600 mb-1">Final (₹)</label>
+//               <input
+//                 type="text"
+//                 readOnly
+//                 value={computedFinal !== "" ? computedFinal : ""}
+//                 placeholder="Auto"
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-500 focus:outline-none"
+//               />
+//             </div>
+//           </div>
+
+//           <div className="grid grid-cols-2 gap-3">
+//             <div>
+//               <label className="block text-xs text-gray-600 mb-1">Payment Status</label>
+//               <select
+//                 value={renewal.paymentStatus}
+//                 onChange={(e) => onChange(index, "paymentStatus", e.target.value)}
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//               >
+//                 {PAYMENT_STATUSES.map((s) => (
+//                   <option key={s} value={s}>
+//                     {s}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+//             <div>
+//               <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
+//               <select
+//                 value={renewal.paymentMode}
+//                 onChange={(e) => onChange(index, "paymentMode", e.target.value)}
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//               >
+//                 <option value="">Select</option>
+//                 {PAYMENT_MODES.map((m) => (
+//                   <option key={m} value={m}>
+//                     {m}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+//           </div>
+
+//           <div>
+//             <label className="block text-xs text-gray-600 mb-1">Payment Date</label>
+//             <input
+//               type="date"
+//               value={renewal.paymentDate}
+//               max={todayString()}
+//               onChange={(e) => onChange(index, "paymentDate", e.target.value)}
+//               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//             />
+//           </div>
+
+//           <div>
+//             <label className="block text-xs text-gray-600 mb-1">Responsible Staff</label>
+
+//             <select
+//               value={renewal.staffId || ""}
+//               onChange={(e) => onChange(index, "staffId", e.target.value)}
+//               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//             >
+//               <option value="">Select Staff</option>
+
+//               {(staffList || []).map((staff) => (
+//                 <option key={staff._id} value={staff._id}>
+//                   {staff.name || staff.fullName || "Unnamed"}
+//                 </option>
+//               ))}
+//             </select>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+// // ── Renew Modal ───────────────────────────────────────────────────────────────
+// function RenewModal({ member, onClose, onRenewed }) {
+//   const [staffList, setStaffList] = useState([]);
+
+//   useEffect(() => {
+//     const fetchStaff = async () => {
+//       try {
+//         const res = await api.fitnessStaff.getAll();
+//         const staff = res.data?.data?.staff || [];
+//         setStaffList(staff);
+//       } catch (err) {
+//         console.error("Error fetching fitness staff:", err);
+//         setStaffList([]);
+//       }
+//     };
+
+//     fetchStaff();
+//   }, []);
+
+//   const buildInitialRenewals = () =>
+//     (member.activityFees || []).map((af) => {
+//       const afterEnd = af.endDate
+//         ? new Date(new Date(af.endDate).getTime() + 86400000)
+//             .toISOString()
+//             .split("T")[0]
+//         : todayString();
+
+//       const startDate = afterEnd < todayString() ? todayString() : afterEnd;
+//       const plan = af.plan || "Monthly";
+
+//       return {
+//         selected: computeActivityStatus(af) !== "Active",
+//         plan,
+//         startDate,
+//         endDate: computeEndDate(startDate, plan),
+//         planFee: String(af.planFee || ""),
+//         discount: "0",
+//         paymentStatus: "Paid",
+//         paymentMode: af.paymentMode || "",
+//         paymentDate: todayString(),
+//         activityFeeId: af._id,
+//         activityId: typeof af.activity === "object" ? af.activity?._id : af.activity,
+//         feeTypeId: typeof af.feeType === "object" ? af.feeType?._id : af.feeType,
+//         staffId: typeof af.staff === "object" ? af.staff?._id : af.staff,
+//       };
+//     });
+
+//   const [renewals, setRenewals] = useState(buildInitialRenewals);
+//   const [loading, setLoading] = useState(false);
+//   const [errors, setErrors] = useState({});
+
+//   const handleChange = (index, field, value) => {
+//     setRenewals((prev) => {
+//       const updated = [...prev];
+//       updated[index] = { ...updated[index], [field]: value };
+//       if (field === "planFee" || field === "discount") {
+//         const f = parseFloat(field === "planFee" ? value : updated[index].planFee) || 0;
+//         const d = parseFloat(field === "discount" ? value : updated[index].discount) || 0;
+//         updated[index].finalAmount = f > 0 ? String(Math.max(0, f - d)) : "";
+//       }
+//       return updated;
+//     });
+
+//     const errKey = `${index}_${field}`;
+//     if (errors[errKey]) setErrors((p) => ({ ...p, [errKey]: "" }));
+//   };
+
+//   const validate = () => {
+//     const e = {};
+//     const selected = renewals.filter((r) => r.selected);
+//     if (selected.length === 0) {
+//       e.global = "Please select at least one activity to renew.";
+//       return e;
+//     }
+//     renewals.forEach((r, i) => {
+//       if (!r.selected) return;
+//       if (!r.startDate) e[`${i}_startDate`] = "Start date required";
+//       if (!r.endDate) e[`${i}_endDate`] = "End date required";
+//       if (r.startDate && r.endDate && r.endDate < r.startDate) {
+//         e[`${i}_endDate`] = "End date cannot be before start date";
+//       }
+//     });
+//     return e;
+//   };
+
+//   const handleRenew = async () => {
+//     const errs = validate();
+//     if (Object.keys(errs).length) {
+//       setErrors(errs);
+//       return;
+//     }
+
+//     const selectedRenewals = renewals
+//       .map((r, i) => ({ ...r, originalIndex: i }))
+//       .filter((r) => r.selected)
+//       .map((r) => ({
+//         activityFeeId: r.activityFeeId,
+//         activityId: r.activityId,
+//         feeTypeId: r.feeTypeId,
+//         staffId: r.staffId,
+//         plan: r.plan,
+//         startDate: r.startDate,
+//         endDate: r.endDate,
+//         planFee: Number(r.planFee) || 0,
+//         discount: Number(r.discount) || 0,
+//         finalAmount:
+//           Number(r.planFee) > 0
+//             ? Math.max(0, (Number(r.planFee) || 0) - (Number(r.discount) || 0))
+//             : 0,
+//         paymentStatus: r.paymentStatus,
+//         paymentMode: r.paymentMode || "",
+//         paymentDate: r.paymentDate || null,
+//       }));
+
+//     setLoading(true);
+//     try {
+//       await api.fitnessMember.renew(member._id, { renewals: selectedRenewals });
+//       const count = selectedRenewals.length;
+//       toast.success(
+//         `${member.name}'s ${count} activit${count === 1 ? "y" : "ies"} renewed successfully!`
+//       );
+//       onRenewed();
+//       onClose();
+//     } catch (err) {
+//       toast.error(err?.response?.data?.message || "Renewal failed. Please try again.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const selectedCount = renewals.filter((r) => r.selected).length;
+
+//   const getActivityName = (af, i) =>
+//     typeof af.activity === "object"
+//       ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+//       : `Activity ${i + 1}`;
+
+//   return (
+//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+//       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+//         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+//           <div>
+//             <h2 className="text-lg font-bold text-[#1a2a5e]">Renew Membership</h2>
+//             <p className="text-xs text-gray-500 mt-0.5">
+//               {member.name} &bull; {member.mobile}
+//             </p>
+//           </div>
+//           <button
+//             onClick={onClose}
+//             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+//           >
+//             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+//             </svg>
+//           </button>
+//         </div>
+
+//         <div className="px-6 pt-4 pb-2 flex-shrink-0">
+//           <p className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+//             Select the activities you want to renew. Inactive ones are pre-selected. Each activity can have its own plan and dates.
+//           </p>
+//           {errors.global && (
+//             <p className="mt-2 text-xs text-red-500 font-medium">{errors.global}</p>
+//           )}
+//         </div>
+
+//         <div className="px-6 py-3 overflow-y-auto flex-1 space-y-3">
+//           {(member.activityFees || []).map((af, i) => (
+//             <ActivityRenewRow
+//               key={af._id || i}
+//               af={af}
+//               index={i}
+//               renewal={renewals[i]}
+//               onChange={handleChange}
+//               activityName={getActivityName(af, i)}
+//               staffList={staffList}
+//             />
+//           ))}
+//         </div>
+
+//         <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0">
+//           {selectedCount > 0 && (
+//             <div className="flex items-center justify-between text-sm mb-3 bg-gray-50 rounded-lg px-3 py-2">
+//               <span className="text-gray-600">
+//                 Renewing{" "}
+//                 <span className="font-semibold text-[#1a2a5e]">{selectedCount}</span>{" "}
+//                 Activity{selectedCount === 1 ? "y" : "ies"}
+//               </span>
+//               <span className="font-bold text-[#1a2a5e]">
+//                 ₹
+//                 {renewals
+//                   .filter((r) => r.selected)
+//                   .reduce((sum, r) => {
+//                     const f = parseFloat(r.planFee) || 0;
+//                     const d = parseFloat(r.discount) || 0;
+//                     return sum + (f > 0 ? Math.max(0, f - d) : 0);
+//                   }, 0)
+//                   .toLocaleString("en-IN")}
+//               </span>
+//             </div>
+//           )}
+
+//           <div className="flex gap-3">
+//             <button
+//               onClick={onClose}
+//               className="flex-1 border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+//             >
+//               Cancel
+//             </button>
+//             <button
+//               onClick={handleRenew}
+//               disabled={loading || selectedCount === 0}
+//               className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white rounded-lg py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+//             >
+//               {loading ? (
+//                 <>
+//                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+//                     <circle
+//                       className="opacity-25"
+//                       cx="12"
+//                       cy="12"
+//                       r="10"
+//                       stroke="currentColor"
+//                       strokeWidth="4"
+//                     />
+//                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+//                   </svg>
+//                   Renewing…
+//                 </>
+//               ) : (
+//                 `Renew ${selectedCount > 0 ? `(${selectedCount})` : ""}`
+//               )}
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// // ── Main Members Component ────────────────────────────────────────────────────
+// export default function Members() {
+//   const navigate = useNavigate();
+
+//   const [members, setMembers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("");
+//   const [renewMember, setRenewMember] = useState(null);
+//   const [renewPassMember, setRenewPassMember] = useState(null);
+//   const [planTypeFilter, setPlanTypeFilter] = useState("");
+
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [limit] = useState(10);
+//   const [totalMembers, setTotalMembers] = useState(0);
+//   const [totalPages, setTotalPages] = useState(1);
+
+//   const fetchMembers = async (page = currentPage) => {
+//     setLoading(true);
+//     try {
+//       const response = await api.fitnessMember.getAll({
+//         page,
+//         limit,
+//         search: searchTerm,
+//         status: statusFilter,
+//         plan: planTypeFilter === "Pass" ? "" : "",
+//       });
+
+//       const payload = response?.data || {};
+//       const membersData = Array.isArray(payload.data) ? payload.data : [];
+//       const pagination = payload.pagination || {};
+
+//       setMembers(membersData);
+//       setTotalMembers(Number(pagination.total || 0));
+//       setTotalPages(Number(pagination.totalPages || 1));
+//       setCurrentPage(Number(pagination.page || page));
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to load members");
+//       setMembers([]);
+//       setTotalMembers(0);
+//       setTotalPages(1);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchMembers(currentPage);
+//   }, [currentPage]);
+
+//   useEffect(() => {
+//     setCurrentPage(1);
+//   }, [searchTerm, statusFilter, planTypeFilter]);
+
+//   useEffect(() => {
+//     fetchMembers(1);
+//   }, [searchTerm, statusFilter, planTypeFilter]);
+
+//   const getMemberOverallStatus = (member) => member.membershipStatus || "Inactive";
+
+//   const filteredMembers = members.filter((member) => {
+//     const matchesSearch =
+//       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       member.mobile?.includes(searchTerm);
+
+//     const matchesStatus =
+//       !statusFilter || getMemberOverallStatus(member) === statusFilter;
+
+//     const isPassMember = isPassMemberFn(member);
+
+//     const matchesPlanType =
+//       !planTypeFilter ||
+//       (planTypeFilter === "Pass" && isPassMember) ||
+//       (planTypeFilter === "Activity" && !isPassMember);
+
+//     return matchesSearch && matchesStatus && matchesPlanType;
+//   });
+
+//   const handleDelete = async (id) => {
+//     if (!window.confirm("Are you sure you want to delete this member?")) return;
+//     try {
+//       await api.fitnessMember.delete(id);
+//       toast.success("Member deleted successfully");
+
+//       const newPage =
+//         members.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
+//       fetchMembers(newPage);
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to delete member");
+//     }
+//   };
+
+//   const activeCount = members.filter((m) => getMemberOverallStatus(m) === "Active").length;
+//   const inactiveCount = totalMembers - activeCount;
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+//       {renewMember && (
+//         <RenewModal
+//           member={renewMember}
+//           onClose={() => setRenewMember(null)}
+//           onRenewed={() => fetchMembers(currentPage)}
+//         />
+//       )}
+
+//       {renewPassMember && (
+//         <PassRenewModal
+//           member={renewPassMember}
+//           onClose={() => setRenewPassMember(null)}
+//           onRenewed={() => fetchMembers(currentPage)}
+//         />
+//       )}
+
+//       <div className="flex items-center justify-between mb-6">
+//         <div>
+//           <h1 className="text-2xl font-bold text-gray-800">Fitness Members</h1>
+//           {!loading && (
+//             <p className="text-xs text-gray-500 mt-0.5">
+//               {totalMembers} total &bull;{" "}
+//               <span className="text-green-600 font-medium">{activeCount} active</span>
+//               {" "}&bull;{" "}
+//               <span className="text-gray-400">{inactiveCount < 0 ? 0 : inactiveCount} inactive</span>
+//             </p>
+//           )}
+//         </div>
+//         <div className="flex gap-3">
+//           <button
+//             onClick={() => fetchMembers(currentPage)}
+//             className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+//           >
+//             ↻ Refresh
+//           </button>
+//           <button
+//             onClick={() => navigate("/fitness/members/add-members")}
+//             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
+//           >
+//             + Add Member
+//           </button>
+//           <button
+//             onClick={() => navigate("/fitness/members/add-pass")}
+//             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
+//           >
+//             + Add Pass Member
+//           </button>
+//         </div>
+//       </div>
+
+//       <div className="flex flex-col sm:flex-row gap-3 mb-6">
+//         <input
+//           type="text"
+//           placeholder="Search by Name or Mobile"
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         />
+
+//         <select
+//           value={planTypeFilter}
+//           onChange={(e) => setPlanTypeFilter(e.target.value)}
+//           className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         >
+//           <option value="">All Plans</option>
+//           <option value="Pass">Pass</option>
+//           <option value="Activity">Activity</option>
+//         </select>
+
+//         <select
+//           value={statusFilter}
+//           onChange={(e) => setStatusFilter(e.target.value)}
+//           className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+//         >
+//           <option value="">All Status</option>
+//           <option value="Active">Active</option>
+//           <option value="Inactive">Inactive</option>
+//         </select>
+//       </div>
+
+//       <div className="bg-white rounded-xl shadow overflow-hidden">
+//         <div className="overflow-x-auto">
+//           <table className="min-w-full text-sm">
+//             <thead>
+//               <tr className="bg-[#1a2a5e] text-white">
+//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Member</th>
+//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Mobile</th>
+//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Plan Type</th>
+//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Activities</th>
+//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Overall Status</th>
+//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Remaining Days</th>
+//                 <th className="px-5 py-4 text-left font-semibold whitespace-nowrap">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {loading ? (
+//                 <tr>
+//                   <td colSpan={7} className="px-6 py-20 text-center">
+//                     <div className="flex justify-center">
+//                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a2a5e]" />
+//                     </div>
+//                     <p className="text-gray-500 mt-3 text-sm">Loading members…</p>
+//                   </td>
+//                 </tr>
+//               ) : filteredMembers.length === 0 ? (
+//                 <tr>
+//                   <td colSpan={7} className="px-6 py-20 text-center text-gray-400 text-sm">
+//                     No members found.
+//                   </td>
+//                 </tr>
+//               ) : (
+//                 filteredMembers.map((member, idx) => {
+//                   const overallStatus = getMemberOverallStatus(member);
+//                   const activityFees = member.activityFees || [];
+//                   const isPassMember = isPassMemberFn(member);
+
+//                   const endDate = getNearestEndDate(member);
+//                   const remaining = getRemainingDays(endDate);
+
+//                   const inactiveActivitiesCount = isPassMember
+//                     ? 0
+//                     : activityFees.filter((af) => computeActivityStatus(af) !== "Active").length;
+
+//                   return (
+//                     <tr key={member._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+//                       <td className="px-5 py-4">
+//                         <div className="font-medium text-gray-800">{member.name}</div>
+//                         {member.memberId && (
+//                           <div className="text-xs text-gray-400 mt-0.5">{member.memberId}</div>
+//                         )}
+//                       </td>
+
+//                       <td className="px-5 py-4 text-gray-600">{member.mobile}</td>
+
+//                       <td className="px-5 py-4">
+//                         {isPassMember ? (
+//                           <span className="text-purple-600 font-medium text-xs">Pass</span>
+//                         ) : (
+//                           <span className="text-blue-600 font-medium text-xs">Activity</span>
+//                         )}
+//                       </td>
+
+//                       <td className="px-5 py-4 max-w-xs">
+//                         {isPassMember ? (
+//                           <span className="inline-flex px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
+//                             Membership Pass
+//                           </span>
+//                         ) : (
+//                           <ActivitySummaryPills activityFees={activityFees} />
+//                         )}
+//                       </td>
+
+//                       <td className="px-5 py-4">
+//                         <span
+//                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+//                             overallStatus === "Active"
+//                               ? "bg-green-50 border-green-300 text-green-700"
+//                               : "bg-red-50 border-red-300 text-red-600"
+//                           }`}
+//                         >
+//                           <span
+//                             className={`w-1.5 h-1.5 rounded-full ${
+//                               overallStatus === "Active" ? "bg-green-500" : "bg-red-400"
+//                             }`}
+//                           />
+//                           {overallStatus}
+//                         </span>
+//                       </td>
+
+//                       <td className="px-5 py-4">
+//                         <div className="relative group inline-block">
+//                           <span
+//                             className={`text-xs font-semibold cursor-pointer ${
+//                               remaining.type === "expired"
+//                                 ? "text-red-500"
+//                                 : remaining.type === "warning"
+//                                 ? "text-orange-500"
+//                                 : "text-gray-700"
+//                             }`}
+//                           >
+//                             {remaining.label}
+//                           </span>
+
+//                           {member.activityFees?.length > 0 && (
+//                             <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50">
+//                               <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-2 text-xs text-gray-700 whitespace-nowrap">
+//                                 {member.activityFees.map((af, i) => {
+//                                   const end = af.endDate ? new Date(af.endDate) : null;
+//                                   const today = new Date();
+//                                   today.setHours(0, 0, 0, 0);
+
+//                                   let diff = null;
+//                                   if (end) {
+//                                     diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+//                                   }
+
+//                                   const name =
+//                                     typeof af.activity === "object"
+//                                       ? af.activity?.name ||
+//                                         af.activity?.activityName ||
+//                                         `Activity ${i + 1}`
+//                                       : `Activity ${i + 1}`;
+
+//                                   return (
+//                                     <div key={i} className="flex justify-between gap-4">
+//                                       <span>{name}</span>
+//                                       <span
+//                                         className={
+//                                           diff < 0
+//                                             ? "text-red-500"
+//                                             : diff <= 3
+//                                             ? "text-orange-500"
+//                                             : "text-gray-600"
+//                                         }
+//                                       >
+//                                         {diff < 0
+//                                           ? "Expired"
+//                                           : diff === 0
+//                                           ? "Last Day"
+//                                           : `${diff} days`}
+//                                       </span>
+//                                     </div>
+//                                   );
+//                                 })}
+//                               </div>
+//                             </div>
+//                           )}
+//                         </div>
+//                       </td>
+
+//                       <td className="px-5 py-4">
+//                         <div className="flex gap-2 flex-wrap">
+//                           <button
+//                             onClick={() => {
+//                               if (isPassMemberFn(member)) {
+//                                 navigate(`/fitness/members/view-pass/${member._id}`);
+//                               } else {
+//                                 navigate(`/fitness/members/view-member/${member._id}`);
+//                               }
+//                             }}
+//                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                           >
+//                             View
+//                           </button>
+
+//                           <button
+//                             onClick={() => {
+//                               if (isPassMemberFn(member)) {
+//                                 navigate(`/fitness/members/edit-pass/${member._id}`);
+//                               } else {
+//                                 navigate(`/fitness/members/edit-member/${member._id}`);
+//                               }
+//                             }}
+//                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                           >
+//                             Edit
+//                           </button>
+
+//                           {(isPassMember ? overallStatus !== "Active" : inactiveActivitiesCount > 0) && (
+//                             <button
+//                               onClick={() => {
+//                                 if (isPassMember) {
+//                                   setRenewPassMember(member);
+//                                 } else {
+//                                   setRenewMember(member);
+//                                 }
+//                               }}
+//                               className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                               title={`${inactiveActivitiesCount} activit${
+//                                 inactiveActivitiesCount === 1 ? "y" : "ies"
+//                               } need renewal`}
+//                             >
+//                               Renew
+//                               {inactiveActivitiesCount > 1
+//                                 ? ` (${inactiveActivitiesCount})`
+//                                 : ""}
+//                             </button>
+//                           )}
+
+//                           <button
+//                             onClick={() => handleDelete(member._id)}
+//                             className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+//                           >
+//                             Delete
+//                           </button>
+//                         </div>
+//                       </td>
+//                     </tr>
+//                   );
+//                 })
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <div className="mt-4 flex items-center justify-between">
+//         <p className="text-xs text-gray-400">
+//           Showing {filteredMembers.length} of {totalMembers} members
+//         </p>
+
+//         <div className="flex items-center gap-2">
+//           <button
+//             onClick={() => currentPage > 1 && setCurrentPage((prev) => prev - 1)}
+//             disabled={currentPage === 1 || loading}
+//             className="px-3 py-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+//           >
+//             Prev
+//           </button>
+
+//           <span className="text-xs text-gray-500">
+//             Page {currentPage} of {totalPages}
+//           </span>
+
+//           <button
+//             onClick={() =>
+//               currentPage < totalPages && setCurrentPage((prev) => prev + 1)
+//             }
+//             disabled={currentPage === totalPages || loading}
+//             className="px-3 py-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+//           >
+//             Next
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
