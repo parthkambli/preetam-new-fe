@@ -1522,7 +1522,14 @@ export default function BookActivity() {
   // Filter states
   const [filterMember, setFilterMember] = useState('');
   const [filterActivity, setFilterActivity] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+const [fromDate, setFromDate] = useState('');
+const [toDate, setToDate] = useState('');
+const [exactDate, setExactDate] = useState('');
+
+
+//pagination
+const [page, setPage] = useState(1);
+const [totalPages, setTotalPages] = useState(1);
 
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
@@ -1589,14 +1596,39 @@ export default function BookActivity() {
 
   const fetchBookings = async () => {
     try {
-      const res = await api.fitnessActivities.getBookings();
-      const data = res.data?.data || res.data?.bookings || res.data || [];
+      if (fromDate && toDate && fromDate > toDate) {
+  toast.error("From date cannot be greater than To date");
+  return;
+}
+      // const res = await api.fitnessActivities.getBookings();
+const res = await api.fitnessActivities.getBookings({
+  page,
+  limit: 10,
+  date: exactDate,
+  fromDate,
+  toDate,
+  customerName: filterMember,
+  activityName: filterActivity,
+}); // For Pagination
+
+      // const data = res.data?.data || res.data?.bookings || res.data || [];
+      const data = res.data?.data || [];
       setBookings(Array.isArray(data) ? data : []);
+
+      setTotalPages(res.data?.totalPages || 1);
     } catch (err) {
       console.error("FETCH BOOKINGS ERROR:", err);
       setBookings([]);
     }
   };
+
+  useEffect(() => {
+  setPage(1);
+}, [fromDate, toDate, filterMember, filterActivity]);
+
+useEffect(() => {
+  fetchBookings();
+}, [page, fromDate, toDate, filterMember, filterActivity]);
 
   const fetchMembers = async () => {
     try {
@@ -1692,7 +1724,7 @@ export default function BookActivity() {
   useEffect(() => {
     fetchActivities();
     fetchFeeTypes();
-    fetchBookings();
+    // fetchBookings();
     fetchMembers();
     fetchStaff();
   }, []);
@@ -1700,6 +1732,8 @@ export default function BookActivity() {
   useEffect(() => {
     fetchAvailability();
   }, [selectedActivity, date]);
+
+
 
   // Member name suggestion useEffect
   useEffect(() => {
@@ -1714,15 +1748,16 @@ export default function BookActivity() {
     setFilteredMembers(filtered);
   }, [memberName, members]);
 
-  const filteredBookings = bookings.filter((b) => {
-    const matchMember = b.customerName?.toLowerCase().includes(filterMember.toLowerCase());
-    const matchActivity = filterActivity === '' || b.activityName === filterActivity;
-    const matchDate = filterDate === '' || b.date === filterDate;
-    return matchMember && matchActivity && matchDate;
-  });
+  // const filteredBookings = bookings.filter((b) => {
+  //   const matchMember = b.customerName?.toLowerCase().includes(filterMember.toLowerCase());
+  //   const matchActivity = filterActivity === '' || b.activityName === filterActivity;
+  //   const matchDate = filterDate === '' || b.date === filterDate;
+  //   return matchMember && matchActivity && matchDate;
+  // });
 
-  const uniqueActivities = [...new Set(bookings.map((b) => b.activityName).filter(Boolean))];
+  const filteredBookings = bookings;
 
+const activityOptions = activities.map((a) => a.name);
   return (
     <div>
       {/* ====================== BOOK ACTIVITY FORM ====================== */}
@@ -1974,39 +2009,82 @@ export default function BookActivity() {
 
         <div className="flex flex-wrap gap-3 mb-5">
           <input
-            type="text"
-            placeholder="Search Member Name"
-            value={filterMember}
-            onChange={(e) => setFilterMember(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#000359]"
-          />
+      type="text"
+      placeholder="Search member"
+      value={filterMember}
+      onChange={(e) => setFilterMember(e.target.value)}
+      className="border border-gray-300 rounded-lg px-3 py-2 text-sm h-10 focus:outline-none focus:ring-2 focus:ring-[#000359]"
+    />
 
           <select
-            value={filterActivity}
-            onChange={(e) => setFilterActivity(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-[#000359]"
-          >
+      value={filterActivity}
+      onChange={(e) => setFilterActivity(e.target.value)}
+      className="border border-gray-300 rounded-lg px-3 py-2 text-sm h-10 focus:outline-none focus:ring-2 focus:ring-[#000359]"
+    >
             <option value="">All Activities</option>
-            {uniqueActivities.map((name) => (
+            {activityOptions.map((name) => (
               <option key={name} value={name}>
                 {name}
               </option>
             ))}
           </select>
 
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
-          />
 
-          {(filterMember || filterActivity || filterDate) && (
+        {/* <div className="flex flex-col w-44">
+  <label className="text-xs text-gray-500 mb-1">Date</label>
+  <input
+    type="date"
+    value={exactDate}
+    onChange={(e) => {
+      setExactDate(e.target.value);
+      setFromDate('');
+      setToDate('');
+      
+    }}
+    className="border border-gray-300 rounded-lg px-3 py-2 text-sm h-10"
+  />
+</div> */}
+      
+
+
+  
+    <div className="flex flex-col w-44">
+      <label className="text-xs text-gray-500 mb-1">From Date</label>
+      <input
+        type="date"
+        value={fromDate}
+        onChange={(e) => {
+  setFromDate(e.target.value);
+  setExactDate('');
+}}
+        className="border rounded-lg px-3 py-2 text-sm h-10"
+      />
+    </div>
+
+    <div className="flex flex-col w-44">
+      <label className="text-xs text-gray-500 mb-1">To Date</label>
+      <input
+        type="date"
+        value={toDate}
+        onChange={(e) => {
+  setToDate(e.target.value);
+  setExactDate('');
+}}
+        className="border rounded-lg px-3 py-2 text-sm h-10"
+      />
+    </div>
+  
+
+          {(filterMember || filterActivity || fromDate || toDate || exactDate) && (
             <button
               onClick={() => {
                 setFilterMember('');
                 setFilterActivity('');
-                setFilterDate('');
+                // setFilterDate('');
+                setFromDate('');
+                setToDate('');
+                setExactDate('');
+                
               }}
               className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
             >
@@ -2014,6 +2092,8 @@ export default function BookActivity() {
             </button>
           )}
         </div>
+
+        
 
         <div className="rounded-xl overflow-hidden border border-gray-200">
           <table className="w-full text-sm">
@@ -2060,16 +2140,67 @@ export default function BookActivity() {
           </table>
         </div>
 
-        {filteredBookings.length > 0 && (
+        {/* {filteredBookings.length > 0 && (
           <p className="text-xs text-gray-400 mt-3">
             Showing {filteredBookings.length} of {bookings.length} booking
             {bookings.length !== 1 ? 's' : ''}
           </p>
-        )}
+        )} */}
+
+        {totalPages > 1 && (
+  <div className="flex items-center justify-between mt-5">
+    
+    {/* LEFT: Page Info */}
+    <p className="text-sm text-gray-500">
+      Page <span className="font-semibold text-gray-800">{page}</span> of{" "}
+      <span className="font-semibold text-gray-800">{totalPages}</span>
+    </p>
+
+    {/* RIGHT: Buttons */}
+    <div className="flex items-center gap-2">
+
+      {/* PREV BUTTON */}
+      <button
+        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+        disabled={page === 1}
+        className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+          page === 1
+            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+            : "border-[#000359] text-[#000359] hover:bg-[#000359] hover:text-white"
+        }`}
+      >
+        ← Prev
+      </button>
+
+      {/* PAGE NUMBER (CURRENT) */}
+      <div className="px-4 py-2 rounded-lg bg-[#000359] text-white text-sm font-semibold">
+        {page}
+      </div>
+
+      {/* NEXT BUTTON */}
+      <button
+        onClick={() =>
+          setPage((prev) => Math.min(prev + 1, totalPages))
+        }
+        disabled={page === totalPages}
+        className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+          page === totalPages
+            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+            : "border-[#000359] text-[#000359] hover:bg-[#000359] hover:text-white"
+        }`}
+      >
+        Next →
+      </button>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );
 }
+
+
+
 
 
 
