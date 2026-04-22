@@ -821,7 +821,7 @@ export default function AddFitnessEnquiry() {
     if (year.length > 4) return; // block invalid year
     handleChange(e);
   }}
-  min={new Date().toISOString().split('T')[0]}
+  // min={new Date().toISOString().split('T')[0]}
   max="9999-12-31"
   className="w-full px-4 py-3 border rounded-lg"
 />
