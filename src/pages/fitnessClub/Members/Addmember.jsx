@@ -7,6 +7,8 @@ import Select from "react-select";
 // Plan keys must match AllotFees fieldMap exactly
 const PLAN_OPTIONS = [
   { value: "Annual",    label: "Annual",    feeKey: "annual"   },
+  { value: "halfYearly",    label: "halfYearly",    feeKey: "halfYearly"   },
+  { value: "quarterly",    label: "quarterly",    feeKey: "quarterly"   },
   { value: "Monthly",   label: "Monthly",   feeKey: "monthly"  },
   { value: "Weekly",    label: "Weekly",    feeKey: "weekly"   },
   { value: "Daily",     label: "Daily",     feeKey: "daily"    },
@@ -19,21 +21,66 @@ const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
 
 
 // ── Helper: compute end date from start date + plan ──────────────────────────
+// const computeEndDate = (startDate, plan) => {
+//   if (!startDate || !plan) return "";
+//   const d = new Date(startDate);
+//   if (isNaN(d.getTime())) return "";
+
+//   switch (plan) {
+//     case "Annual":  d.setFullYear(d.getFullYear() + 1); d.setDate(d.getDate() - 1); break;
+//     case "Monthly": d.setMonth(d.getMonth() + 1);       d.setDate(d.getDate() - 1); break;
+//     case "Weekly":  d.setDate(d.getDate() + 6);          break;
+//     case "Daily":   /* same day */                        break;
+//     case "Hourly":  /* same day */                        break;
+//     default:        d.setMonth(d.getMonth() + 1);        d.setDate(d.getDate() - 1);
+//   }
+//   return d.toISOString().split("T")[0];
+// };
 const computeEndDate = (startDate, plan) => {
   if (!startDate || !plan) return "";
+
   const d = new Date(startDate);
   if (isNaN(d.getTime())) return "";
 
   switch (plan) {
-    case "Annual":  d.setFullYear(d.getFullYear() + 1); d.setDate(d.getDate() - 1); break;
-    case "Monthly": d.setMonth(d.getMonth() + 1);       d.setDate(d.getDate() - 1); break;
-    case "Weekly":  d.setDate(d.getDate() + 6);          break;
-    case "Daily":   /* same day */                        break;
-    case "Hourly":  /* same day */                        break;
-    default:        d.setMonth(d.getMonth() + 1);        d.setDate(d.getDate() - 1);
+    case "Annual":
+      d.setFullYear(d.getFullYear() + 1);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "halfYearly":
+      d.setMonth(d.getMonth() + 6);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "quarterly":
+      d.setMonth(d.getMonth() + 3);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "Monthly":
+      d.setMonth(d.getMonth() + 1);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "Weekly":
+      d.setDate(d.getDate() + 6);
+      break;
+
+    case "Daily":
+      break;
+
+    case "Hourly":
+      break;
+
+    default:
+      d.setMonth(d.getMonth() + 1);
+      d.setDate(d.getDate() - 1);
   }
+
   return d.toISOString().split("T")[0];
 };
+
 
 // ── Helper: compute activity-level membership status ────────────────────────
 const computeActivityStatus = (af) => {

@@ -11,6 +11,8 @@ const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api')
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAN_OPTIONS = [
   { value: "Annual",  label: "Annual",  feeKey: "annual"  },
+  { value: "halfYearly",    label: "halfYearly",    feeKey: "halfYearly"   },
+  { value: "quarterly",    label: "quarterly",    feeKey: "quarterly"   },
   { value: "Monthly", label: "Monthly", feeKey: "monthly" },
   { value: "Weekly",  label: "Weekly",  feeKey: "weekly"  },
   { value: "Daily",   label: "Daily",   feeKey: "daily"   },
@@ -42,18 +44,63 @@ const validatePhoto = (file) => {
 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+// const computeEndDate = (startDate, plan) => {
+//   if (!startDate || !plan) return "";
+//   const d = new Date(startDate);
+//   if (isNaN(d.getTime())) return "";
+//   switch (plan) {
+//     case "Annual":  d.setFullYear(d.getFullYear() + 1); d.setDate(d.getDate() - 1); break;
+//     case "Monthly": d.setMonth(d.getMonth() + 1);       d.setDate(d.getDate() - 1); break;
+//     case "Weekly":  d.setDate(d.getDate() + 6); break;
+//     case "Daily":   break;
+//     case "Hourly":  break;
+//     default:        d.setMonth(d.getMonth() + 1); d.setDate(d.getDate() - 1);
+//   }
+//   return d.toISOString().split("T")[0];
+// };
+
 const computeEndDate = (startDate, plan) => {
   if (!startDate || !plan) return "";
+
   const d = new Date(startDate);
   if (isNaN(d.getTime())) return "";
+
   switch (plan) {
-    case "Annual":  d.setFullYear(d.getFullYear() + 1); d.setDate(d.getDate() - 1); break;
-    case "Monthly": d.setMonth(d.getMonth() + 1);       d.setDate(d.getDate() - 1); break;
-    case "Weekly":  d.setDate(d.getDate() + 6); break;
-    case "Daily":   break;
-    case "Hourly":  break;
-    default:        d.setMonth(d.getMonth() + 1); d.setDate(d.getDate() - 1);
+    case "Annual":
+      d.setFullYear(d.getFullYear() + 1);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "halfYearly":
+      d.setMonth(d.getMonth() + 6);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "quarterly":
+      d.setMonth(d.getMonth() + 3);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "Monthly":
+      d.setMonth(d.getMonth() + 1);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "Weekly":
+      d.setDate(d.getDate() + 6);
+      break;
+
+    case "Daily":
+      break;
+
+    case "Hourly":
+      break;
+
+    default:
+      d.setMonth(d.getMonth() + 1);
+      d.setDate(d.getDate() - 1);
   }
+
   return d.toISOString().split("T")[0];
 };
 
