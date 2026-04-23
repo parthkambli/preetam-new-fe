@@ -179,6 +179,14 @@ export default function Navbar({ onMenuClick }) {
     navigate(`/${e.target.value}/dashboard`);
   };
 
+  const profileRoutes = {
+  FitnessStaff: "/fitness-staff/profile",
+  SchoolStaff: "/school-staff/profile",
+  FitnessMember: "/fitness-member/profile",
+};
+
+const profilePath = profileRoutes[user?.role] || "/profile";
+
   // Check if user is admin
   const isAdmin = user?.role?.toLowerCase() === 'superadmin' || 
                   user?.role === 'super_admin'; // adjust according to your actual roles
@@ -229,7 +237,7 @@ export default function Navbar({ onMenuClick }) {
       {/* Right: avatar + name */}
       <div
         className="flex items-center gap-3 cursor-pointer group"
-        onClick={() => navigate('/profile')}
+        onClick={() => navigate(profilePath)}
         title="View Profile"
       >
         <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300 group-hover:ring-2 group-hover:ring-white/50 transition-all duration-200">

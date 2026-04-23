@@ -227,10 +227,11 @@ import FitnessAdduser from './pages/fitnessClub/UserManagement/Adduser';        
 import FitnessStaffDashboard from "./pages/FitnessStaff/Dashboard";
 import FitnessStaffAttendance from "./pages/FitnessStaff/Attendance"
 import FitnessStaffMySchedule from "./pages/FitnessStaff/MySchedule";
-
+// import Profile from "./pages/FitnessStaff/Profile"
 
 import AddPassMember from './pages/fitnessClub/Members/AddPassMember';
 import ViewPassMember from './pages/fitnessClub/Members/ViewPassMember';
+import StaffProfilePage from './pages/FitnessStaff/Profile';
 
 
 
@@ -313,10 +314,13 @@ function App() {
             <Route path="/fitness/reports" element={<FitnessReports />} />
             <Route path="/fitness/user-management" element={<FitnessUserManagement />} />
             <Route path="/fitness/user-management/Add-user" element={<FitnessAdduser />} />
+
+            // fitness staff panel routes...
             //Added by Aadi
             <Route path="/fitness-staff" element={<FitnessStaffDashboard/>} />
              <Route path="/fitness-staff/attendance" element={<FitnessStaffAttendance />} /> 
              <Route path="/fitness-staff/my-Schedule" element={< FitnessStaffMySchedule />} /> 
+             <Route path="/fitness-staff/profile" element={<StaffProfilePage />} />  // fitness staff panel profile
             //Added by Aadi
 
 
