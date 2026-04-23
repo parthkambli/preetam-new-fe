@@ -281,6 +281,8 @@ const FEE_TYPE_OPTS = ['Visitor', 'Residency', 'Membership Pass'];
 const emptyForm = {
   description: '',
   annual: '',
+  halfYearly: '',   // ✅
+  quarterly: '',    // ✅
   monthly: '',
   weekly: '',
   daily: '',
@@ -337,6 +339,8 @@ export default function FitnessFeeTypes() {
     setForm({
       description: row.description || '',
       annual: row.annual ?? '',
+      halfYearly: row.halfYearly ?? '',   // ✅
+      quarterly: row.quarterly ?? '',     // ✅
       monthly: row.monthly ?? '',
       weekly: row.weekly ?? '',
       daily: row.daily ?? '',
@@ -379,11 +383,13 @@ export default function FitnessFeeTypes() {
     const payload = {
       description: form.description.trim(),
       type: form.type,
-      annual: form.annual !== '' ? Number(form.annual) || 0 : 0,
-      monthly: form.monthly !== '' ? Number(form.monthly) || 0 : 0,
-      weekly: form.weekly !== '' ? Number(form.weekly) || 0 : 0,
-      daily: form.daily !== '' ? Number(form.daily) || 0 : 0,
-      hourly: form.hourly !== '' ? Number(form.hourly) || 0 : 0,
+      annual: Number(form.annual) || 0,
+      halfYearly: Number(form.halfYearly) || 0,   // ✅
+      quarterly: Number(form.quarterly) || 0,     // ✅
+      monthly: Number(form.monthly) || 0,
+      weekly: Number(form.weekly) || 0,
+      daily: Number(form.daily) || 0,
+      hourly: Number(form.hourly) || 0,
     };
 
     console.log('📤 [Frontend] Sending payload to backend:', payload);
@@ -452,7 +458,7 @@ export default function FitnessFeeTypes() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {['annual', 'monthly', 'weekly', 'daily', 'hourly'].map((field) => (
+            {['annual', 'halfYearly', 'quarterly', 'monthly', 'weekly', 'daily', 'hourly'].map((field) => (
               <div key={field}>
                 <label className="block text-xs font-semibold text-[#1e3a8a] mb-1 capitalize">{field}</label>
                 <input
@@ -500,7 +506,7 @@ export default function FitnessFeeTypes() {
         <table className="w-full min-w-[900px] border-collapse">
           <thead>
             <tr className="bg-[#1e3a8a]">
-              {['Sr', 'Description', 'Annual', 'Monthly', 'Weekly', 'Daily', 'Hourly', 'Type', 'Actions'].map((h) => (
+              {['Sr', 'Description', 'Annual', 'Half-Yearly', 'Quarterly', 'Monthly', 'Weekly', 'Daily', 'Hourly', 'Type', 'Actions'].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-white whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -516,6 +522,8 @@ export default function FitnessFeeTypes() {
                   <td className="px-4 py-3">{idx + 1}</td>
                   <td className="px-4 py-3 max-w-[280px]">{row.description}</td>
                   <td className="px-4 py-3">{row.annual?.toLocaleString() || 0}</td>
+                  <td>{row.halfYearly?.toLocaleString() || 0}</td>
+                  <td>{row.quarterly?.toLocaleString() || 0}</td>
                   <td className="px-4 py-3">{row.monthly?.toLocaleString() || 0}</td>
                   <td className="px-4 py-3">{row.weekly?.toLocaleString() || 0}</td>
                   <td className="px-4 py-3">{row.daily?.toLocaleString() || 0}</td>
