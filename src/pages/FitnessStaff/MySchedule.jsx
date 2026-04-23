@@ -248,7 +248,432 @@
 
 
 
-///////////////////////////////
+/////////////////////////////// Working code
+
+// import React, { useEffect, useMemo, useState } from "react";
+// import { api } from "../../../src/services/apiClient";
+
+// function Card({ className = "", ...props }) {
+//   return (
+//     <div
+//       className={`rounded-2xl bg-white shadow-sm border border-gray-200 ${className}`}
+//       {...props}
+//     />
+//   );
+// }
+
+// function CardHeader({ className = "", ...props }) {
+//   return (
+//     <div className={`px-5 sm:px-6 pt-5 sm:pt-6 pb-4 ${className}`} {...props} />
+//   );
+// }
+
+// function CardTitle({ className = "", ...props }) {
+//   return <h3 className={`text-xl sm:text-xl font-bold ${className}`} {...props} />;
+// }
+
+// function CardContent({ className = "", ...props }) {
+//   return <div className={`px-5 sm:px-6 pb-5 sm:pb-6 ${className}`} {...props} />;
+// }
+
+// function Button({ children, className = "", ...props }) {
+//   return (
+//     <button
+//       className={`font-semibold transition-all duration-200 ${className}`}
+//       {...props}
+//     >
+//       {children}
+//     </button>
+//   );
+// }
+
+// export default function MySchedule() {
+//   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
+//   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
+//   const [activeActivityId, setActiveActivityId] = useState(null);
+//   const [activeSlotId, setActiveSlotId] = useState(null);
+
+//   const [activities, setActivities] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const [attendanceByActivity, setAttendanceByActivity] = useState({});
+//   const [statusByActivity, setStatusByActivity] = useState({});
+
+//   const makeKey = (activityId, slotId) => `${activityId}_${slotId}`;
+
+//   useEffect(() => {
+//     fetchMySchedule();
+//   }, []);
+
+//   const fetchMySchedule = async () => {
+//     try {
+//       setLoading(true);
+
+//       const res = await api.staffPanel.getMySchedule();
+//       const scheduleData = Array.isArray(res?.data?.data) ? res.data.data : [];
+
+//       const mappedActivities = scheduleData.map((item, index) => ({
+//         id: item.activityId || `activity-${index}`,
+//         slotId: item.slotId || `slot-${index}`,
+//         title: item.activityName || "Activity",
+//         time:
+//           item.startTime && item.endTime
+//             ? `${item.startTime} - ${item.endTime}`
+//             : item.startTime || "-",
+//         place: item.place || item.location || item.description || "",
+//         participants: Array.isArray(item.participants)
+//           ? item.participants.map((participant) =>
+//               typeof participant === "string"
+//                 ? participant
+//                 : participant?.name || participant?.customerName || "Participant"
+//             )
+//           : [],
+//       }));
+
+//       setActivities(mappedActivities);
+
+//       const attendanceObj = {};
+//       const statusObj = {};
+
+//       mappedActivities.forEach((activity) => {
+//         const key = makeKey(activity.id, activity.slotId);
+
+//         attendanceObj[key] = activity.participants.reduce((acc, name) => {
+//           acc[name] = null;
+//           return acc;
+//         }, {});
+
+//         statusObj[key] = "Pending";
+//       });
+
+//       setAttendanceByActivity(attendanceObj);
+//       setStatusByActivity(statusObj);
+//     } catch (error) {
+//       console.error("Error fetching my schedule:", error);
+//       setActivities([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const activeActivity = useMemo(() => {
+//     return (
+//       activities.find(
+//         (activity) =>
+//           activity.id === activeActivityId && activity.slotId === activeSlotId
+//       ) || null
+//     );
+//   }, [activities, activeActivityId, activeSlotId]);
+
+//   const currentAttendance = useMemo(() => {
+//     if (!activeActivityId || !activeSlotId) return {};
+//     const key = makeKey(activeActivityId, activeSlotId);
+//     return attendanceByActivity[key] || {};
+//   }, [attendanceByActivity, activeActivityId, activeSlotId]);
+
+//   const getActivityAttendance = (activityId, slotId) => {
+//     const key = makeKey(activityId, slotId);
+//     return attendanceByActivity[key] || {};
+//   };
+
+//   const getActivityStatus = (activityId, slotId) => {
+//     const key = makeKey(activityId, slotId);
+//     return statusByActivity[key] || "Pending";
+//   };
+
+//   const getCounts = (activityId, slotId) => {
+//     const activity = activities.find(
+//       (item) => item.id === activityId && item.slotId === slotId
+//     );
+//     const attendance = getActivityAttendance(activityId, slotId);
+
+//     const total = activity?.participants.length || 0;
+//     const present = Object.values(attendance).filter(
+//       (value) => value === "Present"
+//     ).length;
+//     const absent = Object.values(attendance).filter(
+//       (value) => value === "Absent"
+//     ).length;
+
+//     return { total, present, absent };
+//   };
+
+//   const handleStatusChange = (name, value) => {
+//     const key = makeKey(activeActivityId, activeSlotId);
+
+//     setAttendanceByActivity((prev) => ({
+//       ...prev,
+//       [key]: {
+//         ...prev[key],
+//         [name]: value,
+//       },
+//     }));
+//   };
+
+//   const handleSaveAttendance = () => {
+//     if (!activeActivityId || !activeSlotId) return;
+
+//     const key = makeKey(activeActivityId, activeSlotId);
+
+//     setStatusByActivity((prev) => ({
+//       ...prev,
+//       [key]: "Marked",
+//     }));
+
+//     setIsMarkingAttendance(false);
+//     setIsViewingAttendance(false);
+//   };
+
+//   const openMarkModal = (activityId, slotId) => {
+//     setActiveActivityId(activityId);
+//     setActiveSlotId(slotId);
+//     setIsViewingAttendance(false);
+//     setIsMarkingAttendance(true);
+//   };
+
+//   const openViewModal = (activityId, slotId) => {
+//     setActiveActivityId(activityId);
+//     setActiveSlotId(slotId);
+//     setIsMarkingAttendance(false);
+//     setIsViewingAttendance(true);
+//   };
+
+//   return (
+//     <div className="space-y-6 px-1 sm:px-0">
+//       <h2 className="text-[32px] sm:text-2xl font-bold text-[#000033]">
+//         My Schedule
+//       </h2>
+
+//       {loading ? (
+//         <div className="text-sm text-gray-600">Loading...</div>
+//       ) : (
+//         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-6">
+//           {activities.map((activity) => {
+//             const counts = getCounts(activity.id, activity.slotId);
+//             const currentStatus = getActivityStatus(activity.id, activity.slotId);
+
+//             return (
+//               <Card key={makeKey(activity.id, activity.slotId)} className="bg-white p-5 sm:p-6">
+//                 <div className="flex flex-col gap-4 mb-4">
+//                   <div>
+//                     <h3 className="text-[28px] sm:text-xl font-bold text-gray-900 leading-tight">
+//                       {activity.title} – {activity.time}
+//                     </h3>
+//                     <p className="text-[16px] sm:text-sm text-gray-600 mt-2">
+//                       {activity.place}
+//                     </p>
+//                   </div>
+
+//                   <div className="flex flex-col gap-3">
+//                     <div className="flex items-center gap-2 flex-wrap">
+//                       <span className="text-[13px] sm:text-xs font-medium text-gray-600">
+//                         Status
+//                       </span>
+//                       <span
+//                         className={`text-white text-[11px] sm:text-[10px] px-3 py-1 rounded-full font-bold ${
+//                           currentStatus === "Marked" ? "bg-green-500" : "bg-red-500"
+//                         }`}
+//                       >
+//                         {currentStatus}
+//                       </span>
+//                     </div>
+
+//                     <div className="flex gap-2 flex-wrap">
+//                       <Button
+//                         className="bg-[#4CAF50] hover:bg-[#45a049] min-h-[38px] sm:h-8 px-4 sm:px-3 text-[13px] sm:text-[10px] font-bold text-white rounded-md"
+//                         onClick={() => openMarkModal(activity.id, activity.slotId)}
+//                       >
+//                         Mark
+//                       </Button>
+
+//                       <Button
+//                         className="bg-blue-600 hover:bg-blue-700 min-h-[38px] sm:h-8 px-4 sm:px-3 text-[13px] sm:text-[10px] font-bold text-white rounded-md"
+//                         onClick={() => openViewModal(activity.id, activity.slotId)}
+//                       >
+//                         View
+//                       </Button>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <div className="space-y-2">
+//                   <p className="text-[20px] sm:text-lg font-semibold text-gray-800">
+//                     Participants - {counts.total}
+//                   </p>
+//                   <p className="text-[16px] sm:text-sm text-gray-700">
+//                     Present - {counts.present}
+//                   </p>
+//                   <p className="text-[16px] sm:text-sm text-gray-700">
+//                     Absent - {counts.absent}
+//                   </p>
+//                 </div>
+//               </Card>
+//             );
+//           })}
+
+//           {isMarkingAttendance && activeActivity && (
+//             <Card className="xl:col-span-2">
+//               <CardHeader className="flex items-center justify-between border-b">
+//                 <CardTitle className="text-[24px] sm:text-xl">
+//                   Mark Attendance – {activeActivity.title}
+//                 </CardTitle>
+//                 <button
+//                   onClick={() => setIsMarkingAttendance(false)}
+//                   className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold"
+//                 >
+//                   ✕
+//                 </button>
+//               </CardHeader>
+
+//               <CardContent className="pt-5">
+//                 <div className="mb-5 space-y-2">
+//                   <p className="text-[16px] sm:text-sm font-medium text-gray-800">
+//                     Participants - {activeActivity.participants.length}
+//                   </p>
+//                   <p className="text-[16px] sm:text-sm text-green-700 font-medium">
+//                     Present - {getCounts(activeActivity.id, activeActivity.slotId).present}
+//                   </p>
+//                   <p className="text-[16px] sm:text-sm text-red-700 font-medium">
+//                     Absent - {getCounts(activeActivity.id, activeActivity.slotId).absent}
+//                   </p>
+//                 </div>
+
+//                 <div className="max-h-[420px] overflow-y-auto space-y-4">
+//                   {activeActivity.participants.map((name, i) => (
+//                     <div
+//                       key={i}
+//                       className="flex flex-col gap-3 border-b border-gray-100 pb-4"
+//                     >
+//                       <div className="flex items-center gap-2 min-w-0">
+//                         <div className="w-2 h-2 rounded-full bg-black shrink-0" />
+//                         <span className="text-[16px] sm:text-sm font-medium text-gray-700 break-words">
+//                           {name}
+//                         </span>
+//                       </div>
+
+//                       <div className="flex gap-2 flex-wrap">
+//                         <button
+//                           type="button"
+//                           onClick={() => handleStatusChange(name, "Present")}
+//                           className={`px-4 py-2 rounded-lg text-[13px] sm:text-xs font-bold border ${
+//                             currentAttendance[name] === "Present"
+//                               ? "bg-green-500 text-white border-green-500"
+//                               : "bg-white text-green-600 border-green-300"
+//                           }`}
+//                         >
+//                           Present
+//                         </button>
+
+//                         <button
+//                           type="button"
+//                           onClick={() => handleStatusChange(name, "Absent")}
+//                           className={`px-4 py-2 rounded-lg text-[13px] sm:text-xs font-bold border ${
+//                             currentAttendance[name] === "Absent"
+//                               ? "bg-red-500 text-white border-red-500"
+//                               : "bg-white text-red-600 border-red-300"
+//                           }`}
+//                         >
+//                           Absent
+//                         </button>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+
+//                 <div className="flex flex-col sm:flex-row gap-3 mt-6">
+//                   <Button
+//                     className="flex-1 bg-[#4CAF50] hover:bg-[#45a049] font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
+//                     onClick={handleSaveAttendance}
+//                   >
+//                     Save
+//                   </Button>
+
+//                   <Button
+//                     className="flex-1 bg-[#C62828] hover:bg-[#b71c1c] font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
+//                     onClick={() => setIsMarkingAttendance(false)}
+//                   >
+//                     Cancel
+//                   </Button>
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           )}
+
+//           {isViewingAttendance && activeActivity && (
+//             <Card className="xl:col-span-2">
+//               <CardHeader className="flex items-center justify-between border-b">
+//                 <CardTitle className="text-[24px] sm:text-xl">
+//                   View Attendance – {activeActivity.title}
+//                 </CardTitle>
+//                 <button
+//                   onClick={() => setIsViewingAttendance(false)}
+//                   className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold"
+//                 >
+//                   ✕
+//                 </button>
+//               </CardHeader>
+
+//               <CardContent className="pt-5">
+//                 <div className="mb-5 space-y-2">
+//                   <p className="text-[16px] sm:text-sm font-medium text-gray-800">
+//                     Participants - {activeActivity.participants.length}
+//                   </p>
+//                   <p className="text-[16px] sm:text-sm text-green-700 font-medium">
+//                     Present - {getCounts(activeActivity.id, activeActivity.slotId).present}
+//                   </p>
+//                   <p className="text-[16px] sm:text-sm text-red-700 font-medium">
+//                     Absent - {getCounts(activeActivity.id, activeActivity.slotId).absent}
+//                   </p>
+//                 </div>
+
+//                 <div className="max-h-[420px] overflow-y-auto space-y-4">
+//                   {activeActivity.participants.map((name, i) => (
+//                     <div
+//                       key={i}
+//                       className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3"
+//                     >
+//                       <div className="flex items-center gap-2 min-w-0">
+//                         <div className="w-2 h-2 rounded-full bg-black shrink-0" />
+//                         <span className="text-[16px] sm:text-sm font-medium text-gray-700 break-words">
+//                           {name}
+//                         </span>
+//                       </div>
+
+//                       <span
+//                         className={`text-[13px] sm:text-xs font-bold px-3 py-1.5 rounded-full shrink-0 ${
+//                           currentAttendance[name] === "Present"
+//                             ? "bg-green-100 text-green-700"
+//                             : currentAttendance[name] === "Absent"
+//                             ? "bg-red-100 text-red-700"
+//                             : "bg-gray-100 text-gray-600"
+//                         }`}
+//                       >
+//                         {currentAttendance[name] || "Not Marked"}
+//                       </span>
+//                     </div>
+//                   ))}
+//                 </div>
+
+//                 <div className="mt-6">
+//                   <Button
+//                     className="w-full bg-blue-600 hover:bg-blue-700 font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
+//                     onClick={() => setIsViewingAttendance(false)}
+//                   >
+//                     Close
+//                   </Button>
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           )}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+
+
+///////////////////////////////working code
 
 import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../../../src/services/apiClient";
@@ -269,7 +694,7 @@ function CardHeader({ className = "", ...props }) {
 }
 
 function CardTitle({ className = "", ...props }) {
-  return <h3 className={`text-xl sm:text-xl font-bold ${className}`} {...props} />;
+  return <h3 className={`text-lg sm:text-xl font-bold ${className}`} {...props} />;
 }
 
 function CardContent({ className = "", ...props }) {
@@ -295,105 +720,117 @@ export default function MySchedule() {
 
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [attendanceByActivity, setAttendanceByActivity] = useState({});
-  const [statusByActivity, setStatusByActivity] = useState({});
 
   const makeKey = (activityId, slotId) => `${activityId}_${slotId}`;
+
+  // 🔥 TIME BASED STATUS
+  const getStatusFromTime = (startTime, endTime) => {
+    const now = new Date();
+    const today = new Date().toISOString().split("T")[0];
+    const end = new Date(`${today}T${endTime || startTime}`);
+    return now >= end ? "Completed" : "Pending";
+  };
 
   useEffect(() => {
     fetchMySchedule();
   }, []);
 
+  // 🔥 FETCH SCHEDULE
   const fetchMySchedule = async () => {
     try {
       setLoading(true);
 
       const res = await api.staffPanel.getMySchedule();
-      const scheduleData = Array.isArray(res?.data?.data) ? res.data.data : [];
+      const data = Array.isArray(res?.data?.data) ? res.data.data : [];
 
-      const mappedActivities = scheduleData.map((item, index) => ({
-        id: item.activityId || `activity-${index}`,
-        slotId: item.slotId || `slot-${index}`,
-        title: item.activityName || "Activity",
-        time:
-          item.startTime && item.endTime
-            ? `${item.startTime} - ${item.endTime}`
-            : item.startTime || "-",
-        place: item.place || item.location || item.description || "",
-        participants: Array.isArray(item.participants)
-          ? item.participants.map((participant) =>
-              typeof participant === "string"
-                ? participant
-                : participant?.name || participant?.customerName || "Participant"
-            )
-          : [],
-      }));
+      const mapped = data.map((item, index) => {
+        const status = getStatusFromTime(item.startTime, item.endTime);
 
-      setActivities(mappedActivities);
+        return {
+          id: item.activityId || `activity-${index}`,
+          slotId: item.slotId || `slot-${index}`,
+          title: item.activityName || "Activity",
+          time: `${item.startTime} - ${item.endTime}`,
+          startTime: item.startTime,
+          endTime: item.endTime,
+          place: item.place || item.location || "",
+          participants: Array.isArray(item.participants)
+            ? item.participants.map((p) =>
+                typeof p === "string"
+                  ? p
+                  : p?.name || p?.customerName || "Participant"
+              )
+            : [],
+          status,
+        };
+      });
 
+      setActivities(mapped);
+
+      // initialize attendance
       const attendanceObj = {};
-      const statusObj = {};
-
-      mappedActivities.forEach((activity) => {
+      mapped.forEach((activity) => {
         const key = makeKey(activity.id, activity.slotId);
-
         attendanceObj[key] = activity.participants.reduce((acc, name) => {
           acc[name] = null;
           return acc;
         }, {});
-
-        statusObj[key] = "Pending";
       });
 
       setAttendanceByActivity(attendanceObj);
-      setStatusByActivity(statusObj);
-    } catch (error) {
-      console.error("Error fetching my schedule:", error);
-      setActivities([]);
+    } catch (err) {
+      console.error("Schedule error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🔥 AUTO FETCH ATTENDANCE AFTER COMPLETION
+  useEffect(() => {
+    activities.forEach((activity) => {
+      if (activity.status === "Completed") {
+        fetchAttendance(activity.id, activity.slotId);
+      }
+    });
+  }, [activities]);
+
+  const fetchAttendance = async (activityId, slotId) => {
+    try {
+      const res = await api.staffPanel.getAttendance(activityId, slotId);
+      const key = makeKey(activityId, slotId);
+
+      setAttendanceByActivity((prev) => ({
+        ...prev,
+        [key]: res?.data?.data || {},
+      }));
+    } catch (err) {
+      console.error("Attendance fetch failed");
     }
   };
 
   const activeActivity = useMemo(() => {
     return (
       activities.find(
-        (activity) =>
-          activity.id === activeActivityId && activity.slotId === activeSlotId
+        (a) => a.id === activeActivityId && a.slotId === activeSlotId
       ) || null
     );
   }, [activities, activeActivityId, activeSlotId]);
 
   const currentAttendance = useMemo(() => {
     if (!activeActivityId || !activeSlotId) return {};
-    const key = makeKey(activeActivityId, activeSlotId);
-    return attendanceByActivity[key] || {};
+    return attendanceByActivity[makeKey(activeActivityId, activeSlotId)] || {};
   }, [attendanceByActivity, activeActivityId, activeSlotId]);
-
-  const getActivityAttendance = (activityId, slotId) => {
-    const key = makeKey(activityId, slotId);
-    return attendanceByActivity[key] || {};
-  };
-
-  const getActivityStatus = (activityId, slotId) => {
-    const key = makeKey(activityId, slotId);
-    return statusByActivity[key] || "Pending";
-  };
 
   const getCounts = (activityId, slotId) => {
     const activity = activities.find(
-      (item) => item.id === activityId && item.slotId === slotId
+      (a) => a.id === activityId && a.slotId === slotId
     );
-    const attendance = getActivityAttendance(activityId, slotId);
+    const attendance = attendanceByActivity[makeKey(activityId, slotId)] || {};
 
     const total = activity?.participants.length || 0;
-    const present = Object.values(attendance).filter(
-      (value) => value === "Present"
-    ).length;
-    const absent = Object.values(attendance).filter(
-      (value) => value === "Absent"
-    ).length;
+    const present = Object.values(attendance).filter(v => v === "Present").length;
+    const absent = Object.values(attendance).filter(v => v === "Absent").length;
 
     return { total, present, absent };
   };
@@ -411,269 +848,89 @@ export default function MySchedule() {
   };
 
   const handleSaveAttendance = () => {
-    if (!activeActivityId || !activeSlotId) return;
-
-    const key = makeKey(activeActivityId, activeSlotId);
-
-    setStatusByActivity((prev) => ({
-      ...prev,
-      [key]: "Marked",
-    }));
-
     setIsMarkingAttendance(false);
     setIsViewingAttendance(false);
   };
 
-  const openMarkModal = (activityId, slotId) => {
-    setActiveActivityId(activityId);
+  const openMarkModal = (id, slotId) => {
+    setActiveActivityId(id);
     setActiveSlotId(slotId);
-    setIsViewingAttendance(false);
     setIsMarkingAttendance(true);
+    setIsViewingAttendance(false);
   };
 
-  const openViewModal = (activityId, slotId) => {
-    setActiveActivityId(activityId);
+  const openViewModal = (id, slotId) => {
+    setActiveActivityId(id);
     setActiveSlotId(slotId);
-    setIsMarkingAttendance(false);
     setIsViewingAttendance(true);
+    setIsMarkingAttendance(false);
   };
 
   return (
-    <div className="space-y-6 px-1 sm:px-0">
-      <h2 className="text-[32px] sm:text-2xl font-bold text-[#000033]">
+    <div className="space-y-6 px-2 sm:px-0">
+      <h2 className="text-xl sm:text-2xl font-bold text-[#000033]">
         My Schedule
       </h2>
 
       {loading ? (
-        <div className="text-sm text-gray-600">Loading...</div>
+        <div>Loading...</div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
           {activities.map((activity) => {
             const counts = getCounts(activity.id, activity.slotId);
-            const currentStatus = getActivityStatus(activity.id, activity.slotId);
 
             return (
-              <Card key={makeKey(activity.id, activity.slotId)} className="bg-white p-5 sm:p-6">
-                <div className="flex flex-col gap-4 mb-4">
+              <Card key={makeKey(activity.id, activity.slotId)} className="p-4 bg-[#EDE7F6] border-none">
+                <div className="flex justify-between">
+
+                  {/* LEFT */}
                   <div>
-                    <h3 className="text-[28px] sm:text-xl font-bold text-gray-900 leading-tight">
-                      {activity.title} – {activity.time}
+                    <h3 className="text-sm font-bold">
+                      {activity.title} - {activity.time}
                     </h3>
-                    <p className="text-[16px] sm:text-sm text-gray-600 mt-2">
-                      {activity.place}
+                    <p className="text-xs text-gray-600">{activity.place}</p>
+
+                    <p className="text-sm font-semibold mt-2">
+                      Participants - {counts.total}
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[13px] sm:text-xs font-medium text-gray-600">
-                        Status
-                      </span>
-                      <span
-                        className={`text-white text-[11px] sm:text-[10px] px-3 py-1 rounded-full font-bold ${
-                          currentStatus === "Marked" ? "bg-green-500" : "bg-red-500"
-                        }`}
-                      >
-                        {currentStatus}
-                      </span>
-                    </div>
+                  {/* RIGHT */}
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`text-xs px-2 py-1 rounded-full text-white ${
+                      activity.status === "Completed"
+                        ? "bg-green-500"
+                        : "bg-red-500"
+                    }`}>
+                      {activity.status}
+                    </span>
 
-                    <div className="flex gap-2 flex-wrap">
-                      <Button
-                        className="bg-[#4CAF50] hover:bg-[#45a049] min-h-[38px] sm:h-8 px-4 sm:px-3 text-[13px] sm:text-[10px] font-bold text-white rounded-md"
+                    {activity.status !== "Completed" && (
+                      <button
                         onClick={() => openMarkModal(activity.id, activity.slotId)}
+                        className="text-xs bg-green-500 text-white px-2 py-1 rounded"
                       >
                         Mark
-                      </Button>
+                      </button>
+                    )}
 
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700 min-h-[38px] sm:h-8 px-4 sm:px-3 text-[13px] sm:text-[10px] font-bold text-white rounded-md"
-                        onClick={() => openViewModal(activity.id, activity.slotId)}
-                      >
-                        View
-                      </Button>
-                    </div>
+                    <button
+                      onClick={() => openViewModal(activity.id, activity.slotId)}
+                      className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                    >
+                      View
+                    </button>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[20px] sm:text-lg font-semibold text-gray-800">
-                    Participants - {counts.total}
-                  </p>
-                  <p className="text-[16px] sm:text-sm text-gray-700">
-                    Present - {counts.present}
-                  </p>
-                  <p className="text-[16px] sm:text-sm text-gray-700">
-                    Absent - {counts.absent}
-                  </p>
                 </div>
               </Card>
             );
           })}
-
-          {isMarkingAttendance && activeActivity && (
-            <Card className="xl:col-span-2">
-              <CardHeader className="flex items-center justify-between border-b">
-                <CardTitle className="text-[24px] sm:text-xl">
-                  Mark Attendance – {activeActivity.title}
-                </CardTitle>
-                <button
-                  onClick={() => setIsMarkingAttendance(false)}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold"
-                >
-                  ✕
-                </button>
-              </CardHeader>
-
-              <CardContent className="pt-5">
-                <div className="mb-5 space-y-2">
-                  <p className="text-[16px] sm:text-sm font-medium text-gray-800">
-                    Participants - {activeActivity.participants.length}
-                  </p>
-                  <p className="text-[16px] sm:text-sm text-green-700 font-medium">
-                    Present - {getCounts(activeActivity.id, activeActivity.slotId).present}
-                  </p>
-                  <p className="text-[16px] sm:text-sm text-red-700 font-medium">
-                    Absent - {getCounts(activeActivity.id, activeActivity.slotId).absent}
-                  </p>
-                </div>
-
-                <div className="max-h-[420px] overflow-y-auto space-y-4">
-                  {activeActivity.participants.map((name, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-col gap-3 border-b border-gray-100 pb-4"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-2 h-2 rounded-full bg-black shrink-0" />
-                        <span className="text-[16px] sm:text-sm font-medium text-gray-700 break-words">
-                          {name}
-                        </span>
-                      </div>
-
-                      <div className="flex gap-2 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(name, "Present")}
-                          className={`px-4 py-2 rounded-lg text-[13px] sm:text-xs font-bold border ${
-                            currentAttendance[name] === "Present"
-                              ? "bg-green-500 text-white border-green-500"
-                              : "bg-white text-green-600 border-green-300"
-                          }`}
-                        >
-                          Present
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(name, "Absent")}
-                          className={`px-4 py-2 rounded-lg text-[13px] sm:text-xs font-bold border ${
-                            currentAttendance[name] === "Absent"
-                              ? "bg-red-500 text-white border-red-500"
-                              : "bg-white text-red-600 border-red-300"
-                          }`}
-                        >
-                          Absent
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                  <Button
-                    className="flex-1 bg-[#4CAF50] hover:bg-[#45a049] font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
-                    onClick={handleSaveAttendance}
-                  >
-                    Save
-                  </Button>
-
-                  <Button
-                    className="flex-1 bg-[#C62828] hover:bg-[#b71c1c] font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
-                    onClick={() => setIsMarkingAttendance(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {isViewingAttendance && activeActivity && (
-            <Card className="xl:col-span-2">
-              <CardHeader className="flex items-center justify-between border-b">
-                <CardTitle className="text-[24px] sm:text-xl">
-                  View Attendance – {activeActivity.title}
-                </CardTitle>
-                <button
-                  onClick={() => setIsViewingAttendance(false)}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold"
-                >
-                  ✕
-                </button>
-              </CardHeader>
-
-              <CardContent className="pt-5">
-                <div className="mb-5 space-y-2">
-                  <p className="text-[16px] sm:text-sm font-medium text-gray-800">
-                    Participants - {activeActivity.participants.length}
-                  </p>
-                  <p className="text-[16px] sm:text-sm text-green-700 font-medium">
-                    Present - {getCounts(activeActivity.id, activeActivity.slotId).present}
-                  </p>
-                  <p className="text-[16px] sm:text-sm text-red-700 font-medium">
-                    Absent - {getCounts(activeActivity.id, activeActivity.slotId).absent}
-                  </p>
-                </div>
-
-                <div className="max-h-[420px] overflow-y-auto space-y-4">
-                  {activeActivity.participants.map((name, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-2 h-2 rounded-full bg-black shrink-0" />
-                        <span className="text-[16px] sm:text-sm font-medium text-gray-700 break-words">
-                          {name}
-                        </span>
-                      </div>
-
-                      <span
-                        className={`text-[13px] sm:text-xs font-bold px-3 py-1.5 rounded-full shrink-0 ${
-                          currentAttendance[name] === "Present"
-                            ? "bg-green-100 text-green-700"
-                            : currentAttendance[name] === "Absent"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {currentAttendance[name] || "Not Marked"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6">
-                  <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
-                    onClick={() => setIsViewingAttendance(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       )}
     </div>
   );
 }
-
-
-
-///////////////////////////////
 
 
 

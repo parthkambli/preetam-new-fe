@@ -321,6 +321,15 @@ fitnessFees: {
   staffPanel: {
   getMySchedule: () => apiClient.get('/fitness/staff-panel/my-schedule'),
   getAvailableActivities: () => apiClient.get('/fitness/staff-panel/available-activities'),
+
+  getAttendanceByDate: (date) =>
+  apiClient.get(`/fitness/staff-panel/attendance-by-date?date=${date}`),
+
+  getProfile: () =>
+  apiClient.get(`/fitness/staff-panel/profile`),
+
+  getEvents: () =>
+  apiClient.get(`/fitness/staff-panel/events`),
 },
 
   // Fitness Schedules
