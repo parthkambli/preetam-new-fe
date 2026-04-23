@@ -325,9 +325,19 @@ export default function Login() {
     localStorage.setItem('currentOrgId', defaultOrg.id);
 
     // Pass user data to context
-    login(organizations, defaultOrg, user);   // ← Added user as third argument
+login(organizations, defaultOrg, user);
 
-    navigate(`/${defaultOrg.id}/dashboard`);
+// 🔥 Redirect based on exact sidebar routes
+if (user?.role === "FitnessStaff") {
+  navigate("/fitness-staff");
+}
+else if (user?.role === "SchoolStaff") {
+  navigate("/school-staff");
+}
+else {
+  // Admin
+  navigate(`/${defaultOrg.id}/dashboard`);
+}
   } catch (err) {
     setError(err.response?.data?.message || 'Login failed. Please try again.');
   } finally {

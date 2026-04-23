@@ -225,7 +225,10 @@ import FitnessAdduser from './pages/fitnessClub/UserManagement/Adduser';        
 
 
 import FitnessStaffDashboard from "./pages/FitnessStaff/Dashboard";
+import FitnessStaffAttendance from "./pages/FitnessStaff/Attendance"
 import FitnessStaffMySchedule from "./pages/FitnessStaff/MySchedule";
+
+
 import AddPassMember from './pages/fitnessClub/Members/AddPassMember';
 import ViewPassMember from './pages/fitnessClub/Members/ViewPassMember';
 
@@ -312,7 +315,7 @@ function App() {
             <Route path="/fitness/user-management/Add-user" element={<FitnessAdduser />} />
             //Added by Aadi
             <Route path="/fitness-staff" element={<FitnessStaffDashboard/>} />
-             {/* <Route path="/fitness-staff/attendance" element={<FitnessStaffAttendance />} />  */}
+             <Route path="/fitness-staff/attendance" element={<FitnessStaffAttendance />} /> 
              <Route path="/fitness-staff/my-Schedule" element={< FitnessStaffMySchedule />} /> 
             //Added by Aadi
 

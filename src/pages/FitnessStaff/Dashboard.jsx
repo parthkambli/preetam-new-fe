@@ -593,6 +593,8 @@
 
 import React from "react";
 import { Search, CalendarDays } from "lucide-react";
+import { useEffect, useState } from "react";
+import { api } from "../../../src/services/apiClient";
 
 function Card({ className = "", ...props }) {
   return (
@@ -643,48 +645,132 @@ function StatMiniCard({ icon, value, label }) {
 }
 
 export default function Dashboard() {
-  const upcomingSessions = [
-    {
-      title: "Yoga - 08:00 AM",
-      place: "Meet at courtyard",
-      bg: "bg-[#E8E0FA]",
-    },
-    {
-      title: "Yoga - 10:00 AM",
-      place: "Hall A",
-      bg: "bg-[#D8F0E8]",
-    },
-  ];
+  const [schedule, setSchedule] = useState([]);
+  const [loading, setLoading] = useState(false);
+const [staff, setStaff] = useState(null);
+const [events, setEvents] = useState([]);
 
-  const weeklySchedule = [
-    {
-      dateLabel: "Today — 3 event(s)",
-      items: [
-        { time: "08:00", title: "Yoga Session", place: "Meet at courtyard" },
-        { time: "10:00", title: "Yoga Session", place: "Hall A" },
-      ],
-    },
-    {
-      dateLabel: "10/26/2025 — 1 event(s)",
-      items: [
-        {
-          time: "15:00",
-          title: "Group Exercise",
-          place: "gym Room — Group session",
-        },
-      ],
-    },
-    {
-      dateLabel: "10/27/2025 — 1 event(s)",
-      items: [
-        {
-          time: "09:30",
-          title: "Health Talk: Nutrition",
-          place: "Dining Hall",
-        },
-      ],
-    },
-  ];
+  useEffect(() => {
+  fetchSchedule();
+}, []);
+
+const fetchSchedule = async () => {
+  try {
+    setLoading(true);
+
+    const today = new Date();
+    const formattedDate = `${today.getFullYear()}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    const res = await api.staffPanel.getMySchedule(formattedDate);
+
+setSchedule(res?.data?.data || []);
+
+if (res?.data?.staff) {
+  localStorage.setItem("staffName", res.data.staff.name);
+  localStorage.setItem("staffImage", res.data.staff.profileImage);
+
+}  } catch (err) {
+    console.error("Schedule fetch error:", err?.response?.data || err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+useEffect(() => {
+  fetchProfile();
+}, []);
+
+useEffect(() => {
+  fetchEvents();
+}, []);
+
+const fetchProfile = async () => {
+  try {
+    const res = await api.staffPanel.getProfile();
+    setStaff(res?.data?.data || null);
+  } catch (err) {
+    console.error("Profile fetch error:", err);
+  }
+};
+
+  // const upcomingSessions = [
+  //   {
+  //     title: "Yoga - 08:00 AM",
+  //     place: "Meet at courtyard",
+  //     bg: "bg-[#E8E0FA]",
+  //   },
+  //   {
+  //     title: "Yoga - 10:00 AM",
+  //     place: "Hall A",
+  //     bg: "bg-[#D8F0E8]",
+  //   },
+  // ];
+
+  // const weeklySchedule = [
+  //   {
+  //     dateLabel: "Today — 3 event(s)",
+  //     items: [
+  //       { time: "08:00", title: "Yoga Session", place: "Meet at courtyard" },
+  //       { time: "10:00", title: "Yoga Session", place: "Hall A" },
+  //     ],
+  //   },
+  //   {
+  //     dateLabel: "10/26/2025 — 1 event(s)",
+  //     items: [
+  //       {
+  //         time: "15:00",
+  //         title: "Group Exercise",
+  //         place: "gym Room — Group session",
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     dateLabel: "10/27/2025 — 1 event(s)",
+  //     items: [
+  //       {
+  //         time: "09:30",
+  //         title: "Health Talk: Nutrition",
+  //         place: "Dining Hall",
+  //       },
+  //     ],
+  //   },
+  // ];
+
+  const upcomingSessions = schedule.slice(0, 2).map((s, index) => ({
+  title: `${s.activityName} - ${s.startTime}`,
+  place: "Assigned Slot",
+  bg: index % 2 === 0 ? "bg-[#E8E0FA]" : "bg-[#D8F0E8]",
+}));
+
+const fetchEvents = async () => {
+  try {
+    const res = await api.staffPanel.getEvents();
+
+    console.log("EVENTS API RESPONSE:", res?.data);
+
+    setEvents(res?.data?.data || []);
+  } catch (err) {
+    console.error(
+      "Events fetch error:",
+      err?.response?.data || err.message
+    );
+  }
+};
+
+
+const weeklySchedule = [
+  {
+    dateLabel: `This Week — ${events.length} event(s)`,
+    items: events.map((event) => ({
+      time: event.startTime,
+      title: event.title,
+      place: event.location,
+    })),
+  },
+];
 
   return (
     <div className="w-full min-h-screen">
@@ -706,10 +792,12 @@ export default function Dashboard() {
 
             <Avatar className="w-11 h-11 shrink-0">
               <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
+  src={
+    staff?.profileImage || "https://via.placeholder.com/150"
+  }
+  alt="Profile"
+  className="w-full h-full object-cover"
+/>
             </Avatar>
           </div>
 
@@ -718,7 +806,7 @@ export default function Dashboard() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <h3 className="text-[24px] sm:text-xl font-semibold text-[#111111]">
-                  Welcome, Meena Patil
+                  Welcome, {staff?.name || "Staff"}
                 </h3>
                 <p className="text-[15px] sm:text-sm text-gray-400 mt-3 leading-7 sm:leading-6 max-w-md">
                   Welcome to your staff dashboard.
@@ -730,10 +818,17 @@ export default function Dashboard() {
               </div>
 
               <Avatar className="w-16 h-16 sm:w-14 sm:h-14 bg-[#EEEAF8] shrink-0">
-                <AvatarFallback className="text-[#333] text-[22px] sm:text-lg">
-                  MP
-                </AvatarFallback>
-              </Avatar>
+  <AvatarFallback className="text-[#333] text-[22px] sm:text-lg">
+    {staff?.name
+      ? staff.name
+          .trim()
+          .split(" ")
+          .slice(0, 2)
+          .map((word) => word.charAt(0).toUpperCase())
+          .join("")
+      : "ST"}
+  </AvatarFallback>
+</Avatar>
             </div>
           </Card>
 
@@ -741,7 +836,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <StatMiniCard
               icon={<CalendarDays size={16} className="text-[#7C6CF5]" />}
-              value="3"
+              value={schedule.length}
               label="Total Sessions Today"
             />
             <StatMiniCard
@@ -759,7 +854,10 @@ export default function Dashboard() {
                   <path d="M23 11h-6" />
                 </svg>
               }
-              value="28"
+              value={schedule.reduce(
+  (acc, s) => acc + (s.participants?.length || 0),
+  0
+)}
               label="Total Participants"
             />
           </div>
@@ -773,7 +871,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               {upcomingSessions.map((session, index) => (
                 <div
-                  key={index}
+                  key={`${session.title}-${index}`}
                   className={`rounded-xl px-4 py-3 ${session.bg}`}
                 >
                   <p className="text-[17px] sm:text-base font-semibold text-[#111111]">

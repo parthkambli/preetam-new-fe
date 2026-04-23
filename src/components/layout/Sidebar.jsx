@@ -339,7 +339,7 @@ export default function Sidebar({ isOpen, onClose }) {
   else if (user?.role === 'FitnessStaff') {
     menu = [
       { to: "/fitness-staff", label: "Dashboard", icon: "🏠" },
-      { to: "/fitness-staff/attendance", label: "Available Activities", icon: "🏃" },
+      { to: "/fitness-staff/attendance", label: "Attendance", icon: "📅" },
       { to: "/fitness-staff/my-schedule", label: "My Schedule", icon: "💰" },
     ];
   } 
