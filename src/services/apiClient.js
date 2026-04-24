@@ -270,6 +270,8 @@ fitnessStaff: {
     // For detailed student list
     getStudentAttendance: (activityId, date) => 
       apiClient.get(`/attendance/details/${activityId}/${date}`),
+
+    mark: (data) => apiClient.post('/attendance/mark', data),
   },
 
 // ====================== FITNESS FEES ======================
@@ -318,6 +320,8 @@ fitnessFees: {
     cancelBooking: (id) => apiClient.delete(`/fitness/activities/bookings/${id}`),
   },
   
+
+  // staff panel
   staffPanel: {
   getMySchedule: () => apiClient.get('/fitness/staff-panel/my-schedule'),
   getAvailableActivities: () => apiClient.get('/fitness/staff-panel/available-activities'),
@@ -330,6 +334,9 @@ fitnessFees: {
 
   getEvents: () =>
   apiClient.get(`/fitness/staff-panel/events`),
+
+  scanQR: (memberId) =>
+    apiClient.post('/fitness/staff-panel/scan-qr', { memberId }),
 },
 
   // Fitness Schedules
@@ -360,7 +367,23 @@ fitnessFees: {
     getData: () => apiClient.get("/school/dashboard"),
   },
 
-  
+  // ================= USER MANAGEMENT =================
+  userManagement: {
+    getAll: () => apiClient.get("/user-management"),
+
+    create: (data) => apiClient.post('/user-management', data),
+
+    assignRole: (data) =>
+      apiClient.put("/user-management/assign-role", data),
+
+    updatePermissions: (data) =>
+      apiClient.put("/user-management/permissions", data),
+  },
+
+  // ================= ACCESS ROLES =================
+  accessRoles: {
+    getAll: () => apiClient.get("/access-roles"),
+  },
 
   
 

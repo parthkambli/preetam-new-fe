@@ -642,7 +642,7 @@ export default function Attendance() {
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full min-w-[700px] border-collapse">
+        <table className="w-full min-w-175 border-collapse">
           <thead>
             <tr className="bg-[#1e3a8a]">
               <th className="px-4 py-3 text-left text-xs font-semibold text-white">Activity Name</th>

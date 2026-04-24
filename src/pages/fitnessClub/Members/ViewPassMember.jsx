@@ -105,6 +105,30 @@ export default function ViewPassMember() {
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow space-y-6">
+        {/* QR CODE */}
+        <div className="flex flex-col items-center">
+          <h2 className="font-semibold mb-2">Member QR</h2>
+
+          {member.qrCode ? (
+            <>
+              <img
+                src={member.qrCode}
+                alt="QR Code"
+                className="w-36 h-36 border p-2 rounded bg-white"
+              />
+
+              <a
+                href={member.qrCode}
+                download={`qr-${member.memberId}.png`}
+                className="text-sm text-blue-600 mt-1"
+              >
+                Download
+              </a>
+            </>
+          ) : (
+            <p className="text-gray-400 text-sm">QR not available</p>
+          )}
+        </div>
 
         {/* Personal Info */}
         <div>

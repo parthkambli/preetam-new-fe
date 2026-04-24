@@ -833,6 +833,35 @@ export default function AddPassMember({ viewMode = false }) {
           Back to Members
         </button>
       </div>
+        {isView && (
+          <div className="bg-white rounded-xl shadow p-6 mb-6 flex flex-col items-center">
+            <h2 className="text-base font-bold text-[#1a2a5e] mb-3">
+              Member QR Code
+            </h2>
+
+            {form.qrCode ? (
+              <>
+                <img
+                  src={form.qrCode}
+                  alt="QR Code"
+                  className="w-40 h-40 border p-2 rounded-lg bg-white"
+                />
+
+                <a
+                  href={form.qrCode}
+                  download={`qr-${form.userId}.png`}
+                  className="mt-2 text-sm text-blue-600 hover:underline"
+                >
+                  Download QR
+                </a>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">
+                QR not available
+              </p>
+            )}
+          </div>
+        )}
 
       {/* Enquiry selector (add only) */}
       {!isEdit && !isView && (

@@ -1283,6 +1283,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { api } from "../../../src/services/apiClient";
+import QRScanner from "../../../src/components/QRScanner";
 
 
 function Card({ className = "", ...props }) {
@@ -1319,6 +1320,7 @@ export default function AttendancePage() {
 
   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
   const [activeActivity, setActiveActivity] = useState(null);
+  const [scanning, setScanning] = useState(false);
   const containerRef = useRef(null);
 const selectedRef = useRef(null);
 
@@ -1356,6 +1358,44 @@ useEffect(() => {
 
   return () => clearTimeout(timeout);
 }, [selectedDate]);
+
+const handleScan = async (memberId) => {
+  try {
+    const res = await api.staffPanel.scanQR(memberId);
+
+    if (!res.data.success) {
+      alert(res.data.message || "Scan failed");
+      return;
+    }
+
+    // 🔥 CASE 1: auto marked
+    if (res.data.autoMarked) {
+      alert(`Attendance marked for ${res.data.member.name}`);
+      return;
+    }
+
+    // 🔥 CASE 2: multiple activities
+    if (!res.data.autoMarked && res.data.activities?.length) {
+      const first = res.data.activities[0]; // simple fallback
+
+      await api.attendance.mark({
+        memberId: res.data.member.memberId,
+        activityFeeId: first.activityFeeId,
+        activityId: first.activityId,
+        status: "Present",
+        notes: ""
+      });
+
+      alert(`Attendance marked for ${res.data.member.name}`);
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Scan failed");
+  } finally {
+    setScanning(false);
+  }
+};
 
   // 🔥 FETCH FROM BACKEND
  const fetchAttendance = async (date) => {
@@ -1418,6 +1458,18 @@ console.error("Attendance fetch error:", err?.response?.data || err.message);
           </button>
         ))}
       </div>
+
+      <button
+        onClick={() => setScanning((s) => !s)}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        {scanning ? "Stop Scan" : "Scan QR"}
+      </button>
+      {scanning && (
+        <div className="mt-4">
+          <QRScanner onScan={handleScan} />
+        </div>
+      )}
 
       {/* LOADING */}
       {loading && <div className="text-sm text-gray-500">Loading...</div>}
