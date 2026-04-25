@@ -1281,10 +1281,15 @@
 //// 
 
 
+
+
+
+
+
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { api } from "../../../src/services/apiClient";
 import QRScanner from "../../../src/components/QRScanner";
-
+import { hasPermission } from "../../../src/utils/permissions";
 
 function Card({ className = "", ...props }) {
   return (
@@ -1310,6 +1315,12 @@ function CardContent({ className = "", ...props }) {
 }
 
 export default function AttendancePage() {
+
+  // 🔥 HARD BLOCK — NO ACCESS
+  if (!hasPermission("VIEW_ATTENDANCE") && !hasPermission("MARK_ATTENDANCE")) {
+  return <div className="p-6">No access</div>;
+}
+
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
@@ -1321,8 +1332,11 @@ export default function AttendancePage() {
   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
   const [activeActivity, setActiveActivity] = useState(null);
   const [scanning, setScanning] = useState(false);
+  const [multiActivities, setMultiActivities] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
+
   const containerRef = useRef(null);
-const selectedRef = useRef(null);
+  const selectedRef = useRef(null);
 
   const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const monthNames = [
@@ -1337,87 +1351,83 @@ const selectedRef = useRef(null);
     return { day: dayNames[d.getDay()], date: i + 1 };
   });
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (selectedRef.current && containerRef.current) {
+        const container = containerRef.current;
+        const selected = selectedRef.current;
 
-useEffect(() => {
-  const timeout = setTimeout(() => {
-    if (selectedRef.current && containerRef.current) {
-      const container = containerRef.current;
-      const selected = selectedRef.current;
+        const offset =
+          selected.offsetLeft -
+          container.offsetWidth / 2 +
+          selected.offsetWidth / 2;
 
-      const offset =
-        selected.offsetLeft -
-        container.offsetWidth / 2 +
-        selected.offsetWidth / 2;
+        container.scrollTo({
+          left: offset,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
 
-      container.scrollTo({
-        left: offset,
-        behavior: "smooth",
-      });
+    return () => clearTimeout(timeout);
+  }, [selectedDate]);
+
+  const handleScan = async (memberId) => {
+    try {
+      const res = await api.staffPanel.scanQR(memberId);
+
+      if (!res.data.success) {
+        alert(res.data.message || "Scan failed");
+        return;
+      }
+
+      if (res.data.autoMarked) {
+        alert(`Attendance marked for ${res.data.member.name}`);
+        return;
+      }
+
+      if (!res.data.autoMarked && res.data.activities?.length) {
+        const first = res.data.activities[0];
+
+        await api.attendance.mark({
+          memberId: res.data.member.memberId,
+          activityFeeId: first.activityFeeId,
+          activityId: first.activityId,
+          status: "Present",
+          notes: ""
+        });
+
+        alert(`Attendance marked for ${res.data.member.name}`);
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Scan failed");
+    } finally {
+      setScanning(false);
     }
-  }, 100);
+  };
 
-  return () => clearTimeout(timeout);
-}, [selectedDate]);
+  const fetchAttendance = async (date) => {
+    try {
+      setLoading(true);
 
-const handleScan = async (memberId) => {
-  try {
-    const res = await api.staffPanel.scanQR(memberId);
+      const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
 
-    if (!res.data.success) {
-      alert(res.data.message || "Scan failed");
-      return;
+      const res = await api.staffPanel.getAttendanceByDate(formattedDate);
+
+      setActivities(res?.data?.data || []);
+    } catch (err) {
+      console.error("Attendance fetch error:", err?.response?.data || err.message);
+      setActivities([]);
+    } finally {
+      setLoading(false);
     }
-
-    // 🔥 CASE 1: auto marked
-    if (res.data.autoMarked) {
-      alert(`Attendance marked for ${res.data.member.name}`);
-      return;
-    }
-
-    // 🔥 CASE 2: multiple activities
-    if (!res.data.autoMarked && res.data.activities?.length) {
-      const first = res.data.activities[0]; // simple fallback
-
-      await api.attendance.mark({
-        memberId: res.data.member.memberId,
-        activityFeeId: first.activityFeeId,
-        activityId: first.activityId,
-        status: "Present",
-        notes: ""
-      });
-
-      alert(`Attendance marked for ${res.data.member.name}`);
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert("Scan failed");
-  } finally {
-    setScanning(false);
-  }
-};
-
-  // 🔥 FETCH FROM BACKEND
- const fetchAttendance = async (date) => {
-  try {
-    setLoading(true);
-
-    const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
-
-    const res = await api.staffPanel.getAttendanceByDate(formattedDate);
-
-    setActivities(res?.data?.data || []);
-  } catch (err) {
-console.error("Attendance fetch error:", err?.response?.data || err.message);
-    setActivities([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
-  fetchAttendance(selectedDate);
-}, [selectedDate, currentMonth, currentYear]);
+    fetchAttendance(selectedDate);
+  }, [selectedDate, currentMonth, currentYear]);
 
   const openViewModal = (activity) => {
     setActiveActivity(activity);
@@ -1439,13 +1449,13 @@ console.error("Attendance fetch error:", err?.response?.data || err.message);
 
       {/* DATE SCROLLER */}
       <div
-  ref={containerRef}
-  className="flex gap-2 overflow-x-auto pb-2 scroll-smooth"
->
+        ref={containerRef}
+        className="flex gap-2 overflow-x-auto pb-2 scroll-smooth"
+      >
         {dates.map((d) => (
           <button
-  key={d.date}
-  ref={selectedDate === d.date ? selectedRef : null}
+            key={d.date}
+            ref={selectedDate === d.date ? selectedRef : null}
             onClick={() => setSelectedDate(d.date)}
             className={`min-w-[70px] h-[70px] rounded-xl flex flex-col justify-center items-center ${
               selectedDate === d.date
@@ -1459,16 +1469,19 @@ console.error("Attendance fetch error:", err?.response?.data || err.message);
         ))}
       </div>
 
+      {/* ✅ SCAN BUTTON (permission safe) */}
+      {hasPermission("MARK_ATTENDANCE") && (
       <button
         onClick={() => setScanning((s) => !s)}
         className="bg-blue-600 text-white px-4 py-2 rounded"
       >
         {scanning ? "Stop Scan" : "Scan QR"}
       </button>
-      {scanning && (
-        <div className="mt-4">
-          <QRScanner onScan={handleScan} />
-        </div>
+    )}
+
+      {/* ✅ SCANNER (double protected) */}
+      {scanning && hasPermission("MARK_ATTENDANCE") && (
+        <QRScanner onScan={handleScan} />
       )}
 
       {/* LOADING */}
@@ -1489,35 +1502,33 @@ console.error("Attendance fetch error:", err?.response?.data || err.message);
             >
               <div className="flex justify-between">
 
-                {/* LEFT */}
                 <div>
                   <h3 className="font-bold text-sm">
                     {activity.activityName}
                   </h3>
 
                   <p className="text-sm mt-2 font-semibold">
-  Participants - {activity.total ?? activity.participants?.length ?? 0}
-</p>
+                    Participants - {activity.total ?? activity.participants?.length ?? 0}
+                  </p>
 
-<p className="text-xs text-gray-600">
-  Present: {activity.present ?? activity.participants?.filter(p => p.status === "Present").length ?? 0}
-  {" | "}
-  Absent: {activity.absent ?? activity.participants?.filter(p => p.status === "Absent").length ?? 0}
-</p>
+                  <p className="text-xs text-gray-600">
+                    Present: {activity.present ?? activity.participants?.filter(p => p.status === "Present").length ?? 0}
+                    {" | "}
+                    Absent: {activity.absent ?? activity.participants?.filter(p => p.status === "Absent").length ?? 0}
+                  </p>
                 </div>
 
-                {/* RIGHT */}
                 <div className="flex flex-col items-end gap-2">
 
                   <span
-  className={`text-xs px-2 py-1 text-white rounded-full ${
-    activity.status === "Completed"
-      ? "bg-green-500"
-      : "bg-orange-500"
-  }`}
->
-  {activity.status}
-</span>
+                    className={`text-xs px-2 py-1 text-white rounded-full ${
+                      activity.status === "Completed"
+                        ? "bg-green-500"
+                        : "bg-orange-500"
+                    }`}
+                  >
+                    {activity.status}
+                  </span>
 
                   <button
                     onClick={() => openViewModal(activity)}

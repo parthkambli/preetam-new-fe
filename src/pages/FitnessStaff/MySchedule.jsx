@@ -677,6 +677,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../../../src/services/apiClient";
+import { hasPermission } from "../../../src/utils/permissions";
 
 function Card({ className = "", ...props }) {
   return (
@@ -713,6 +714,9 @@ function Button({ children, className = "", ...props }) {
 }
 
 export default function MySchedule() {
+  if (!hasPermission("VIEW_OWN_SCHEDULE")) {
+  return <div className="p-6">No access</div>;
+}
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
   const [activeActivityId, setActiveActivityId] = useState(null);
@@ -733,8 +737,10 @@ export default function MySchedule() {
   };
 
   useEffect(() => {
+  if (hasPermission("VIEW_OWN_SCHEDULE")) {
     fetchMySchedule();
-  }, []);
+  }
+}, []);
 
   // 🔥 FETCH SCHEDULE
   const fetchMySchedule = async () => {
@@ -789,7 +795,10 @@ export default function MySchedule() {
   // 🔥 AUTO FETCH ATTENDANCE AFTER COMPLETION
   useEffect(() => {
     activities.forEach((activity) => {
-      if (activity.status === "Completed") {
+      if (
+      activity.status === "Completed" &&
+      hasPermission("VIEW_ATTENDANCE")
+    ) {
         fetchAttendance(activity.id, activity.slotId);
       }
     });
@@ -891,9 +900,11 @@ export default function MySchedule() {
                     </h3>
                     <p className="text-xs text-gray-600">{activity.place}</p>
 
-                    <p className="text-sm font-semibold mt-2">
-                      Participants - {counts.total}
-                    </p>
+                    {hasPermission("VIEW_ATTENDANCE") && (
+                      <p className="text-sm font-semibold mt-2">
+                        Participants - {counts.total}
+                      </p>
+                    )}
                   </div>
 
                   {/* RIGHT */}
@@ -906,7 +917,7 @@ export default function MySchedule() {
                       {activity.status}
                     </span>
 
-                    {activity.status !== "Completed" && (
+                    {activity.status !== "Completed" && hasPermission("MARK_ATTENDANCE") && (
                       <button
                         onClick={() => openMarkModal(activity.id, activity.slotId)}
                         className="text-xs bg-green-500 text-white px-2 py-1 rounded"
@@ -915,12 +926,14 @@ export default function MySchedule() {
                       </button>
                     )}
 
-                    <button
-                      onClick={() => openViewModal(activity.id, activity.slotId)}
-                      className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
-                    >
-                      View
-                    </button>
+                    {hasPermission("VIEW_ATTENDANCE") && (
+                      <button
+                        onClick={() => openViewModal(activity.id, activity.slotId)}
+                        className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                      >
+                        View
+                      </button>
+                    )}
                   </div>
                 </div>
               </Card>

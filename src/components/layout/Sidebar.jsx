@@ -321,6 +321,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useOrg } from '../../context/OrgContext';
 import schoolLogo from '../../assets/school-logo.png';
 import fitnessLogo from '../../assets/fitness-logo.png';
+import { hasPermission } from "../../utils/permissions";
 
 export default function Sidebar({ isOpen, onClose }) {
   const { currentOrg, user, logout } = useOrg();
@@ -336,13 +337,39 @@ export default function Sidebar({ isOpen, onClose }) {
       { to: "/school-staff/attendance", label: "Attendance", icon: "✅" },
     ];
   } 
+  // else if (user?.role === 'FitnessStaff') {
+  //   menu = [
+  //     { to: "/fitness-staff", label: "Dashboard", icon: "🏠" },
+  //     { to: "/fitness-staff/attendance", label: "Attendance", icon: "📅" },
+  //     { to: "/fitness-staff/my-schedule", label: "My Schedule", icon: "💰" },
+  //   ];
+  // } 
   else if (user?.role === 'FitnessStaff') {
-    menu = [
-      { to: "/fitness-staff", label: "Dashboard", icon: "🏠" },
-      { to: "/fitness-staff/attendance", label: "Attendance", icon: "📅" },
-      { to: "/fitness-staff/my-schedule", label: "My Schedule", icon: "💰" },
-    ];
-  } 
+  const fullMenu = [
+    {
+      to: "/fitness-staff",
+      label: "Dashboard",
+      icon: "🏠",
+      permission: ["VIEW_OWN_SCHEDULE", "VIEW_EVENTS"]
+    },
+    {
+      to: "/fitness-staff/attendance",
+      label: "Attendance",
+      icon: "📅",
+      permission: ["VIEW_ATTENDANCE", "MARK_ATTENDANCE"]
+    },
+    {
+      to: "/fitness-staff/my-schedule",
+      label: "My Schedule",
+      icon: "💰",
+      permission: ["VIEW_OWN_SCHEDULE"]
+    },
+  ];
+
+  menu = fullMenu.filter(item =>
+    item.permission.some(p => hasPermission(p))
+  );
+}
   else {
     // Fallback for Admin or other roles - keep your original full menus
     const schoolMenu = [

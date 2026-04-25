@@ -595,6 +595,7 @@ import React from "react";
 import { Search, CalendarDays } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "../../../src/services/apiClient";
+import { hasPermission } from "../../../src/utils/permissions";
 
 function Card({ className = "", ...props }) {
   return (
@@ -645,13 +646,22 @@ function StatMiniCard({ icon, value, label }) {
 }
 
 export default function Dashboard() {
+  if (
+  !hasPermission("VIEW_OWN_SCHEDULE") &&
+  !hasPermission("VIEW_EVENTS")
+) {
+  return <div className="p-6">No access</div>;
+}
+
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(false);
 const [staff, setStaff] = useState(null);
 const [events, setEvents] = useState([]);
 
   useEffect(() => {
-  fetchSchedule();
+  if (hasPermission("VIEW_OWN_SCHEDULE")) {
+    fetchSchedule();
+  }
 }, []);
 
 const fetchSchedule = async () => {
@@ -684,7 +694,9 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  fetchEvents();
+  if (hasPermission("VIEW_EVENTS")) {
+    fetchEvents();
+  }
 }, []);
 
 const fetchProfile = async () => {
@@ -739,11 +751,13 @@ const fetchProfile = async () => {
   //   },
   // ];
 
-  const upcomingSessions = schedule.slice(0, 2).map((s, index) => ({
-  title: `${s.activityName} - ${s.startTime}`,
-  place: "Assigned Slot",
-  bg: index % 2 === 0 ? "bg-[#E8E0FA]" : "bg-[#D8F0E8]",
-}));
+  const upcomingSessions = hasPermission("VIEW_OWN_SCHEDULE")
+  ? schedule.slice(0, 2).map((s, index) => ({
+      title: `${s.activityName} - ${s.startTime}`,
+      place: "Assigned Slot",
+      bg: index % 2 === 0 ? "bg-[#E8E0FA]" : "bg-[#D8F0E8]",
+    }))
+  : [];
 
 const fetchEvents = async () => {
   try {
@@ -836,7 +850,7 @@ const weeklySchedule = [
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <StatMiniCard
               icon={<CalendarDays size={16} className="text-[#7C6CF5]" />}
-              value={schedule.length}
+              value={hasPermission("VIEW_OWN_SCHEDULE") ? schedule.length : 0}
               label="Total Sessions Today"
             />
             <StatMiniCard
@@ -854,10 +868,11 @@ const weeklySchedule = [
                   <path d="M23 11h-6" />
                 </svg>
               }
-              value={schedule.reduce(
-  (acc, s) => acc + (s.participants?.length || 0),
-  0
-)}
+              value={
+                hasPermission("VIEW_OWN_SCHEDULE")
+                  ? schedule.reduce((acc, s) => acc + (s.participants?.length || 0), 0)
+                  : 0
+              }
               label="Total Participants"
             />
           </div>
@@ -886,39 +901,38 @@ const weeklySchedule = [
           </Card>
 
           {/* This Week */}
-          <Card className="p-5 sm:p-6">
-            <h3 className="text-[24px] sm:text-xl font-semibold text-[#111111] mb-4">
-              This Week
-            </h3>
+          {hasPermission("VIEW_EVENTS") && (
+              <Card className="p-5 sm:p-6">
+                <h3 className="text-[24px] sm:text-xl font-semibold text-[#111111] mb-4">
+                  This Week
+                </h3>
 
-            <div className="space-y-4">
-              {weeklySchedule.map((group, groupIndex) => (
-                <div key={groupIndex}>
-                  <p className="text-[15px] sm:text-sm font-semibold text-[#111111] mb-2">
-                    {group.dateLabel}
-                  </p>
+                <div className="space-y-4">
+                  {weeklySchedule.map((group, groupIndex) => (
+                    <div key={groupIndex}>
+                      <p className="text-[15px] sm:text-sm font-semibold text-[#111111] mb-2">
+                        {group.dateLabel}
+                      </p>
 
-                  <div className="space-y-2">
-                    {group.items.map((item, itemIndex) => (
-                      <div
-                        key={itemIndex}
-                        className="grid grid-cols-[58px_1fr] sm:grid-cols-[72px_1fr_1fr] gap-2 text-[14px] sm:text-sm text-[#111111]"
-                      >
-                        <div className="font-medium">{item.time}</div>
-                        <div>{item.title}</div>
-                        <div className="text-gray-600 sm:block hidden">
-                          {item.place}
-                        </div>
-                        <div className="text-gray-600 sm:hidden col-span-2 pl-[58px]">
-                          {item.place}
-                        </div>
+                      <div className="space-y-2">
+                        {group.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="grid grid-cols-[58px_1fr] sm:grid-cols-[72px_1fr_1fr] gap-2 text-[14px] sm:text-sm text-[#111111]">
+                            <div className="font-medium">{item.time}</div>
+                            <div>{item.title}</div>
+                            <div className="text-gray-600 sm:block hidden">
+                              {item.place}
+                            </div>
+                            <div className="text-gray-600 sm:hidden col-span-2 pl-[58px]">
+                              {item.place}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </Card>
+              </Card>
+            )}
         </div>
       </div>
     </div>
