@@ -1431,8 +1431,16 @@ export default function FitnessStaffDetail() {
               </label>
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-700">Profile Photo</p>
-              <p className="text-xs text-gray-400">Max {MAX_PHOTO_SIZE_MB}MB • JPG, PNG</p>
+              {/* <p className="text-sm font-semibold text-gray-700">Profile Photo....</p>
+              <p className="text-xs text-gray-400">Max {MAX_PHOTO_SIZE_MB}MB • JPG, PNG</p> */}
+              <InputField
+    label="Full Name"
+    name="fullName"
+    value={form.fullName}
+    onChange={handleChange}
+    required
+    error={fieldErrors.fullName}
+  />
             </div>
           </div>
 

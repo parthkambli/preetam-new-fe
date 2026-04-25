@@ -138,9 +138,17 @@ const formatDateForInput = (v) => {
   return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
 };
 
-const generatePassword = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
-  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+// const generatePassword = () => {
+//   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
+//   return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+// };
+
+const generatePassword = (name = "", mobile = "") => {
+  const cleanName = name.trim().replace(/\s+/g, "");
+  const namePart = cleanName.substring(0, 3) || "Mem";
+  const mobilePart = mobile.slice(-4) || "1234";
+
+  return `${namePart}@${mobilePart}`;
 };
 
 // ── Generic Field Component ───────────────────────────────────────────────
@@ -642,9 +650,18 @@ const validatePhoto = (file) => {
     if (!isEdit && form.mobile) setForm((p) => ({ ...p, userId: form.mobile }));
   }, [form.mobile, isEdit]);
 
+  // useEffect(() => {
+  //   if (!isEdit) setForm((prev) => prev.password ? prev : { ...prev, password: generatePassword() });
+  // }, [isEdit]);
+
   useEffect(() => {
-    if (!isEdit) setForm((prev) => prev.password ? prev : { ...prev, password: generatePassword() });
-  }, [isEdit]);
+  if (!isEdit && form.mobile) {
+    setForm((prev) => ({
+      ...prev,
+      password: generatePassword(prev.name, prev.mobile),
+    }));
+  }
+}, [form.name, form.mobile, isEdit]);
 
   const prefillFromEnquiry = (enq) => {
     setForm((prev) => ({
