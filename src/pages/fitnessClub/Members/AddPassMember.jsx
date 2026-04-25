@@ -100,9 +100,17 @@ const formatDateForInput = (v) => {
   return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
 };
 
-const generatePassword = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
-  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+// const generatePassword = () => {
+//   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#";
+//   return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+// };
+
+const generatePassword = (name = "", mobile = "") => {
+  const cleanName = name.trim().replace(/\s+/g, "");
+  const namePart = cleanName.substring(0, 3) || "Mem";
+  const mobilePart = mobile.slice(-4) || "1234";
+
+  return `${namePart}@${mobilePart}`;
 };
 
 // ─── Client-side photo validation ────────────────────────────────────────────
@@ -562,16 +570,61 @@ export default function AddPassMember({ viewMode = false }) {
           }];
         }
 
-        setForm({
-          ...emptyForm,
-          ...member,
-          numberOfPersons: member.numberOfPersons || "",
-          startDate:    formatDateForInput(member.startDate),
-          endDate:      formatDateForInput(member.endDate),
-          photoPreview: member.photo || null,
-          staff:        typeof member.staff === "object" ? member.staff?._id || "" : member.staff || "",
-          activityFees,
-        });
+        // setForm({
+        //   ...emptyForm,
+        //   ...member,
+        //   numberOfPersons: member.numberOfPersons || "",
+        //   startDate:    formatDateForInput(member.startDate),
+        //   endDate:      formatDateForInput(member.endDate),
+        //   photoPreview: member.photo || null,
+        //   staff:        typeof member.staff === "object" ? member.staff?._id || "" : member.staff || "",
+        //   activityFees,
+        // });
+
+const getPhotoPreviewUrl = (member) => {
+  const rawPhoto =
+    member?.profilePhoto?.url ||
+    member?.profilePhoto ||
+    member?.photo ||
+    member?.photoUrl ||
+    member?.profileImage ||
+    null;
+
+  if (!rawPhoto) return null;
+
+  // if already full URL
+  if (
+    typeof rawPhoto === "string" &&
+    (rawPhoto.startsWith("http://") || rawPhoto.startsWith("https://"))
+  ) {
+    return rawPhoto;
+  }
+
+  // if backend sends only file path like uploads/member.jpg
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+  return `${BASE_URL}/${String(rawPhoto).replace(/^\/+/, "")}`;
+};
+
+
+setForm({
+  ...emptyForm,
+  ...member,
+  numberOfPersons: member.numberOfPersons || "",
+  startDate: formatDateForInput(member.startDate),
+  endDate: formatDateForInput(member.endDate),
+
+  photoPreview: member.photo
+    ? `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}${member.photo}`
+    : null,
+
+  staff:
+    typeof member.staff === "object"
+      ? member.staff?._id || ""
+      : member.staff || "",
+
+  activityFees,
+});
       } catch (err) {
         const msg = resolveApiError(err);
         toast.error(`Failed to load member: ${msg}`);
@@ -580,14 +633,25 @@ export default function AddPassMember({ viewMode = false }) {
   }, [id, isEdit, feeTypes]);
 
   // Auto userId from mobile
-  useEffect(() => {
-    if (!isEdit && form.mobile) setForm((p) => ({ ...p, userId: form.mobile }));
-  }, [form.mobile, isEdit]);
+useEffect(() => {
+  if (form.mobile) {
+    setForm((p) => ({ ...p, userId: form.mobile }));
+  }
+}, [form.mobile]);
 
   // Auto-generate password on add
+  // useEffect(() => {
+  //   if (!isEdit) setForm((prev) => prev.password ? prev : { ...prev, password: generatePassword() });
+  // }, [isEdit]);
+
   useEffect(() => {
-    if (!isEdit) setForm((prev) => prev.password ? prev : { ...prev, password: generatePassword() });
-  }, [isEdit]);
+  if (!isEdit && form.mobile) {
+    setForm((prev) => ({
+      ...prev,
+      password: generatePassword(prev.name, prev.mobile),
+    }));
+  }
+}, [form.name, form.mobile, isEdit]);
 
   const prefillFromEnquiry = (enq) => {
     setForm((prev) => ({
@@ -685,7 +749,9 @@ export default function AddPassMember({ viewMode = false }) {
       const n = Number(form.age);
       if (isNaN(n) || n < 1 || n > 120) e.age = "Age must be between 1 and 120.";
     }
-    if (!form.password?.trim()) e.password = "Password is required.";
+   if (!isEdit && !form.password?.trim()) {
+  e.password = "Password is required.";
+}
 
     // Photo (re-check in case state is stale)
     if (form.photo instanceof File) {
@@ -991,16 +1057,41 @@ export default function AddPassMember({ viewMode = false }) {
           <h2 className="text-base font-bold text-[#1a2a5e] mb-4">Login Details</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="User ID (Mobile)" name="userId" placeholder="Auto from mobile" readOnly {...fieldProps} />
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                Password<span className="text-red-500 ml-0.5">*</span>
-              </label>
-              <input type="text" name="password" value={form.password} onChange={handleChange}
-                placeholder="e.g. EMP@1234" readOnly={isView}
-                className={`w-full border rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#000359]/30 focus:border-[#000359] bg-white transition-all ${errors.password ? "border-red-400 bg-red-50" : "border-gray-300"}`}
-              />
-              {errors.password && <p className="text-xs text-red-500 mt-0.5">{errors.password}</p>}
-            </div>
+           <div className="flex flex-col gap-1">
+  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+    Password
+    {!isEdit && <span className="text-red-500 ml-0.5">*</span>}
+    {isEdit && (
+      <span className="text-xs text-gray-400 ml-2 normal-case">
+        (optional for edit)
+      </span>
+    )}
+  </label>
+
+  <input
+    type="text"
+    name="password"
+    value={form.password}
+    onChange={handleChange}
+    placeholder={
+      isEdit
+        ? "Leave blank to keep current password"
+        : "e.g. EMP@1234"
+    }
+    readOnly={isView}
+    className={`w-full border rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#000359]/30 focus:border-[#000359] bg-white transition-all ${
+      errors.password
+        ? "border-red-400 bg-red-50"
+        : "border-gray-300"
+    }`}
+  />
+
+  {errors.password && (
+    <p className="text-xs text-red-500 mt-0.5">
+      {errors.password}
+    </p>
+  )}
+</div>
           </div>
         </div>
 

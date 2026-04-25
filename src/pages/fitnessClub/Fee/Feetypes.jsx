@@ -296,6 +296,7 @@ export default function FitnessFeeTypes() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState([]);
 
   const fetchFeeTypes = async () => {
     try {
@@ -317,8 +318,29 @@ export default function FitnessFeeTypes() {
     }
   };
 
+const fetchActivities = async () => {
+  try {
+    const res = await api.fitnessActivities.getAll();
+
+    console.log("✅ Activities fetched:", res.data);
+
+    setActivities(
+      Array.isArray(res.data?.data)
+        ? res.data.data
+        : []
+    );
+
+  } catch (err) {
+    console.error("❌ Failed to fetch activities:", err);
+    toast.error("Failed to load activities");
+    setActivities([]);
+  }
+};
+
   useEffect(() => {
     fetchFeeTypes();
+    fetchActivities();
+
   }, []);
 
   const handleChange = (field, value) => {
@@ -446,7 +468,7 @@ export default function FitnessFeeTypes() {
             {editId ? 'Edit Fitness Fee Type' : 'Add Fitness Fee Type'}
           </h3>
 
-          <div>
+          {/* <div>
             <label className="block text-xs font-semibold text-[#1e3a8a] mb-1">Description</label>
             <input
               type="text"
@@ -455,7 +477,31 @@ export default function FitnessFeeTypes() {
               onChange={(e) => handleChange('description', e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
-          </div>
+          </div> */}
+
+          <div>
+  <label className="block text-xs font-semibold text-[#1e3a8a] mb-1">
+    Description
+  </label>
+
+  <input
+    list="activitySuggestions"
+    type="text"
+    placeholder="Select activity then add extra text (e.g. FA-2 Premium Batch)"
+    value={form.description}
+    onChange={(e) => handleChange("description", e.target.value)}
+    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+  />
+
+  <datalist id="activitySuggestions">
+    {activities.map((activity) => (
+      <option
+        key={activity._id}
+        value={activity.name}
+      />
+    ))}
+  </datalist>
+</div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             {['annual', 'halfYearly', 'quarterly', 'monthly', 'weekly', 'daily', 'hourly'].map((field) => (

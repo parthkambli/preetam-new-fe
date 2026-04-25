@@ -763,6 +763,15 @@ const validatePhoto = (file) => {
     }
   };
 
+  useEffect(() => {
+  if (form.mobile) {
+    setForm((prev) => ({
+      ...prev,
+      userId: form.mobile,
+    }));
+  }
+}, [form.mobile]);
+
   // ── Loading / not-found states ────────────────────────────────────────────
   if (loading) {
     return (
