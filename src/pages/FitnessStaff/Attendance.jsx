@@ -1372,41 +1372,126 @@ export default function AttendancePage() {
     return () => clearTimeout(timeout);
   }, [selectedDate]);
 
-  const handleScan = async (memberId) => {
-    try {
-      const res = await api.staffPanel.scanQR(memberId);
+  // const handleScan = async (raw) => {
+  //   try {
+  //     const parsed = JSON.parse(raw);
+  //     const memberId = parsed.memberId;
 
-      if (!res.data.success) {
-        alert(res.data.message || "Scan failed");
-        return;
-      }
+  //     if (!memberId) throw new Error("Invalid QR");
 
-      if (res.data.autoMarked) {
-        alert(`Attendance marked for ${res.data.member.name}`);
-        return;
-      }
+  //     console.log("STEP 1: VALIDATING MEMBER");
 
-      if (!res.data.autoMarked && res.data.activities?.length) {
-        const first = res.data.activities[0];
+  //     // 🔥 STEP 1: VALIDATE
+  //     const res = await api.attendance.validate(memberId);
 
-        await api.attendance.mark({
-          memberId: res.data.member.memberId,
-          activityFeeId: first.activityFeeId,
-          activityId: first.activityId,
-          status: "Present",
-          notes: ""
-        });
+  //     const data = res.data;
 
-        alert(`Attendance marked for ${res.data.member.name}`);
-      }
+  //     if (!data.valid) {
+  //       console.error("Invalid member");
+  //       return;
+  //     }
 
-    } catch (err) {
-      console.error(err);
-      alert("Scan failed");
-    } finally {
-      setScanning(false);
+  //     const activities = data.activeActivities || [];
+
+  //     if (activities.length === 0) {
+  //       console.error("No active activities");
+  //       return;
+  //     }
+
+  //     // 🔥 STEP 2: SINGLE ACTIVITY → DIRECT MARK
+  //     if (activities.length === 1) {
+  //       const act = activities[0];
+
+  //       await api.attendance.mark({
+  //         memberId,
+  //         activityId: act.activityId,
+  //         activityFeeId: act.activityFeeId,
+  //       });
+
+  //       console.log("Attendance marked directly");
+  //       return;
+  //     }
+
+  //     // 🔥 STEP 3: MULTIPLE → SHOW UI
+  //     setSelectedMember({
+  //       memberId,
+  //       activities
+  //     });
+
+  //   } catch (err) {
+  //     console.error("Scan error:", err?.response?.data || err.message);
+  //   }
+  // };
+
+  const scanLock = useRef(false); // ✅ ADD THIS ABOVE handleScan
+
+const handleScan = async (raw) => {
+  console.log("RAW QR:", raw);
+
+try {
+  const parsed = JSON.parse(raw);
+  console.log("PARSED QR:", parsed);
+} catch (e) {
+  console.error("QR NOT JSON:", raw);
+}
+
+  if (scanLock.current) return; // 🚫 prevents multiple scans
+  scanLock.current = true;
+
+  try {
+    const parsed = JSON.parse(raw);
+    const memberId = parsed.memberId;
+    const organizationId = parsed.organizationId;
+
+if (!memberId || !organizationId) {
+  throw new Error("Invalid QR data");
+}
+
+    if (!memberId) throw new Error("Invalid QR");
+
+    // 🔥 STEP 1: VALIDATE
+    const res = await api.attendance.validate(memberId, organizationId);
+    const data = res.data;
+
+    if (!data.valid) {
+      console.error("Invalid member");
+      scanLock.current = false;
+      return;
     }
-  };
+
+    const activities = data.activeActivities || [];
+
+    if (activities.length === 0) {
+      console.error("No active activities");
+      scanLock.current = false;
+      return;
+    }
+
+    // ✅ SINGLE ACTIVITY
+    if (activities.length === 1) {
+      const act = activities[0];
+
+      await api.attendance.mark({
+        memberId,
+        activityId: act.activityId,
+        activityFeeId: act.activityFeeId,
+      });
+
+      console.log("Attendance marked");
+      return;
+    }
+
+    // ✅ MULTIPLE → SHOW UI
+    setSelectedMember({
+      memberId,
+      activities,
+    });
+
+  } catch (err) {
+    console.error(err);
+    scanLock.current = false; // allow retry only if error
+  }
+};
 
   const fetchAttendance = async (date) => {
     try {
@@ -1480,8 +1565,53 @@ export default function AttendancePage() {
     )}
 
       {/* ✅ SCANNER (double protected) */}
+      {/* console.log("SCANNER RENDERED"); */}
       {scanning && hasPermission("MARK_ATTENDANCE") && (
-        <QRScanner onScan={handleScan} />
+        <div className="mt-4 p-4 bg-white rounded-xl shadow">
+          <p className="text-sm font-medium mb-2 text-gray-700">
+            Scan Member QR Code
+          </p>
+
+          <QRScanner onScan={handleScan} />
+
+          <button
+            onClick={() => setScanning(false)}
+            className="mt-3 text-sm text-red-500"
+          >
+            Stop Scanner
+          </button>
+        </div>
+      )}
+
+      {selectedMember && (
+        <div className="mt-4 bg-white p-4 rounded shadow">
+          <p className="font-semibold mb-2">Select Activity</p>
+
+          {selectedMember.activities.map((act) => (
+            <button
+              key={act.activityId}
+              onClick={async () => {
+                try {
+                  await api.attendance.mark({
+                    memberId: selectedMember.memberId,
+                    activityId: act.activityId,
+                    activityFeeId: act.activityFeeId,
+                  });
+
+                  console.log("Attendance marked");
+
+                  setSelectedMember(null); // reset UI
+
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+              className="block w-full text-left p-2 border mb-2 rounded hover:bg-gray-100"
+            >
+              {act.activityName}
+            </button>
+          ))}
+        </div>
       )}
 
       {/* LOADING */}

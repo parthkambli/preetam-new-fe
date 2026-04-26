@@ -337,13 +337,6 @@ export default function Sidebar({ isOpen, onClose }) {
       { to: "/school-staff/attendance", label: "Attendance", icon: "✅" },
     ];
   } 
-  // else if (user?.role === 'FitnessStaff') {
-  //   menu = [
-  //     { to: "/fitness-staff", label: "Dashboard", icon: "🏠" },
-  //     { to: "/fitness-staff/attendance", label: "Attendance", icon: "📅" },
-  //     { to: "/fitness-staff/my-schedule", label: "My Schedule", icon: "💰" },
-  //   ];
-  // } 
   else if (user?.role === 'FitnessStaff') {
   const fullMenu = [
     {
@@ -364,6 +357,18 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: "💰",
       permission: ["VIEW_OWN_SCHEDULE"]
     },
+    {
+      to: "/fitness-staff/fees",   // ✅ ADD THIS
+      label: "Fees",
+      icon: "💵",
+      permission: ["VIEW_FEES", "MANAGE_FEES"]  // ✅ IMPORTANT
+    },
+    {
+      to: "/fitness-staff/reports",
+      label: "Reports",
+      icon: "📊",
+      permission: ["VIEW_REPORTS"]
+    }
   ];
 
   menu = fullMenu.filter(item =>

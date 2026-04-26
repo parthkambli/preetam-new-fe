@@ -426,8 +426,8 @@
 
 
 import { useState, useEffect } from "react";
-import { api } from "../../../services/apiClient";
-import { hasPermission } from "../../../utils/permissions";
+import { api } from "../../../src/services/apiClient";
+// import { hasPermission } from "../../../utils/permissions";
 
 // ── Static data ────────────────────────────────────────────────────────────
 const STATS = [
@@ -561,7 +561,7 @@ const fetchAdmissions = async () => {
 
 const fetchParticipants = async () => {
   try {
-    const res = await api.fitnessMember.getAll();
+    const res = await api.staffPanel.getMembers();
 
     console.log("Participants API:", res.data);
 
@@ -774,15 +774,15 @@ const fetchParticipants = async () => {
                     <>
                       <td className="px-5 py-3 text-gray-800">{row.name || row.fullName || "-"}</td>
                       <td className="px-5 py-3 text-gray-600">{row.category ||"-"}</td>
-<td className="px-5 py-3">
-  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-    row.membershipStatus === "Active"
-      ? "bg-green-100 text-green-700"
-      : "bg-red-100 text-red-600"
-  }`}>
-    {row.membershipStatus || "Inactive"}
-  </span>
-</td>
+                      <td className="px-5 py-3">
+                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                          row.membershipStatus === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-600"
+                        }`}>
+                          {row.membershipStatus || "Inactive"}
+                        </span>
+                      </td>
                     </>
                   )}
                 </tr>

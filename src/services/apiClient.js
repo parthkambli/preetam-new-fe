@@ -271,6 +271,11 @@ fitnessStaff: {
     getStudentAttendance: (activityId, date) => 
       apiClient.get(`/attendance/details/${activityId}/${date}`),
 
+    validate: (memberId, organizationId) =>
+      apiClient.get(`/attendance/validate/${memberId}`, {
+        params: { organizationId }
+      }),
+
     mark: (data) => apiClient.post('/attendance/mark', data),
   },
 
@@ -335,6 +340,9 @@ fitnessFees: {
   getEvents: () =>
   apiClient.get(`/fitness/staff-panel/events`),
 
+  getMembers: () => apiClient.get('/fitness/staff-panel/members'),
+  getStaff: () => apiClient.get('/fitness/staff-panel/staff'),
+
   scanQR: (memberId) =>
     apiClient.post('/fitness/staff-panel/scan-qr', { memberId }),
 },
@@ -383,6 +391,8 @@ fitnessFees: {
   // ================= ACCESS ROLES =================
   accessRoles: {
     getAll: () => apiClient.get("/access-roles"),
+      create: (data) => apiClient.post("/access-roles", data),
+      update: (id, data) => apiClient.put(`/access-roles/${id}`, data),
   },
 
   

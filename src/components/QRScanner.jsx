@@ -2,41 +2,58 @@ import { useEffect, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
 export default function QRScanner({ onScan }) {
-  const scannerRef = useRef(null);
+  const qrRef = useRef(null);
+  const isRunning = useRef(false);
 
   useEffect(() => {
-    const scanner = new Html5Qrcode("reader");
-    scannerRef.current = scanner;
+    const qr = new Html5Qrcode("qr-reader");
+    qrRef.current = qr;
 
-    scanner
-      .start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          try {
-            const parsed = JSON.parse(decodedText);
-
-            if (!parsed.memberId) {
-              alert("Invalid QR");
-              return;
-            }
-
-            // 🔥 STOP scanner after success (IMPORTANT)
-            scanner.stop();
-
-            onScan(parsed.memberId);
-
-          } catch {
-            alert("Invalid QR format");
+    const startScanner = async () => {
+      try {
+        await qr.start(
+          { facingMode: "user" },
+          {
+            fps: 10,
+            qrbox: 250,
+          },
+          (decodedText) => {
+            console.log("QR DETECTED:", decodedText);
+            onScan(decodedText);
           }
-        }
-      )
-      .catch((err) => console.error(err));
+        );
+
+        isRunning.current = true;
+      } catch (err) {
+        console.error("QR start error:", err);
+      }
+    };
+
+    startScanner();
 
     return () => {
-      scanner.stop().catch(() => {});
-    };
-  }, [onScan]);
+      if (qrRef.current && isRunning.current) {
+        qrRef.current.stop()
+          .then(() => {
+            qrRef.current.clear(); // ✅ THIS releases camera
+          })
+          .catch(() => {});
 
-  return <div id="reader" style={{ width: "300px" }} />;
+        isRunning.current = false;
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{ width: "100%", maxWidth: 400, margin: "auto" }}>
+      <div
+        id="qr-reader"
+        style={{
+          width: "100%",
+          minHeight: "300px",
+          border: "2px solid red"
+        }}
+      />
+    </div>
+  );
 }

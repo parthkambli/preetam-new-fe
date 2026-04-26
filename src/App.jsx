@@ -226,6 +226,8 @@ import FitnessAdduser from './pages/fitnessClub/UserManagement/Adduser';        
 
 import FitnessStaffDashboard from "./pages/FitnessStaff/Dashboard";
 import FitnessStaffAttendance from "./pages/FitnessStaff/Attendance"
+import FitnessStaffFees from "./pages/FitnessStaff/fee"
+import FitnessStaffReport from "./pages/FitnessStaff/Reports"
 import FitnessStaffMySchedule from "./pages/FitnessStaff/MySchedule";
 // import Profile from "./pages/FitnessStaff/Profile"
 
@@ -320,6 +322,8 @@ function App() {
             <Route path="/fitness-staff" element={<FitnessStaffDashboard/>} />
              <Route path="/fitness-staff/attendance" element={<FitnessStaffAttendance />} /> 
              <Route path="/fitness-staff/my-Schedule" element={< FitnessStaffMySchedule />} /> 
+             <Route path="/fitness-staff/fees" element={< FitnessStaffFees />} /> 
+             <Route path="/fitness-staff/reports" element={< FitnessStaffReport />} /> 
              <Route path="/fitness-staff/profile" element={<StaffProfilePage />} />  // fitness staff panel profile
             //Added by Aadi
 

@@ -356,7 +356,15 @@ export default function UserManagement() {
   const fetchRoles = async () => {
     try {
       const res = await api.accessRoles.getAll();
-      setRoles(res.data.data || []);
+      const allRoles = res.data.data || [];
+
+      // ✅ ONLY STAFF ROLES
+      const staffRoles = allRoles.filter(
+        r =>
+          !["ADMIN", "PARTICIPANT", "STUDENT"].includes(r.roleKey)
+      );
+
+      setRoles(staffRoles);
     } catch (err) {
       console.error("Fetch roles failed:", err);
     }
@@ -370,10 +378,27 @@ export default function UserManagement() {
 
   const assignRole = async (userId, roleId) => {
     if (!roleId) return;
+
     setAssigningRole(userId);
+
     try {
-      await api.userManagement.assignRole({ userId, accessRoleId: roleId });
+      const selectedRole = roles.find(r => r._id === roleId);
+
+      // 1️⃣ Assign role
+      await api.userManagement.assignRole({
+        userId,
+        accessRoleId: roleId
+      });
+
+      // 2️⃣ 🔥 RESET USER OVERRIDES (CRITICAL FIX)
+      await api.userManagement.updatePermissions({
+        userId,
+        customPermissions: [],
+        removedPermissions: []
+      });
+
       await fetchUsers();
+
     } catch (err) {
       console.error("Assign role failed:", err);
     } finally {
@@ -393,12 +418,12 @@ export default function UserManagement() {
             Manage users and assign roles. Permission overrides available for Staff only.
           </p>
         </div>
-        <button
+        {/* <button
           onClick={() => navigate("/fitness/user-management/Add-user")}
           className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg text-sm shadow-md transition-colors"
         >
           + Add User
-        </button>
+        </button> */}
       </div>
 
       {/* Table */}
