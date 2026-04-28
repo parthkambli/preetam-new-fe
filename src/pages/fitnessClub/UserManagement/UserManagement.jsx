@@ -330,6 +330,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../../services/apiClient";
+import Pagination from "../../../components/Pagination";
 
 const STAFF_ROLES = ["FitnessStaff", "SchoolStaff"];
 
@@ -339,19 +340,52 @@ export default function UserManagement() {
   const [roles, setRoles] = useState([]);
   const [assigningRole, setAssigningRole] = useState(null); // userId being updated
 
-  useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-  }, []);
+  // 🔥 Pagination states
+const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(10);
+const [totalPages, setTotalPages] = useState(1);
+const [totalCount, setTotalCount] = useState(0);
+
+useEffect(() => {
+  fetchUsers();
+}, [page, limit]);
+
+useEffect(() => {
+  fetchRoles();
+}, []);
+
+  // const fetchUsers = async () => {
+  //   try {
+  //     const res = await api.userManagement.getAll();
+  //     setUsers(res.data.data || []);
+  //   } catch (err) {
+  //     console.error("Fetch users failed:", err);
+  //   }
+  // };
 
   const fetchUsers = async () => {
-    try {
-      const res = await api.userManagement.getAll();
-      setUsers(res.data.data || []);
-    } catch (err) {
-      console.error("Fetch users failed:", err);
-    }
-  };
+  try {
+    const res = await api.userManagement.getAll({
+      page,
+      limit
+    });
+
+    setUsers(res.data.data || []);
+
+    setTotalPages(
+      res.data.pagination?.totalPages || 1
+    );
+
+    setTotalCount(
+      res.data.pagination?.totalRecords || 0
+    );
+
+  } catch (err) {
+    console.error("Fetch users failed:", err);
+  }
+};
+
+
 
   const fetchRoles = async () => {
     try {
@@ -407,7 +441,7 @@ export default function UserManagement() {
   };
 
   const isStaff = (user) => STAFF_ROLES.includes(user.role);
-
+  
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       {/* Header */}
@@ -546,6 +580,15 @@ export default function UserManagement() {
         * Permission overrides can only be set for <strong>FitnessStaff</strong> and{" "}
         <strong>SchoolStaff</strong> users.
       </p>
+
+              <Pagination
+  page={page}
+  limit={limit}
+  totalPages={totalPages}
+  totalCount={totalCount}
+  setPage={setPage}
+  setLimit={setLimit}
+/>
     </div>
   );
 }

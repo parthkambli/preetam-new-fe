@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
+import Pagination from "../../../components/Pagination";
 
 const EVENT_TYPES = ["All", "Competition", "Workshop", "Bootcamp", "Seminar", "Health Camp", "Members Meet", "Festival", "Other"];
 
@@ -74,21 +75,6 @@ export default function Events() {
     navigate("/fitness/Addevent", { state: { event } });
   };
 
-  // pagination calculations
-  const startItem = (page - 1) * limit + 1;
-  const endItem = Math.min(page * limit, totalCount);
-
-  const handleFirst = () => setPage(1);
-  const handleLast = () => setPage(totalPages);
-  const handlePrev = () => page > 1 && setPage(p => p - 1);
-  const handleNext = () => page < totalPages && setPage(p => p + 1);
-
-  const handlePageInput = (e) => {
-    const value = Number(e.target.value);
-    if (value >= 1 && value <= totalPages) {
-      setPage(value);
-    }
-  };
 
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Loading events...</div>;
@@ -175,99 +161,16 @@ export default function Events() {
           </table>
         </div>
       </div>
+    
+    <Pagination
+  page={page}
+  limit={limit}
+  totalPages={totalPages}
+  totalCount={totalCount}
+  setPage={setPage}
+  setLimit={setLimit}
+/>
 
-
-{/* 🔥 ADVANCED PAGINATION */}
-<div className="flex flex-wrap items-center justify-between gap-4 mt-6 bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm">
-
-  {/* LEFT — Items per page + count */}
-  <div className="flex items-center gap-3 text-sm text-gray-500">
-    <span className="font-medium text-gray-600">Rows per page</span>
-
-    <select
-      value={limit}
-      onChange={(e) => {
-        setLimit(Number(e.target.value));
-        setPage(1);
-      }}
-      className="border border-[#1a2a5e]/30 px-2 py-1.5 rounded-lg bg-[#1a2a5e]/5 text-[#1a2a5e] text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]/30 focus:border-[#1a2a5e] transition"
-    >
-      {[10, 25, 50, 100].map(n => (
-        <option key={n} value={n}>{n}</option>
-      ))}
-    </select>
-
-    <span className="hidden sm:inline-block w-px h-4 bg-gray-200" />
-
-    <span className="text-gray-400 text-xs">
-      Showing{" "}
-      <span className="font-semibold text-gray-700">{startItem}–{endItem}</span>
-      {" "}of{" "}
-      <span className="font-semibold text-gray-700">{totalCount}</span>
-      {" "}results
-    </span>
-  </div>
-
-  {/* RIGHT — Navigation controls */}
-  <div className="flex items-center gap-1">
-
-    {/* FIRST */}
-    <button
-      onClick={handleFirst}
-      disabled={page === 1}
-      title="First page"
-      className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1a2a5e] text-white border border-[#1a2a5e] hover:bg-[#152147] hover:border-[#152147] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 text-xs font-bold shadow-sm"
-    >
-      «
-    </button>
-
-    {/* PREV */}
-    <button
-      onClick={handlePrev}
-      disabled={page === 1}
-      title="Previous page"
-      className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1a2a5e] text-white border border-[#1a2a5e] hover:bg-[#152147] hover:border-[#152147] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 text-xs font-bold shadow-sm"
-    >
-      ‹
-    </button>
-
-    {/* PAGE BOX */}
-    <div className="flex items-center gap-1.5 border border-[#1a2a5e]/20 bg-[#1a2a5e]/5 px-3 py-1.5 rounded-lg mx-1">
-      <span className="text-xs text-[#1a2a5e]/60 font-medium">Page</span>
-      <input
-        type="number"
-        value={page}
-        onChange={handlePageInput}
-        min={1}
-        max={totalPages}
-        className="w-10 text-center text-sm font-bold text-[#1a2a5e] bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-      />
-      <span className="text-xs text-[#1a2a5e]/40">/</span>
-      <span className="text-xs font-semibold text-[#1a2a5e]/70">{totalPages}</span>
-    </div>
-
-    {/* NEXT */}
-    <button
-      onClick={handleNext}
-      disabled={page === totalPages}
-      title="Next page"
-      className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1a2a5e] text-white border border-[#1a2a5e] hover:bg-[#152147] hover:border-[#152147] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 text-xs font-bold shadow-sm"
-    >
-      ›
-    </button>
-
-    {/* LAST */}
-    <button
-      onClick={handleLast}
-      disabled={page === totalPages}
-      title="Last page"
-      className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1a2a5e] text-white border border-[#1a2a5e] hover:bg-[#152147] hover:border-[#152147] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 text-xs font-bold shadow-sm"
-    >
-      »
-    </button>
-
-  </div>
-</div>
     </div>
   );
 }

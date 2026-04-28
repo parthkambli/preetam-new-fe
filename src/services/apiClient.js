@@ -377,7 +377,8 @@ fitnessFees: {
 
   // ================= USER MANAGEMENT =================
   userManagement: {
-    getAll: () => apiClient.get("/user-management"),
+  getAll: (params = {}) =>
+    apiClient.get("/user-management", { params }),
 
     create: (data) => apiClient.post('/user-management', data),
 
