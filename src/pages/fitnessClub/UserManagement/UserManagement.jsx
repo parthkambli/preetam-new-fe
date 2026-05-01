@@ -346,9 +346,11 @@ const [limit, setLimit] = useState(10);
 const [totalPages, setTotalPages] = useState(1);
 const [totalCount, setTotalCount] = useState(0);
 
+const [search, setSearch] = useState("");
+
 useEffect(() => {
   fetchUsers();
-}, [page, limit]);
+}, [page, limit, search]);
 
 useEffect(() => {
   fetchRoles();
@@ -367,7 +369,8 @@ useEffect(() => {
   try {
     const res = await api.userManagement.getAll({
       page,
-      limit
+      limit,
+      search
     });
 
     setUsers(res.data.data || []);
@@ -461,7 +464,29 @@ useEffect(() => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      {/* Filters */}
+<div className="bg-white rounded-xl shadow p-4 mb-4">
+  <div className="flex flex-wrap gap-4 items-end">
+    <div className="flex flex-col">
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        Search Name
+      </label>
+      <input
+  type="text"
+  placeholder="Enter user name"
+  value={search}
+  onChange={(e) => {
+    setSearch(e.target.value);
+    setPage(1);
+  }}
+  className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] focus:border-transparent"
+/>
+    </div>
+  </div>
+</div>
+
+{/* Table */}
+<div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>

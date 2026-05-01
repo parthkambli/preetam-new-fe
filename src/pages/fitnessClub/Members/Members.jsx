@@ -1103,6 +1103,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 import PassRenewModal from "./PassRenewModal";
+import Pagination  from "../../../components/Pagination";
 
 const PLAN_OPTIONS = [
   { value: "Annual",  label: "Annual",  months: 12 },
@@ -1700,13 +1701,34 @@ export default function Members() {
   const [renewPassMember, setRenewPassMember] = useState(null);
   const [planTypeFilter, setPlanTypeFilter] = useState("");
 
+  const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(10);
+const [totalPages, setTotalPages] = useState(1);
+const [totalCount, setTotalCount] = useState(0);
+
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await api.fitnessMember.getAll();
+      const response = await api.fitnessMember.getAll({
+  page,
+  limit,
+  search: searchTerm,
+  status: statusFilter,
+  plan: planTypeFilter
+});
       // backend returns array directly (applyComputedStatuses is run server-side)
-      const raw = response?.data ?? response;
-      setMembers(Array.isArray(raw) ? raw : []);
+      const raw =
+  response?.data?.data || [];
+
+setMembers(Array.isArray(raw) ? raw : []);
+
+setTotalPages(
+  response?.data?.pagination?.totalPages || 1
+);
+
+setTotalCount(
+  response?.data?.pagination?.totalRecords || 0
+);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load members");
@@ -1716,30 +1738,29 @@ export default function Members() {
     }
   };
 
-  useEffect(() => { fetchMembers(); }, []);
+  useEffect(() => {
+  fetchMembers();
+}, [
+  page,
+  limit,
+  searchTerm,
+  statusFilter,
+  planTypeFilter
+]);
+
+useEffect(() => {
+  setPage(1);
+}, [
+  searchTerm,
+  statusFilter,
+  planTypeFilter,
+  limit
+]);
 
   // Overall status is driven by the computed membershipStatus from backend
   const getMemberOverallStatus = (member) => member.membershipStatus || "Inactive";
 
-  const filteredMembers = members.filter((member) => {
-    const matchesSearch =
-      member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.mobile?.includes(searchTerm);
-    const matchesStatus =
-      !statusFilter || getMemberOverallStatus(member) === statusFilter;
 
-      //New logic for added Plan type
-      // const isPassMember = !!member.membershipPass;
-
-      const isPassMember = isPassMemberFn(member);
-
-  const matchesPlanType =
-    !planTypeFilter ||
-    (planTypeFilter === "Pass" && isPassMember) ||
-    (planTypeFilter === "Activity" && !isPassMember);
-
-  return matchesSearch && matchesStatus && matchesPlanType;
-  });
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this member?")) return;
@@ -1870,14 +1891,14 @@ export default function Members() {
                     <p className="text-gray-500 mt-3 text-sm">Loading members…</p>
                   </td>
                 </tr>
-              ) : filteredMembers.length === 0 ? (
+              ) : members.length=== 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center text-gray-400 text-sm">
                     No members found.
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map((member, idx) => {
+                members.map((member, idx) => {
                   const overallStatus = getMemberOverallStatus(member);
                   const activityFees  = member.activityFees || [];
                   // const isPassMember = !!member.membershipPass;
@@ -2061,12 +2082,27 @@ export default function Members() {
               )}
             </tbody>
           </table>
+          
         </div>
+        
+        
       </div>
+      <Pagination
+  page={page}
+  limit={limit}
+  totalPages={totalPages}
+  totalCount={totalCount}
+  setPage={setPage}
+  setLimit={setLimit}
+/>
 
       <p className="text-xs text-gray-400 mt-4 text-center">
-        Showing {filteredMembers.length} of {members.length} members
+        Showing {members.length} of {members.length} members
       </p>
+
+      
+
+      
     </div>
   );
 }

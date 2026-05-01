@@ -2,21 +2,22 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
+import AsyncSelect from "react-select/async";
 
 export default function AddActivity({ onCancel, onSaved, editData }) {
   const [activityName, setActivityName] = useState("");
   const [capacity, setCapacity] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [staffList, setStaffList] = useState([]);
+  // const [staffList, setStaffList] = useState([]);
 
   const [slots, setSlots] = useState([
     { startTime: "", endTime: "", staffId: "" }
   ]);
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+  // useEffect(() => {
+  //   fetchStaff();
+  // }, []);
 
   useEffect(() => {
     if (editData) {
@@ -33,14 +34,36 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
     }
   }, [editData]);
 
-  const fetchStaff = async () => {
-    try {
-      const res = await api.fitnessStaff.getAll();
-      setStaffList(res.data?.data?.staff || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // const fetchStaff = async () => {
+  //   try {
+  //     const res = await api.fitnessStaff.getAll();
+  //     setStaffList(res.data?.data?.staff || []);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
+  const loadStaffOptions = async (inputValue) => {
+  try {
+    const res = await api.fitnessStaff.getAll({
+      search: inputValue || "",
+      status: "Active",
+      page: 1,
+      limit: 5
+    });
+
+    const data = res.data?.data?.staff || [];
+
+    return data.map((staff) => ({
+      value: staff._id,
+      label: `${staff.fullName} (${staff.role || "Staff"})`,
+      data: staff
+    }));
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
 
   const handleSlotChange = (index, field, value) => {
     const updated = [...slots];
@@ -167,20 +190,23 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
                 className="input"
               />
 
-              <select
-                value={slot.staffId}
-                onChange={(e) =>
-                  handleSlotChange(index, "staffId", e.target.value)
-                }
-                className="input"
-              >
-                <option value="">Instructor</option>
-                {staffList.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.fullName}
-                  </option>
-                ))}
-              </select>
+              <AsyncSelect
+  cacheOptions
+  defaultOptions
+  loadOptions={loadStaffOptions}
+  placeholder="Search Instructor"
+  value={null}
+  onChange={(selected) =>
+    handleSlotChange(
+      index,
+      "staffId",
+      selected ? selected.value : ""
+    )
+  }
+  isClearable
+  className="w-full"
+  classNamePrefix="react-select"
+/>
 
               <button
                 onClick={() => removeSlot(index)}

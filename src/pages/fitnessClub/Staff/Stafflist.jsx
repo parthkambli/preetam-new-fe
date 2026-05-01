@@ -206,12 +206,20 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';           // ← Already imported
 import api from '../../../services/api';
 
+import Pagination from "../../../components/Pagination";
+
 export default function StaffList() {
   const navigate = useNavigate();
 
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(10);
+const [totalPages, setTotalPages] = useState(1);
+const [totalCount, setTotalCount] = useState(0);
+const [roleOptions, setRoleOptions] = useState([]);
 
   const [filters, setFilters] = useState({ 
     search: '', 
@@ -229,9 +237,30 @@ export default function StaffList() {
       setLoading(true);
       setError(null);
 
-      const response = await api.fitnessStaff.getAll();
+      // const response = await api.fitnessStaff.getAll();
+
+const response = await api.fitnessStaff.getAll({
+  page,
+  limit,
+  search: filters.search,
+  mobile: filters.mobile,
+  role: filters.role,
+  status: filters.status,
+});
+      // const staffData = response.data?.data?.staff || [];
+      // setStaff(staffData);
+
       const staffData = response.data?.data?.staff || [];
-      setStaff(staffData);
+
+setStaff(staffData);
+
+setTotalPages(
+  response.data?.data?.pagination?.totalPages || 1
+);
+
+setTotalCount(
+  response.data?.data?.pagination?.totalRecords || 0
+);
 
     } catch (err) {
       console.error("❌ Fetch error:", err);
@@ -245,26 +274,75 @@ export default function StaffList() {
     }
   };
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+  // useEffect(() => {
+  //   fetchStaff();
+  // }, []);
 
-  const filteredStaff = staff.filter(s => {
-    const searchMatch = !filters.search || 
-      s.fullName?.toLowerCase().includes(filters.search.toLowerCase());
-    const mobileMatch = !filters.mobile || 
-      s.mobileNumber?.includes(filters.mobile);
-    const roleMatch = !filters.role || s.role === filters.role;
-    const statusMatch = !filters.status || s.status === filters.status;
-    return searchMatch && mobileMatch && roleMatch && statusMatch;
-  });
+useEffect(() => {
+  fetchStaff();
+}, [
+  page,
+  limit,
+  filters.search,
+  filters.mobile,
+  filters.role,
+  filters.status
+]);
+
+useEffect(() => {
+  fetchRoleOptions();
+}, []);
+
+useEffect(() => {
+  setPage(1);
+}, [
+  filters.search,
+  filters.mobile,
+  filters.role,
+  filters.status,
+  limit
+]);
+
+  // const filteredStaff = staff.filter(s => {
+  //   const searchMatch = !filters.search || 
+  //     s.fullName?.toLowerCase().includes(filters.search.toLowerCase());
+  //   const mobileMatch = !filters.mobile || 
+  //     s.mobileNumber?.includes(filters.mobile);
+  //   const roleMatch = !filters.role || s.role === filters.role;
+  //   const statusMatch = !filters.status || s.status === filters.status;
+  //   return searchMatch && mobileMatch && roleMatch && statusMatch;
+  // });
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('en-GB');
   };
 
-  const uniqueRoles = [...new Set(staff.map(s => s.role).filter(Boolean))];
+
+  const fetchRoleOptions = async () => {
+  try {
+    const response =
+      await api.fitnessStaff.getAll({
+        limit: 500
+      });
+
+    const allStaff =
+      response.data?.data?.staff || [];
+
+    const uniqueRoles = [
+      ...new Set(
+        allStaff
+          .map((s) => s.role)
+          .filter(Boolean)
+      )
+    ];
+
+    setRoleOptions(uniqueRoles);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   // ==================== DELETE FUNCTION (Updated with Toast Confirmation) ====================
   const handleDelete = async (staffMember) => {
@@ -342,7 +420,7 @@ export default function StaffList() {
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-44 focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white"
         >
           <option value="">All Roles</option>
-          {uniqueRoles.map(r => <option key={r} value={r}>{r}</option>)}
+          {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <select
           value={filters.status}
@@ -379,14 +457,14 @@ export default function StaffList() {
                     {error}
                   </td>
                 </tr>
-              ) : filteredStaff.length === 0 ? (
+              ) : staff.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-5 py-10 text-center text-gray-400">
                     No records found
                   </td>
                 </tr>
               ) : (
-                filteredStaff.map(s => (
+                staff.map(s => (
                   <tr key={s._id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 text-gray-500 text-xs font-mono whitespace-nowrap">
                       {s.employeeId || '-'}
@@ -446,6 +524,14 @@ export default function StaffList() {
             </tbody>
           </table>
         </div>
+        <Pagination
+  page={page}
+  limit={limit}
+  totalPages={totalPages}
+  totalCount={totalCount}
+  setPage={setPage}
+  setLimit={setLimit}
+/>
       </div>
     </div>
   );

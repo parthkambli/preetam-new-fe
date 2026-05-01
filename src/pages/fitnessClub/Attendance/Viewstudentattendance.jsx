@@ -219,13 +219,17 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../../services/apiClient";
+import Pagination from "../../../components/Pagination";
 
 export default function ViewStudentAttendance() {
   const { activityid } = useParams();   // Matches your route :activityid
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activityName, setActivityName] = useState("");
-
+  const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(10);
+const [totalPages, setTotalPages] = useState(1);
+const [totalCount, setTotalCount] = useState(0);
   useEffect(() => {
     const fetchStudentAttendance = async () => {
       if (!activityid) return;
@@ -235,13 +239,22 @@ export default function ViewStudentAttendance() {
         // Using today's date by default
         const today = new Date().toISOString().split('T')[0];
 
-        const response = await api.attendance.getStudentAttendance(activityid, today);
+        // const response = await api.attendance.getStudentAttendance(activityid, today);
         
-        setStudents(response.data || []);
+        // setStudents(response.data || []);
+
+        const response = await api.attendance.getStudentAttendance(activityid, today, {
+  page,
+  limit
+});
+
+setStudents(response.data.data || []);
+setTotalPages(response.data.pagination?.totalPages || 1);
+setTotalCount(response.data.pagination?.total || 0);
         
-        if (response.data?.length > 0 && response.data[0].activity) {
-          setActivityName(response.data[0].activity.name || "Activity");
-        }
+if (response.data.data?.length > 0 && response.data.data[0].activity) {
+  setActivityName(response.data.data[0].activity.name || "Activity");
+}
       } catch (error) {
         console.error("Failed to fetch student attendance:", error.response?.data || error.message);
         setStudents([]);
@@ -251,7 +264,11 @@ export default function ViewStudentAttendance() {
     };
 
     fetchStudentAttendance();
-  }, [activityid]);
+  }, [activityid, page, limit]);
+
+  useEffect(() => {
+  setPage(1);
+}, [limit]);
 
   return (
     <div className="p-6 min-h-screen bg-white font-sans">
@@ -298,7 +315,16 @@ export default function ViewStudentAttendance() {
             )}
           </tbody>
         </table>
+        <Pagination
+                page={page}
+                limit={limit}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                setPage={setPage}
+                setLimit={setLimit}
+              />
       </div>
+      
     </div>
   );
 }

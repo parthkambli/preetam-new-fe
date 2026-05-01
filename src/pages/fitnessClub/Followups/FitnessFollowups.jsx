@@ -704,6 +704,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '../../../services/apiClient';
+import Pagination from "../../../components/Pagination";
 
 export default function FitnessFollowups() {
   const [followups, setFollowups] = useState([]);
@@ -711,6 +712,11 @@ export default function FitnessFollowups() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(10);
+const [totalPages, setTotalPages] = useState(1);
+const [totalCount, setTotalCount] = useState(0);
 
   const [filters, setFilters] = useState({
     status: '',
@@ -728,11 +734,24 @@ export default function FitnessFollowups() {
   });
 
   // Fetch data
+useEffect(() => {
+  fetchFollowups();
+}, [filters, page, limit]);
+
+useEffect(() => {
+  fetchUpcomingFollowups();
+  fetchActivities();
+}, []);
+
   useEffect(() => {
-    fetchFollowups();
-    fetchUpcomingFollowups();
-    fetchActivities();
-  }, [filters]);
+  setPage(1);
+}, [
+  filters.status,
+  filters.search,
+  filters.fromDate,
+  filters.toDate,
+  limit
+]);
 
   const fetchActivities = async () => {
     try {
@@ -754,7 +773,10 @@ export default function FitnessFollowups() {
     setLoading(true);
     setError('');
     try {
-      const params = { enquiryType: 'fitness' };
+      const params = { enquiryType: 'fitness',
+        page,
+        limit
+       };
 
       if (filters.status) params.status = filters.status;
       if (filters.search) params.search = filters.search;
@@ -764,7 +786,18 @@ export default function FitnessFollowups() {
 
       const response = await api.followups.getAll(params);
 
-      let data = response.data?.data || response.data || [];
+      // let data = response.data?.data || response.data || [];
+
+      let data = response.data?.data || [];
+
+// pagination values from backend
+setTotalPages(
+  response.data?.pagination?.totalPages || 1
+);
+
+setTotalCount(
+  response.data?.pagination?.totalRecords || 0
+);
 
       // ✅ FRONTEND FILTER — Date Range (Next Visit Date)
       if (filters.fromDate || filters.toDate) {
@@ -892,48 +925,71 @@ export default function FitnessFollowups() {
           </div>
         </div>
       )}
+{/* Filters */}
+<div className="flex flex-wrap gap-4 items-end">
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <input
-          type="text"
-          placeholder="Search name"
-          className="border border-gray-300 rounded px-3 py-2 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-blue-400"
-          value={filters.search}
-          onChange={(e) => handleFilterChange('search', e.target.value)}
-        />
+  {/* Search Name */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-600 mb-1">
+      Search Name
+    </label>
+    <input
+      type="text"
+      placeholder="Search name"
+      className="border border-gray-300 rounded px-3 py-2 text-sm w-56 focus:outline-none focus:ring-1 focus:ring-blue-400"
+      value={filters.search}
+      onChange={(e) => handleFilterChange("search", e.target.value)}
+    />
+  </div>
 
-        {/* ✅ Date Range Filter — From */}
-        <input
-          type="date"
-          className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-          value={filters.fromDate}
-          max={filters.toDate || undefined}
-          onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-          title="From Date"
-        />
+  {/* Start Date */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-600 mb-1">
+      Start Date
+    </label>
+    <input
+      type="date"
+      className="border border-gray-300 rounded px-3 py-2 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-blue-400"
+      value={filters.fromDate}
+      max={filters.toDate || undefined}
+      onChange={(e) => handleFilterChange("fromDate", e.target.value)}
+      title="Start Date"
+    />
+  </div>
 
-        {/* ✅ Date Range Filter — To */}
-        <input
-          type="date"
-          className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-          value={filters.toDate}
-          min={filters.fromDate || undefined}
-          onChange={(e) => handleFilterChange('toDate', e.target.value)}
-          title="To Date"
-        />
+  {/* End Date */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-600 mb-1">
+      End Date
+    </label>
+    <input
+      type="date"
+      className="border border-gray-300 rounded px-3 py-2 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-blue-400"
+      value={filters.toDate}
+      min={filters.fromDate || undefined}
+      onChange={(e) => handleFilterChange("toDate", e.target.value)}
+      title="End Date"
+    />
+  </div>
 
-        <select
-          className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-          value={filters.status}
-          onChange={(e) => handleFilterChange('status', e.target.value)}
-        >
-          <option value="">All Status</option>
-          <option value="New">New</option>
-          <option value="Follow Up">Follow-up</option>
-          <option value="Converted">Converted</option>
-        </select>
-      </div>
+  {/* Status Filter */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-600 mb-1">
+      Status
+    </label>
+    <select
+      className="border border-gray-300 rounded px-3 py-2 text-sm w-40 focus:outline-none focus:ring-1 focus:ring-blue-400"
+      value={filters.status}
+      onChange={(e) => handleFilterChange("status", e.target.value)}
+    >
+      <option value="">All Status</option>
+      <option value="New">New</option>
+      <option value="Follow Up">Follow-up</option>
+      <option value="Converted">Converted</option>
+    </select>
+  </div>
+
+</div>
 
       {/* Main Table */}
       {loading ? (
@@ -1090,6 +1146,15 @@ export default function FitnessFollowups() {
           </div>
         </div>
       )}
+
+      <Pagination
+  page={page}
+  limit={limit}
+  totalPages={totalPages}
+  totalCount={totalCount}
+  setPage={setPage}
+  setLimit={setLimit}
+/>
     </div>
   );
 }

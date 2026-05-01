@@ -2117,13 +2117,17 @@ export default function Activities() {
 
       const [activitiesRes, bookingsRes] = await Promise.all([
         api.fitnessActivities.getAll(),
-        api.fitnessActivities.getAllBookings(),
+        // api.fitnessActivities.getAllBookings(),
+        api.fitnessActivities.getDashboardByDate(selected)
       ]);
 
       const activities = activitiesRes.data.data || [];
       const bookings = bookingsRes.data.data || [];
 
-      const todayBookings = bookings.filter((b) => isSameDate(b.date));
+      console.log("BOOKINGS:", bookings);
+
+      // const todayBookings = bookings.filter((b) => isSameDate(b.date));
+      const todayBookings = bookings;
 
       let totalSlots = 0;
       let fullSlots = 0;
@@ -2135,12 +2139,17 @@ export default function Activities() {
 
           const slotTime = `${slot.startTime} - ${slot.endTime}`;
 
+          // const booked = bookings.filter(
+          //   (b) =>
+          //    b.activityName?.trim() === activity.name?.trim() &&
+          //     normalizeTime(b.slotTime) === normalizeTime(slotTime)
+          // ).length;
+
           const booked = bookings.filter(
-            (b) =>
-              b.activityName === activity.name &&
-              normalizeTime(b.slotTime) === normalizeTime(slotTime) &&
-              isSameDate(b.date)
-          ).length;
+  (b) =>
+    b.activityId?._id === activity._id &&
+    b.slotId === slot._id
+).length;
 
           if (booked >= activity.capacity) fullSlots++;
 
@@ -2181,16 +2190,19 @@ export default function Activities() {
       const isSameDate = (date) =>
         format(new Date(date), "yyyy-MM-dd") === selected;
 
-      const res = await api.fitnessActivities.getAllBookings();
+      const res = await api.fitnessActivities.getDashboardByDate(selected)
       const bookings = res.data.data || [];
 
-      const filtered = bookings.filter(
-        (b) =>
-          b.activityName === slot.activity &&
-          normalizeTime(b.slotTime) === normalizeTime(slot.time) &&
-          isSameDate(b.date)
-      );
-
+//       const filtered = bookings.filter(
+//   (b) =>
+//     b.activityName?.trim() === slot.activity?.trim() &&
+//     normalizeTime(b.slotTime) === normalizeTime(slot.time)
+// );
+const filtered = bookings.filter(
+  (b) =>
+    b.activityId?._id === slot.activityId &&
+    b.slotId === slot.slotId
+);
       setSelectedSlot(slot);
       setSlotBookings(filtered);
       setShowModal(true);

@@ -429,6 +429,8 @@ import { useState, useEffect } from "react";
 import { api } from "../../../services/apiClient";
 import { hasPermission } from "../../../utils/permissions";
 
+import Pagination from "../../../components/Pagination";
+
 // ── Static data ────────────────────────────────────────────────────────────
 const STATS = [
   { label: "Total Enquiries", value: "248", prefix: "" },
@@ -501,6 +503,11 @@ export default function Reports() {
   const [admissionsData, setAdmissionsData] = useState([]);
   const [participantsData, setParticipantsData] = useState([]);
 
+  const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(10);
+const [totalPages, setTotalPages] = useState(1);
+const [totalCount, setTotalCount] = useState(0);
+
 
 const [stats, setStats] = useState({
   totalEnquiries: 0,
@@ -528,22 +535,46 @@ const fetchSummary = async (from = "", to = "") => {
   const isAdmissions = activeTab === "admissions";
 
   const admissionsHeaders = ["Name", "Date", "Status"];
-  const admissionsRows = ADMISSIONS_DATA.map((r) => [r.name, r.date, r.status]);
+  // const admissionsRows = ADMISSIONS_DATA.map((r) => [r.name, r.date, r.status]);
 
   const participantsHeaders = ["Name", "Category", "Status"];
-  const participantsRows = PARTICIPANTS_DATA.map((r) => [r.name, r.category, r.status]);
+  // const participantsRows = PARTICIPANTS_DATA.map((r) => [r.name, r.category, r.status]);
 
   const currentTitle = isAdmissions ? "Admissions Report" : "Participants Report";
   const currentHeaders = isAdmissions ? admissionsHeaders : participantsHeaders;
-  const currentRows = isAdmissions ? admissionsRows : participantsRows;
+  // const currentRows = isAdmissions ? admissionsRows : participantsRows;
+  const currentRows = isAdmissions
+  ? (admissionsData || []).map((row) => [
+      row.fullName || "-",
+      row.createdAt
+        ? new Date(row.createdAt).toLocaleDateString()
+        : "-",
+      row.status || "-"
+    ])
+  : (participantsData || []).map((row) => [
+      row.name || row.fullName || "-",
+      row.category || "-",
+      row.membershipStatus || "Inactive"
+    ]);
   const currentData = isAdmissions ? (admissionsData || []) : (participantsData || []);  
 
 
-  useEffect(() => {
+//   useEffect(() => {
+//   fetchAdmissions();
+//   fetchParticipants();
+//   fetchSummary();    // 👈 ADD THIS
+// }, []);
+
+useEffect(() => {
   fetchAdmissions();
-  fetchParticipants();
-  fetchSummary();    // 👈 ADD THIS
+  fetchSummary();
 }, []);
+
+useEffect(() => {
+  if (activeTab === "participants") {
+    fetchParticipants();
+  }
+}, [page, limit, activeTab]);
 
 const fetchAdmissions = async () => {
   try {
@@ -559,31 +590,106 @@ const fetchAdmissions = async () => {
 };
 
 
+// const fetchParticipants = async () => {
+//   try {
+//     const res = await api.fitnessMember.getAll();
+
+//     console.log("Participants API:", res.data);
+
+//     // ✅ FIX
+//     setParticipantsData(res.data?.data || res.data || []);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+
+
 const fetchParticipants = async () => {
   try {
-    const res = await api.fitnessMember.getAll();
+    const res = await api.fitnessMember.getAll({
+      page,
+      limit
+    });
 
     console.log("Participants API:", res.data);
 
-    // ✅ FIX
-    setParticipantsData(res.data?.data || res.data || []);
+    setParticipantsData(
+      res.data?.data || []
+    );
+
+    setTotalPages(
+      res.data?.pagination?.totalPages || 1
+    );
+
+    setTotalCount(
+      res.data?.pagination?.totalRecords || 0
+    );
+
   } catch (err) {
     console.error(err);
   }
 };
 
+  const getExportRows = async () => {
+  try {
+    if (isAdmissions) {
+      const res = await api.fitnessEnquiry.getAll({
+        page: 1,
+        limit: 10000
+      });
+
+      const data = res.data?.data || [];
+
+      return data.map((row) => [
+        row.fullName || "-",
+        row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString()
+          : "-",
+        row.status || "-"
+      ]);
+    } else {
+      const res = await api.fitnessMember.getAll({
+        page: 1,
+        limit: 10000
+      });
+
+      const data = res.data?.data || [];
+
+      return data.map((row) => [
+        row.name || row.fullName || "-",
+        row.category || "-",
+        row.membershipStatus || "Inactive"
+      ]);
+    }
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
 
 
   const handleExportPDF = async () => {
     setExporting("pdf");
-    try { await exportToPDF(currentTitle, currentHeaders, currentRows); }
+    try { const rows = await getExportRows();
+
+await exportToPDF(
+  currentTitle,
+  currentHeaders,
+  rows
+); }
     catch (e) { console.error(e); }
     finally { setExporting(""); }
   };
 
   const handleExportExcel = async () => {
     setExporting("excel");
-    try { await exportToExcel(currentTitle, currentHeaders, currentRows); }
+    try {const rows = await getExportRows();
+
+await exportToExcel(
+  currentTitle,
+  currentHeaders,
+  rows
+); }
     catch (e) { console.error(e); }
     finally { setExporting(""); }
   };
@@ -676,17 +782,18 @@ const fetchParticipants = async () => {
         {/* Bottom 2 wide cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
           {/* {STATS.filter((s) => s.wide).map((stat) => ( */}
-          {[
-  // { label: "Pending Fees", value: stats.pendingFees, prefix: "₹ " },
-  { label: "Today's Attendance", value: "118" }, // keep static for now
+          {
+            [
+  { label: "Today's Attendance", value: stats.todaysAttendance || 0 },
 ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                {stat.prefix}{stat.value}
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">{stat.label}</p>
-            </div>
-          ))}
+  <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
+    <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+      {stat.prefix || ""}{stat.value?.toLocaleString?.() || stat.value}
+    </p>
+    <p className="text-xs sm:text-sm text-gray-500 mt-1">{stat.label}</p>
+  </div>
+))
+          }
         </div>
       </div>
 
@@ -789,7 +896,20 @@ const fetchParticipants = async () => {
               ))}
             </tbody>
           </table>
+          
         </div>
+
+        {!isAdmissions && (
+  <Pagination
+    page={page}
+    limit={limit}
+    totalPages={totalPages}
+    totalCount={totalCount}
+    setPage={setPage}
+    setLimit={setLimit}
+  />
+)}
+        
 
         {/* Export buttons */}
         <div className="flex justify-end gap-3 px-5 py-4">
@@ -831,7 +951,9 @@ const fetchParticipants = async () => {
             Export Excel
           </button>
         </div>
+        
       </div>
+      
     </div>
   );
 }

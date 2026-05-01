@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 import Select from "react-select";
+import AsyncSelect from "react-select/async";
 
 const PLAN_OPTIONS = [
   { value: "Annual",  label: "Annual",  feeKey: "annual"  },
@@ -439,7 +440,7 @@ export default function AddPassMember({ viewMode = false }) {
   const [saved, setSaved]     = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [enquiryOptions, setEnquiryOptions]         = useState([]);
+  
   const [selectedEnquiry, setSelectedEnquiry]       = useState(null);
   const [loadingEnquiries, setLoadingEnquiries]     = useState(false);
   const [staffOptions, setStaffOptions]             = useState([]);
@@ -452,26 +453,26 @@ export default function AddPassMember({ viewMode = false }) {
   const overallStatus = computeActivityStatus(passFee);
 
   // Load Enquiries (add only, not edit)
-  useEffect(() => {
-    if (isEdit) return;
-    (async () => {
-      try {
-        setLoadingEnquiries(true);
-        const res  = await api.fitnessEnquiry.getAll({ limit: 100 });
-        const raw  = res?.data ?? res;
-        const list = (Array.isArray(raw) ? raw : []).filter((e) => e.status !== "Admitted");
-        setEnquiryOptions(list.map((e) => ({
-          value: e._id,
-          label: `${e.enquiryId || "ENQ"} - ${e.fullName} (${e.mobile})`,
-          data:  e,
-        })));
-      } catch {
-        toast.error("Could not load enquiries. Please refresh the page.");
-      } finally {
-        setLoadingEnquiries(false);
-      }
-    })();
-  }, [isEdit]);
+  // useEffect(() => {
+  //   if (isEdit) return;
+  //   (async () => {
+  //     try {
+  //       setLoadingEnquiries(true);
+  //       const res  = await api.fitnessEnquiry.getAll({ limit: 100 });
+  //       const raw  = res?.data ?? res;
+  //       const list = (Array.isArray(raw) ? raw : []).filter((e) => e.status !== "Admitted");
+  //       setEnquiryOptions(list.map((e) => ({
+  //         value: e._id,
+  //         label: `${e.enquiryId || "ENQ"} - ${e.fullName} (${e.mobile})`,
+  //         data:  e,
+  //       })));
+  //     } catch {
+  //       toast.error("Could not load enquiries. Please refresh the page.");
+  //     } finally {
+  //       setLoadingEnquiries(false);
+  //     }
+  //   })();
+  // }, [isEdit]);
 
   // Load Staff
   useEffect(() => {
@@ -539,6 +540,36 @@ export default function AddPassMember({ viewMode = false }) {
       });
     }
   }, [isEdit, location.state]);
+
+  const loadEnquiryOptions = async (inputValue) => {
+  try {
+    setLoadingEnquiries(true);
+
+    const res = await api.fitnessEnquiry.getAll({
+      search: inputValue || "",
+      page: 1,
+      limit: 20
+    });
+
+    const data = (res?.data?.data || []).filter(
+      (item) => item.status !== "Admitted"
+    );
+
+    return data.map((e) => ({
+      value: e._id,
+      label: `${e.enquiryId || "ENQ"} - ${e.fullName} (${e.mobile})`,
+      data: e,
+    }));
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Could not load enquiries");
+    return [];
+  } finally {
+    setLoadingEnquiries(false);
+  }
+};
+
 
   // Load member for Edit / View
   useEffect(() => {
@@ -937,13 +968,18 @@ useEffect(() => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Choose an existing enquiry to auto-fill details
             </label>
-            <Select
-              options={enquiryOptions} onChange={handleEnquirySelect} value={selectedEnquiry}
-              placeholder={loadingEnquiries ? "Loading enquiries..." : "Search and select fitness enquiry..."}
-              isClearable isLoading={loadingEnquiries}
-              noOptionsMessage={() => "No pending enquiries found"}
-              classNamePrefix="react-select"
-            />
+            <AsyncSelect
+  cacheOptions
+  defaultOptions
+  loadOptions={loadEnquiryOptions}
+  onChange={handleEnquirySelect}
+  value={selectedEnquiry}
+  placeholder="Search and select fitness enquiry..."
+  isClearable
+  isLoading={loadingEnquiries}
+  noOptionsMessage={() => "No enquiries found"}
+  classNamePrefix="react-select"
+/>
           </div>
           <p className="text-sm text-gray-500 mt-2">OR fill the member form manually below</p>
         </div>

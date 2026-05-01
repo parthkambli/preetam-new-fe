@@ -268,8 +268,10 @@ fitnessStaff: {
       apiClient.get('/attendance/summary', { params }),
 
     // For detailed student list
-    getStudentAttendance: (activityId, date) => 
-      apiClient.get(`/attendance/details/${activityId}/${date}`),
+    // getStudentAttendance: (activityId, date) => 
+    //   apiClient.get(`/attendance/details/${activityId}/${date}`),
+    getStudentAttendance: (activityId, date, params) =>
+  apiClient.get(`/attendance/${activityId}/${date}`, { params }),
 
     validate: (memberId, organizationId) =>
       apiClient.get(`/attendance/validate/${memberId}`, {
@@ -320,7 +322,10 @@ fitnessFees: {
     getBookings: (params) =>
   apiClient.get('/fitness/activities/bookings', { params }),
 
-    getAllBookings: () => apiClient.get("/fitness/activities/bookings/all"), // for bookings dashboard only..
+   getDashboardByDate: (date) =>
+  apiClient.get("/fitness/activities/dashboard", {
+    params: { date }
+  }),// for bookings dashboard only..
 
     cancelBooking: (id) => apiClient.delete(`/fitness/activities/bookings/${id}`),
   },

@@ -1230,6 +1230,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../../services/apiClient';
+import Pagination from "../../../components/Pagination";
 
 export default function FitnessEnquiry() {
   const [enquiries, setEnquiries] = useState([]);
@@ -1253,6 +1254,11 @@ export default function FitnessEnquiry() {
   const [nextVisit, setNextVisit] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [page, setPage] = useState(1);
+const [limit, setLimit] = useState(10);
+const [totalPages, setTotalPages] = useState(1);
+const [totalCount, setTotalCount] = useState(0);
+
   useEffect(() => {
     const fetchActivities = async () => {
       setActivityLoading(true);
@@ -1270,15 +1276,41 @@ export default function FitnessEnquiry() {
   }, []);
 
   // ✅ Only fetch when NON-date filters change
+  // useEffect(() => {
+  //   fetchEnquiries();
+  // }, [filters.status, filters.source, filters.search, filters.activity]);
+
   useEffect(() => {
-    fetchEnquiries();
-  }, [filters.status, filters.source, filters.search, filters.activity]);
+  fetchEnquiries();
+}, [
+  filters.status,
+  filters.source,
+  filters.search,
+  filters.activity,
+  page,
+  limit
+]);
+
+useEffect(() => {
+  setPage(1);
+}, [
+  filters.status,
+  filters.source,
+  filters.search,
+  filters.activity,
+  filters.fromDate,
+  filters.toDate,
+  limit
+]);
 
   const fetchEnquiries = async () => {
     setLoading(true);
     setError('');
     try {
-      const params = {};
+      const params = {
+  page,
+  limit
+};
 
       if (filters.status) params.status = filters.status;
       if (filters.source) params.source = filters.source;
@@ -1289,6 +1321,16 @@ export default function FitnessEnquiry() {
 
       const response = await api.fitnessEnquiry.getAll(params);
       setEnquiries(response.data?.data || response.data || []);
+
+      setEnquiries(response.data?.data || []);
+
+setTotalPages(
+  response.data?.pagination?.totalPages || 1
+);
+
+setTotalCount(
+  response.data?.pagination?.totalRecords || 0
+);
     } catch (err) {
       setError('Failed to load enquiries');
       console.error(err);
@@ -1591,6 +1633,14 @@ export default function FitnessEnquiry() {
           </div>
         </div>
       )}
+      <Pagination
+  page={page}
+  limit={limit}
+  totalPages={totalPages}
+  totalCount={totalCount}
+  setPage={setPage}
+  setLimit={setLimit}
+/>
     </div>
   );
 }

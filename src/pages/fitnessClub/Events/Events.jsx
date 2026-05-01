@@ -15,12 +15,22 @@ export default function Events() {
   const [searchType, setSearchType] = useState("");
   const [searchDate, setSearchDate] = useState("");
 
+  const [debouncedSearchName, setDebouncedSearchName] = useState("");
+
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearchName(searchName);
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [searchName]);
 
   // reset page on filter change
   useEffect(() => {
@@ -31,10 +41,10 @@ export default function Events() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        setLoading(true);
+  setLoading(true);
 
         const res = await api.fitnessEvents.getAll({
-          title: searchName,
+          title: debouncedSearchName,
           type: searchType,
           date: searchDate,
           page,
@@ -57,7 +67,7 @@ export default function Events() {
     };
 
     fetchEvents();
-  }, [searchName, searchType, searchDate, page, limit]);
+  }, [debouncedSearchName, searchType, searchDate, page, limit]);
 
   const handleDelete = async (id) => {
     try {
@@ -76,9 +86,7 @@ export default function Events() {
   };
 
 
-  if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading events...</div>;
-  }
+  
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -136,13 +144,21 @@ export default function Events() {
               </tr>
             </thead>
 
-            <tbody>
-              {events.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-10">No events found.</td>
-                </tr>
-              ) : (
-                events.map((event, idx) => (
+           <tbody>
+  {loading ? (
+    <tr>
+      <td colSpan={7} className="text-center py-10">
+        Loading events...
+      </td>
+    </tr>
+  ) : events.length === 0 ? (
+    <tr>
+      <td colSpan={7} className="text-center py-10">
+        No events found.
+      </td>
+    </tr>
+  ) : (
+    events.map((event, idx) => (
                   <tr key={event._id}>
                     <td className="px-4 py-3">{event.title}</td>
                     <td className="px-4 py-3">{event.type}</td>
