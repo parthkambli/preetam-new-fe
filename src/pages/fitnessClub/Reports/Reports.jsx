@@ -566,7 +566,12 @@ const fetchSummary = async (from = "", to = "") => {
 // }, []);
 
 useEffect(() => {
-  fetchAdmissions();
+  if (activeTab === "admissions") {
+    fetchAdmissions();
+  }
+}, [page, limit, activeTab]);
+
+useEffect(() => {
   fetchSummary();
 }, []);
 
@@ -576,18 +581,18 @@ useEffect(() => {
   }
 }, [page, limit, activeTab]);
 
-const fetchAdmissions = async () => {
-  try {
-    const res = await api.fitnessEnquiry.getAll();
+// const fetchAdmissions = async () => {
+//   try {
+//     const res = await api.fitnessEnquiry.getAll();
 
-    console.log("API DATA:", res.data);
+//     console.log("API DATA:", res.data);
 
-    // ✅ FIX
-    setAdmissionsData(res.data?.data || res.data || []);
-  } catch (err) {
-    console.error("Error:", err);
-  }
-};
+//     // ✅ FIX
+//     setAdmissionsData(res.data?.data || res.data || []);
+//   } catch (err) {
+//     console.error("Error:", err);
+//   }
+// };
 
 
 // const fetchParticipants = async () => {
@@ -602,6 +607,32 @@ const fetchAdmissions = async () => {
 //     console.error(err);
 //   }
 // };
+
+
+const fetchAdmissions = async () => {
+  try {
+    const res = await api.fitnessEnquiry.getAll({
+      page,
+      limit
+    });
+
+    console.log("Admissions API:", res.data);
+
+    setAdmissionsData(res.data?.data || []);
+
+    setTotalPages(
+      res.data?.pagination?.totalPages || 1
+    );
+
+    setTotalCount(
+      res.data?.pagination?.totalRecords || 0
+    );
+
+  } catch (err) {
+    console.error("Error:", err);
+  }
+};
+
 
 
 const fetchParticipants = async () => {
@@ -899,16 +930,14 @@ await exportToExcel(
           
         </div>
 
-        {!isAdmissions && (
-  <Pagination
-    page={page}
-    limit={limit}
-    totalPages={totalPages}
-    totalCount={totalCount}
-    setPage={setPage}
-    setLimit={setLimit}
-  />
-)}
+        <Pagination
+  page={page}
+  limit={limit}
+  totalPages={totalPages}
+  totalCount={totalCount}
+  setPage={setPage}
+  setLimit={setLimit}
+/>
         
 
         {/* Export buttons */}

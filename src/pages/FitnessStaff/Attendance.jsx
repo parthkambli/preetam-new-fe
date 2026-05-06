@@ -1283,43 +1283,523 @@
 
 
 
+// working code ---> 
 
 
+// import React, { useEffect, useMemo, useState, useRef } from "react";
+// import { api } from "../../../src/services/apiClient";
+// import QRScanner from "../../../src/components/QRScanner";
+// import { hasPermission } from "../../../src/utils/permissions";
 
-import React, { useEffect, useMemo, useState, useRef } from "react";
+// function Card({ className = "", ...props }) {
+//   return (
+//     <div
+//       className={`rounded-2xl bg-white shadow-sm border border-gray-200 ${className}`}
+//       {...props}
+//     />
+//   );
+// }
+
+// function CardHeader({ className = "", ...props }) {
+//   return (
+//     <div className={`px-5 sm:px-6 pt-5 pb-4 ${className}`} {...props} />
+//   );
+// }
+
+// function CardTitle({ className = "", ...props }) {
+//   return <h3 className={`text-lg font-bold ${className}`} {...props} />;
+// }
+
+// function CardContent({ className = "", ...props }) {
+//   return <div className={`px-5 sm:px-6 pb-5 ${className}`} {...props} />;
+// }
+
+// export default function AttendancePage() {
+
+//   // 🔥 HARD BLOCK — NO ACCESS
+//   if (!hasPermission("VIEW_ATTENDANCE") && !hasPermission("MARK_ATTENDANCE")) {
+//   return <div className="p-6">No access</div>;
+// }
+
+//   const today = new Date();
+//   const currentMonth = today.getMonth();
+//   const currentYear = today.getFullYear();
+
+//   const [selectedDate, setSelectedDate] = useState(today.getDate());
+//   const [activities, setActivities] = useState([]);
+//   const [loading, setLoading] = useState(false);
+
+//   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
+//   const [activeActivity, setActiveActivity] = useState(null);
+//   const [scanning, setScanning] = useState(false);
+//   const [multiActivities, setMultiActivities] = useState(null);
+//   const [selectedMember, setSelectedMember] = useState(null);
+//   const [toastMsg, setToastMsg] = useState(""); 
+
+//   const containerRef = useRef(null);
+//   const selectedRef = useRef(null);
+
+//   const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+//   const monthNames = [
+//     "January","February","March","April","May","June",
+//     "July","August","September","October","November","December",
+//   ];
+
+//   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+//   const dates = Array.from({ length: daysInMonth }, (_, i) => {
+//     const d = new Date(currentYear, currentMonth, i + 1);
+//     return { day: dayNames[d.getDay()], date: i + 1 };
+//   });
+
+//   useEffect(() => {
+//     const timeout = setTimeout(() => {
+//       if (selectedRef.current && containerRef.current) {
+//         const container = containerRef.current;
+//         const selected = selectedRef.current;
+
+//         const offset =
+//           selected.offsetLeft -
+//           container.offsetWidth / 2 +
+//           selected.offsetWidth / 2;
+
+//         container.scrollTo({
+//           left: offset,
+//           behavior: "smooth",
+//         });
+//       }
+//     }, 100);
+
+//     return () => clearTimeout(timeout);
+//   }, [selectedDate]);
+
+//   useEffect(() => {
+//   if (!toastMsg) return;
+
+//   const t = setTimeout(() => {
+//     setToastMsg("");
+//   }, 2000);
+
+//   return () => clearTimeout(t);
+// }, [toastMsg]);
+
+//   // const handleScan = async (raw) => {
+//   //   try {
+//   //     const parsed = JSON.parse(raw);
+//   //     const memberId = parsed.memberId;
+
+//   //     if (!memberId) throw new Error("Invalid QR");
+
+//   //     console.log("STEP 1: VALIDATING MEMBER");
+
+//   //     // 🔥 STEP 1: VALIDATE
+//   //     const res = await api.attendance.validate(memberId);
+
+//   //     const data = res.data;
+
+//   //     if (!data.valid) {
+//   //       console.error("Invalid member");
+//   //       return;
+//   //     }
+
+//   //     const activities = data.activeActivities || [];
+
+//   //     if (activities.length === 0) {
+//   //       console.error("No active activities");
+//   //       return;
+//   //     }
+
+//   //     // 🔥 STEP 2: SINGLE ACTIVITY → DIRECT MARK
+//   //     if (activities.length === 1) {
+//   //       const act = activities[0];
+
+//   //       await api.attendance.mark({
+//   //         memberId,
+//   //         activityId: act.activityId,
+//   //         activityFeeId: act.activityFeeId,
+//   //       });
+
+//   //       console.log("Attendance marked directly");
+//   //       return;
+//   //     }
+
+//   //     // 🔥 STEP 3: MULTIPLE → SHOW UI
+//   //     setSelectedMember({
+//   //       memberId,
+//   //       activities
+//   //     });
+
+//   //   } catch (err) {
+//   //     console.error("Scan error:", err?.response?.data || err.message);
+//   //   }
+//   // };
+
+//   const scanLock = useRef(false); // ✅ ADD THIS ABOVE handleScan
+// // working -->04/05/26
+// // const handleScan = async (raw) => {
+// //   console.log("RAW QR:", raw);
+
+// // try {
+// //   const parsed = JSON.parse(raw);
+// //   console.log("PARSED QR:", parsed);
+// // } catch (e) {
+// //   console.error("QR NOT JSON:", raw);
+// // }
+
+// //   if (scanLock.current) return; // 🚫 prevents multiple scans
+// //   scanLock.current = true;
+
+// //   try {
+// //     const parsed = JSON.parse(raw);
+// //     const memberId = parsed.memberId;
+// //     const organizationId = parsed.organizationId;
+
+// // if (!memberId || !organizationId) {
+// //   throw new Error("Invalid QR data");
+// // }
+
+// //     if (!memberId) throw new Error("Invalid QR");
+
+// //     // 🔥 STEP 1: VALIDATE
+// //     const res = await api.attendance.validate(memberId, organizationId);
+// //     const data = res.data;
+
+// //     if (!data.valid) {
+// //       console.error("Invalid member");
+// //       scanLock.current = false;
+// //       return;
+// //     }
+
+// //     const activities = data.activeActivities || [];
+
+// //     if (activities.length === 0) {
+// //       console.error("No active activities");
+// //       scanLock.current = false;
+// //       return;
+// //     }
+
+// //     // ✅ SINGLE ACTIVITY
+// //     if (activities.length === 1) {
+// //       const act = activities[0];
+
+// //       await api.attendance.mark({
+// //         memberId,
+// //         activityId: act.activityId,
+// //         activityFeeId: act.activityFeeId,
+// //       });
+
+// //       console.log("Attendance marked");
+// //       return;
+// //     }
+
+// //     // ✅ MULTIPLE → SHOW UI
+// //     setSelectedMember({
+// //       memberId,
+// //       activities,
+// //     });
+
+// //   } catch (err) {
+// //     console.error(err);
+// //     scanLock.current = false; // allow retry only if error
+// //   }
+// // };
+// // <--- working 
+// const handleScan = async (raw) => {
+//   if (scanLock.current) return;
+//   scanLock.current = true;
+
+//   try {
+//     const parsed = JSON.parse(raw);
+//     const memberId = parsed.memberId;
+//     const organizationId = parsed.organizationId;
+
+//     if (!memberId || !organizationId) {
+//       throw new Error("Invalid QR data");
+//     }
+
+//     // ✅ USE SINGLE BACKEND API
+//     // const res = await api.staffPanel.scanQR({
+//     //   memberId,
+//     //   organizationId
+//     // });
+// const res = await api.staffPanel.scanQR(memberId);
+//     const data = res.data;
+
+//     // ✅ SHOW MESSAGE FROM BACKEND
+//     setToastMsg(data.message || "Done");
+
+//     // ✅ AUTO MARK
+//     if (data.autoMarked) {
+
+//       fetchAttendance(selectedDate); 
+//     } 
+//     // ✅ MULTIPLE ACTIVITIES
+//     else {
+//       setSelectedMember({
+//         memberId: data.member.memberId,
+//         activities: data.activities
+//       });
+//     }
+
+//   } catch (err) {
+//     setToastMsg(err?.response?.data?.message || err.message);
+//   }
+
+//   // ✅ RESET LOCK
+//   setTimeout(() => {
+//     scanLock.current = false;
+//   }, 1500);
+// };
+
+
+//   const fetchAttendance = async (date) => {
+//     try {
+//       setLoading(true);
+
+//       const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+
+//       const res = await api.staffPanel.getAttendanceByDate(formattedDate);
+
+//       setActivities(res?.data?.data || []);
+//     } catch (err) {
+//       console.error("Attendance fetch error:", err?.response?.data || err.message);
+//       setActivities([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchAttendance(selectedDate);
+//   }, [selectedDate, currentMonth, currentYear]);
+
+//   const openViewModal = (activity) => {
+//     setActiveActivity(activity);
+//     setIsViewingAttendance(true);
+//   };
+
+//   return (
+//     <div className="space-y-6 px-2">
+
+//       {/* HEADER */}
+//       <h2 className="text-xl sm:text-2xl font-bold text-[#000033]">
+//         Attendance
+//       </h2>
+
+//       {/* MONTH */}
+//       <div className="text-lg font-semibold">
+//         {monthNames[currentMonth]} {currentYear}
+//       </div>
+
+//       {/* DATE SCROLLER */}
+//       <div
+//         ref={containerRef}
+//         className="flex gap-2 overflow-x-auto pb-2 scroll-smooth"
+//       >
+//         {dates.map((d) => (
+//           <button
+//             key={d.date}
+//             ref={selectedDate === d.date ? selectedRef : null}
+//             onClick={() => setSelectedDate(d.date)}
+//             className={`min-w-[70px] h-[70px] rounded-xl flex flex-col justify-center items-center ${
+//               selectedDate === d.date
+//                 ? "bg-blue-600 text-white"
+//                 : "bg-gray-100 text-gray-500"
+//             }`}
+//           >
+//             <span className="text-xs">{d.day}</span>
+//             <span className="text-lg font-bold">{d.date}</span>
+//           </button>
+//         ))}
+//       </div>
+
+//       {/* ✅ SCAN BUTTON (permission safe) */}
+//       {hasPermission("MARK_ATTENDANCE") && (
+//       <button
+//         onClick={() => setScanning((s) => !s)}
+//         className="bg-blue-600 text-white px-4 py-2 rounded"
+//       >
+//         {scanning ? "Stop Scan" : "Scan QR"}
+//       </button>
+//     )}
+
+//       {/* ✅ SCANNER (double protected) */}
+//       {/* console.log("SCANNER RENDERED"); */}
+//       {scanning && hasPermission("MARK_ATTENDANCE") && (
+//         <div className="mt-4 p-4 bg-white rounded-xl shadow">
+//           <p className="text-sm font-medium mb-2 text-gray-700">
+//             Scan Member QR Code
+//           </p>
+
+//           <QRScanner onScan={handleScan} />
+//           {toastMsg && (
+//   <div className="mt-3 bg-green-100 text-green-700 px-3 py-2 rounded">
+//     {toastMsg}
+//   </div>
+// )}
+
+//           <button
+//             onClick={() => setScanning(false)}
+//             className="mt-3 text-sm text-red-500"
+//           >
+//             Stop Scanner
+//           </button>
+//         </div>
+//       )}
+
+//       {selectedMember && (
+//         <div className="mt-4 bg-white p-4 rounded shadow">
+//           <p className="font-semibold mb-2">Select Activity</p>
+
+//           {selectedMember.activities.map((act) => (
+//             <button
+//               key={act.activityId}
+//               onClick={async () => {
+//   try {
+//     const res = await api.attendance.mark({
+//       memberId: selectedMember.memberId,
+//       activityId: act.activityId,
+//       activityFeeId: act.activityFeeId,
+//     });
+
+//     setToastMsg(
+//       res?.data?.message || `${act.activityName} attendance marked`
+//     );
+
+//     setSelectedMember(null);
+
+//     fetchAttendance(selectedDate); // ✅ THIS FIXES YOUR ISSUE
+
+//   } catch (err) {
+//     setToastMsg(err?.response?.data?.message || "Failed to mark attendance");
+//   }
+// }}
+//               className="block w-full text-left p-2 border mb-2 rounded hover:bg-gray-100"
+//             >
+//               {act.activityName}
+//             </button>
+//           ))}
+//         </div>
+//       )}
+
+//       {/* LOADING */}
+//       {loading && <div className="text-sm text-gray-500">Loading...</div>}
+
+//       {/* CARDS */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+//         {activities.length === 0 && !loading ? (
+//           <Card className="p-4">
+//             No attendance found for this date
+//           </Card>
+//         ) : (
+//           activities.map((activity) => (
+//             <Card
+//               key={activity.activityId}
+//               className="p-4 bg-green-100 border-none"
+//             >
+//               <div className="flex justify-between">
+
+//                 <div>
+//                   <h3 className="font-bold text-sm">
+//                     {activity.activityName}
+//                   </h3>
+
+//                   <p className="text-sm mt-2 font-semibold">
+//                     Participants - {activity.total ?? activity.participants?.length ?? 0}
+//                   </p>
+
+//                   <p className="text-xs text-gray-600">
+//                     Present: {activity.present ?? activity.participants?.filter(p => p.status === "Present").length ?? 0}
+//                     {" | "}
+//                     Absent: {activity.absent ?? activity.participants?.filter(p => p.status === "Absent").length ?? 0}
+//                   </p>
+//                 </div>
+
+//                 <div className="flex flex-col items-end gap-2">
+
+//                   <span
+//                     className={`text-xs px-2 py-1 text-white rounded-full ${
+//                       activity.status === "Completed"
+//                         ? "bg-green-500"
+//                         : "bg-orange-500"
+//                     }`}
+//                   >
+//                     {activity.status}
+//                   </span>
+
+//                   <button
+//                     onClick={() => openViewModal(activity)}
+//                     className="text-xs bg-blue-500 text-white px-3 py-1 rounded-full"
+//                   >
+//                     View
+//                   </button>
+//                 </div>
+//               </div>
+//             </Card>
+//           ))
+//         )}
+//       </div>
+
+//       {/* VIEW MODAL */}
+//       {isViewingAttendance && activeActivity && (
+//         <Card className="mt-4">
+//           <CardHeader className="flex justify-between border-b">
+//             <CardTitle>
+//               {activeActivity.activityName} Attendance
+//             </CardTitle>
+
+//             <button onClick={() => setIsViewingAttendance(false)}>✕</button>
+//           </CardHeader>
+
+//           <CardContent>
+//             {activeActivity.participants?.map((p, i) => (
+//               <div key={i} className="flex justify-between border-b py-2">
+//                 <span>{p.name}</span>
+//                 <span className="text-sm">{p.status}</span>
+//               </div>
+//             ))}
+//           </CardContent>
+//         </Card>
+//       )}
+//     </div>
+//   );
+// }
+
+// <---- working code
+
+import React, { useEffect, useState, useRef } from "react";
 import { api } from "../../../src/services/apiClient";
 import QRScanner from "../../../src/components/QRScanner";
 import { hasPermission } from "../../../src/utils/permissions";
 
-function Card({ className = "", ...props }) {
+function Card({ className = "", children, ...props }) {
   return (
     <div
-      className={`rounded-2xl bg-white shadow-sm border border-gray-200 ${className}`}
+      className={`rounded-3xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 ${className}`}
       {...props}
-    />
+    >
+      {children}
+    </div>
   );
 }
 
-function CardHeader({ className = "", ...props }) {
+function CardHeader({ className = "", children, ...props }) {
   return (
-    <div className={`px-5 sm:px-6 pt-5 pb-4 ${className}`} {...props} />
+    <div className={`px-6 pt-5 pb-4 border-b border-gray-100 ${className}`} {...props}>
+      {children}
+    </div>
   );
 }
 
-function CardTitle({ className = "", ...props }) {
-  return <h3 className={`text-lg font-bold ${className}`} {...props} />;
-}
-
-function CardContent({ className = "", ...props }) {
-  return <div className={`px-5 sm:px-6 pb-5 ${className}`} {...props} />;
+function CardTitle({ className = "", children, ...props }) {
+  return <h3 className={`text-lg font-semibold text-gray-900 ${className}`} {...props}>{children}</h3>;
 }
 
 export default function AttendancePage() {
-
-  // 🔥 HARD BLOCK — NO ACCESS
   if (!hasPermission("VIEW_ATTENDANCE") && !hasPermission("MARK_ATTENDANCE")) {
-  return <div className="p-6">No access</div>;
-}
+    return <div className="p-8 text-center text-gray-500">No access to attendance module</div>;
+  }
 
   const today = new Date();
   const currentMonth = today.getMonth();
@@ -1332,21 +1812,17 @@ export default function AttendancePage() {
   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
   const [activeActivity, setActiveActivity] = useState(null);
   const [scanning, setScanning] = useState(false);
-  const [multiActivities, setMultiActivities] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [toastMsg, setToastMsg] = useState(""); 
 
   const containerRef = useRef(null);
   const selectedRef = useRef(null);
+  const scanLock = useRef(false);
 
   const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
-  ];
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-  const dates = Array.from({ length: daysInMonth }, (_, i) => {
+  const dates = Array.from({ length: new Date(currentYear, currentMonth + 1, 0).getDate() }, (_, i) => {
     const d = new Date(currentYear, currentMonth, i + 1);
     return { day: dayNames[d.getDay()], date: i + 1 };
   });
@@ -1356,154 +1832,58 @@ export default function AttendancePage() {
       if (selectedRef.current && containerRef.current) {
         const container = containerRef.current;
         const selected = selectedRef.current;
-
-        const offset =
-          selected.offsetLeft -
-          container.offsetWidth / 2 +
-          selected.offsetWidth / 2;
-
-        container.scrollTo({
-          left: offset,
-          behavior: "smooth",
-        });
+        const offset = selected.offsetLeft - container.offsetWidth / 2 + selected.offsetWidth / 2;
+        container.scrollTo({ left: offset, behavior: "smooth" });
       }
-    }, 100);
-
+    }, 150);
     return () => clearTimeout(timeout);
   }, [selectedDate]);
 
-  // const handleScan = async (raw) => {
-  //   try {
-  //     const parsed = JSON.parse(raw);
-  //     const memberId = parsed.memberId;
+  useEffect(() => {
+    if (!toastMsg) return;
+    const t = setTimeout(() => setToastMsg(""), 2500);
+    return () => clearTimeout(t);
+  }, [toastMsg]);
 
-  //     if (!memberId) throw new Error("Invalid QR");
+  const handleScan = async (raw) => {
+    if (scanLock.current) return;
+    scanLock.current = true;
 
-  //     console.log("STEP 1: VALIDATING MEMBER");
+    try {
+      const parsed = JSON.parse(raw);
+      const memberId = parsed.memberId;
+      const organizationId = parsed.organizationId;
 
-  //     // 🔥 STEP 1: VALIDATE
-  //     const res = await api.attendance.validate(memberId);
+      if (!memberId || !organizationId) throw new Error("Invalid QR data");
 
-  //     const data = res.data;
+      const res = await api.staffPanel.scanQR(memberId);
+      const data = res.data;
 
-  //     if (!data.valid) {
-  //       console.error("Invalid member");
-  //       return;
-  //     }
+      setToastMsg(data.message || "Attendance processed");
 
-  //     const activities = data.activeActivities || [];
-
-  //     if (activities.length === 0) {
-  //       console.error("No active activities");
-  //       return;
-  //     }
-
-  //     // 🔥 STEP 2: SINGLE ACTIVITY → DIRECT MARK
-  //     if (activities.length === 1) {
-  //       const act = activities[0];
-
-  //       await api.attendance.mark({
-  //         memberId,
-  //         activityId: act.activityId,
-  //         activityFeeId: act.activityFeeId,
-  //       });
-
-  //       console.log("Attendance marked directly");
-  //       return;
-  //     }
-
-  //     // 🔥 STEP 3: MULTIPLE → SHOW UI
-  //     setSelectedMember({
-  //       memberId,
-  //       activities
-  //     });
-
-  //   } catch (err) {
-  //     console.error("Scan error:", err?.response?.data || err.message);
-  //   }
-  // };
-
-  const scanLock = useRef(false); // ✅ ADD THIS ABOVE handleScan
-
-const handleScan = async (raw) => {
-  console.log("RAW QR:", raw);
-
-try {
-  const parsed = JSON.parse(raw);
-  console.log("PARSED QR:", parsed);
-} catch (e) {
-  console.error("QR NOT JSON:", raw);
-}
-
-  if (scanLock.current) return; // 🚫 prevents multiple scans
-  scanLock.current = true;
-
-  try {
-    const parsed = JSON.parse(raw);
-    const memberId = parsed.memberId;
-    const organizationId = parsed.organizationId;
-
-if (!memberId || !organizationId) {
-  throw new Error("Invalid QR data");
-}
-
-    if (!memberId) throw new Error("Invalid QR");
-
-    // 🔥 STEP 1: VALIDATE
-    const res = await api.attendance.validate(memberId, organizationId);
-    const data = res.data;
-
-    if (!data.valid) {
-      console.error("Invalid member");
-      scanLock.current = false;
-      return;
+      if (data.autoMarked) {
+        fetchAttendance(selectedDate);
+      } else if (data.activities?.length > 0) {
+        setSelectedMember({
+          memberId: data.member.memberId,
+          activities: data.activities
+        });
+      }
+    } catch (err) {
+      setToastMsg(err?.response?.data?.message || err.message || "Scan failed");
+    } finally {
+      setTimeout(() => { scanLock.current = false; }, 1500);
     }
-
-    const activities = data.activeActivities || [];
-
-    if (activities.length === 0) {
-      console.error("No active activities");
-      scanLock.current = false;
-      return;
-    }
-
-    // ✅ SINGLE ACTIVITY
-    if (activities.length === 1) {
-      const act = activities[0];
-
-      await api.attendance.mark({
-        memberId,
-        activityId: act.activityId,
-        activityFeeId: act.activityFeeId,
-      });
-
-      console.log("Attendance marked");
-      return;
-    }
-
-    // ✅ MULTIPLE → SHOW UI
-    setSelectedMember({
-      memberId,
-      activities,
-    });
-
-  } catch (err) {
-    console.error(err);
-    scanLock.current = false; // allow retry only if error
-  }
-};
+  };
 
   const fetchAttendance = async (date) => {
     try {
       setLoading(true);
-
       const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
-
       const res = await api.staffPanel.getAttendanceByDate(formattedDate);
-
       setActivities(res?.data?.data || []);
     } catch (err) {
-      console.error("Attendance fetch error:", err?.response?.data || err.message);
+      console.error(err);
       setActivities([]);
     } finally {
       setLoading(false);
@@ -1512,187 +1892,214 @@ if (!memberId || !organizationId) {
 
   useEffect(() => {
     fetchAttendance(selectedDate);
-  }, [selectedDate, currentMonth, currentYear]);
+  }, [selectedDate]);
 
   const openViewModal = (activity) => {
     setActiveActivity(activity);
     setIsViewingAttendance(true);
   };
 
+  const closeModal = () => {
+    setIsViewingAttendance(false);
+    setActiveActivity(null);
+  };
+
+  // Helper to format time
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "Time N/A";
+    // If time is like "09:00:00" or "14:30"
+    return timeStr.slice(0, 5); // Show HH:MM
+  };
+
   return (
-    <div className="space-y-6 px-2">
-
-      {/* HEADER */}
-      <h2 className="text-xl sm:text-2xl font-bold text-[#000033]">
-        Attendance
-      </h2>
-
-      {/* MONTH */}
-      <div className="text-lg font-semibold">
-        {monthNames[currentMonth]} {currentYear}
-      </div>
-
-      {/* DATE SCROLLER */}
-      <div
-        ref={containerRef}
-        className="flex gap-2 overflow-x-auto pb-2 scroll-smooth"
-      >
-        {dates.map((d) => (
-          <button
-            key={d.date}
-            ref={selectedDate === d.date ? selectedRef : null}
-            onClick={() => setSelectedDate(d.date)}
-            className={`min-w-[70px] h-[70px] rounded-xl flex flex-col justify-center items-center ${
-              selectedDate === d.date
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-500"
-            }`}
-          >
-            <span className="text-xs">{d.day}</span>
-            <span className="text-lg font-bold">{d.date}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ✅ SCAN BUTTON (permission safe) */}
-      {hasPermission("MARK_ATTENDANCE") && (
-      <button
-        onClick={() => setScanning((s) => !s)}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        {scanning ? "Stop Scan" : "Scan QR"}
-      </button>
-    )}
-
-      {/* ✅ SCANNER (double protected) */}
-      {/* console.log("SCANNER RENDERED"); */}
-      {scanning && hasPermission("MARK_ATTENDANCE") && (
-        <div className="mt-4 p-4 bg-white rounded-xl shadow">
-          <p className="text-sm font-medium mb-2 text-gray-700">
-            Scan Member QR Code
-          </p>
-
-          <QRScanner onScan={handleScan} />
-
-          <button
-            onClick={() => setScanning(false)}
-            className="mt-3 text-sm text-red-500"
-          >
-            Stop Scanner
-          </button>
+    <div className="space-y-8 px-4 pb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#000033]">Attendance</h1>
+          <p className="text-gray-500 mt-1">{monthNames[currentMonth]} {currentYear}</p>
         </div>
-      )}
+      </div>
 
-      {selectedMember && (
-        <div className="mt-4 bg-white p-4 rounded shadow">
-          <p className="font-semibold mb-2">Select Activity</p>
-
-          {selectedMember.activities.map((act) => (
+      {/* Date Scroller */}
+      <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100">
+        <div ref={containerRef} className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide scroll-smooth">
+          {dates.map((d) => (
             <button
-              key={act.activityId}
-              onClick={async () => {
-                try {
-                  await api.attendance.mark({
-                    memberId: selectedMember.memberId,
-                    activityId: act.activityId,
-                    activityFeeId: act.activityFeeId,
-                  });
-
-                  console.log("Attendance marked");
-
-                  setSelectedMember(null); // reset UI
-
-                } catch (err) {
-                  console.error(err);
-                }
-              }}
-              className="block w-full text-left p-2 border mb-2 rounded hover:bg-gray-100"
+              key={d.date}
+              ref={selectedDate === d.date ? selectedRef : null}
+              onClick={() => setSelectedDate(d.date)}
+              className={`min-w-[68px] h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 snap-start
+                ${selectedDate === d.date 
+                  ? "bg-[#000033] text-white shadow-md scale-105" 
+                  : "bg-gray-50 hover:bg-gray-100 text-gray-600"
+                }`}
             >
-              {act.activityName}
+              <span className="text-xs font-medium tracking-widest">{d.day}</span>
+              <span className="text-3xl font-bold mt-1">{d.date}</span>
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Scan Button */}
+      {hasPermission("MARK_ATTENDANCE") && (
+        <button
+          onClick={() => setScanning(!scanning)}
+          className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-3 hover:shadow-lg transition-all"
+        >
+          📱 {scanning ? "Stop Scanning" : "Scan Member QR"}
+        </button>
       )}
 
-      {/* LOADING */}
-      {loading && <div className="text-sm text-gray-500">Loading...</div>}
+      {/* Scanner */}
+      {scanning && hasPermission("MARK_ATTENDANCE") && (
+        <div className="bg-white rounded-3xl p-6 shadow border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <p className="font-semibold text-lg">Scan Member QR Code</p>
+            <button onClick={() => setScanning(false)} className="text-red-500 hover:text-red-600">Close</button>
+          </div>
+          <QRScanner onScan={handleScan} />
+          {toastMsg && <div className="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-3 rounded-2xl">{toastMsg}</div>}
+        </div>
+      )}
 
-      {/* CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Multiple Activity Selection */}
+      {selectedMember && (
+        <div className="bg-white rounded-3xl p-6 shadow border border-gray-100">
+          <h3 className="font-semibold text-lg mb-4">Select Activity</h3>
+          <div className="space-y-3">
+            {selectedMember.activities.map((act) => (
+              <button
+                key={act.activityId}
+                onClick={async () => {
+                  try {
+                    const res = await api.attendance.mark({
+                      memberId: selectedMember.memberId,
+                      activityId: act.activityId,
+                      activityFeeId: act.activityFeeId,
+                    });
+                    setToastMsg(res?.data?.message || "Attendance marked");
+                    setSelectedMember(null);
+                    fetchAttendance(selectedDate);
+                  } catch (err) {
+                    setToastMsg("Failed to mark attendance");
+                  }
+                }}
+                className="w-full text-left p-5 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-2xl transition-all flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium">{act.activityName}</p>
+                  {/* <p className="text-sm text-gray-500">{formatTime(act.time || act.startTime)}</p> */}
+                </div>
+                <span className="text-blue-600 text-2xl">→</span>
+              </button>
+            ))}
+          </div>
+          <button onClick={() => setSelectedMember(null)} className="mt-4 text-gray-500">Cancel</button>
+        </div>
+      )}
 
+      {/* Activities Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {activities.length === 0 && !loading ? (
-          <Card className="p-4">
-            No attendance found for this date
+          <Card className="col-span-full p-12 text-center text-gray-400">
+            No activities for this date
           </Card>
         ) : (
           activities.map((activity) => (
-            <Card
-              key={activity.activityId}
-              className="p-4 bg-green-100 border-none"
-            >
-              <div className="flex justify-between">
+            <Card key={activity.activityId}>
+              <div className="p-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-xl text-gray-900">{activity.activityName}</h3>
+                    
+                    {/* TIME DISPLAY - IMPROVED */}
+                    <p className="text-blue-600 font-medium mt-1 flex items-center gap-2">
+                      🕒 {formatTime(activity.time || activity.startTime || activity.scheduleTime)}
+                    </p>
+                  </div>
 
-                <div>
-                  <h3 className="font-bold text-sm">
-                    {activity.activityName}
-                  </h3>
-
-                  <p className="text-sm mt-2 font-semibold">
-                    Participants - {activity.total ?? activity.participants?.length ?? 0}
-                  </p>
-
-                  <p className="text-xs text-gray-600">
-                    Present: {activity.present ?? activity.participants?.filter(p => p.status === "Present").length ?? 0}
-                    {" | "}
-                    Absent: {activity.absent ?? activity.participants?.filter(p => p.status === "Absent").length ?? 0}
-                  </p>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-
-                  <span
-                    className={`text-xs px-2 py-1 text-white rounded-full ${
-                      activity.status === "Completed"
-                        ? "bg-green-500"
-                        : "bg-orange-500"
-                    }`}
-                  >
+                  <span className={`text-xs px-4 py-1.5 font-medium rounded-full ${
+                    activity.status === "Completed" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                  }`}>
                     {activity.status}
                   </span>
-
-                  <button
-                    onClick={() => openViewModal(activity)}
-                    className="text-xs bg-blue-500 text-white px-3 py-1 rounded-full"
-                  >
-                    View
-                  </button>
                 </div>
+
+                <div className="mt-8 flex items-end gap-6">
+                  <div>
+                    <div className="text-5xl font-bold text-gray-900">
+                      {activity.total ?? activity.participants?.length ?? 0}
+                    </div>
+                    <p className="text-xs uppercase tracking-widest text-gray-500">Participants</p>
+                  </div>
+
+                  <div className="flex-1 text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-emerald-600">Present</span>
+                      <span className="font-semibold">
+                        {activity.present ?? activity.participants?.filter(p => p.status === "Present").length ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-orange-600">Absent</span>
+                      <span className="font-semibold">
+                        {activity.absent ?? activity.participants?.filter(p => p.status === "Absent").length ?? 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 rounded-b-3xl">
+                <button
+                  onClick={() => openViewModal(activity)}
+                  className="w-full bg-white border border-gray-200 hover:border-gray-300 py-3 rounded-2xl font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  View Full Attendance →
+                </button>
               </div>
             </Card>
           ))
         )}
       </div>
 
-      {/* VIEW MODAL */}
+      {/* View Modal */}
       {isViewingAttendance && activeActivity && (
-        <Card className="mt-4">
-          <CardHeader className="flex justify-between border-b">
-            <CardTitle>
-              {activeActivity.activityName} Attendance
-            </CardTitle>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <CardHeader className="flex items-center justify-between bg-gray-50">
+              <CardTitle>{activeActivity.activityName}</CardTitle>
+              <button onClick={closeModal} className="text-3xl text-gray-400 hover:text-gray-600">×</button>
+            </CardHeader>
 
-            <button onClick={() => setIsViewingAttendance(false)}>✕</button>
-          </CardHeader>
+            <div className="p-6 text-sm text-gray-600 border-b">
+              🕒 {formatTime(activeActivity.time || activeActivity.startTime)}
+            </div>
 
-          <CardContent>
-            {activeActivity.participants?.map((p, i) => (
-              <div key={i} className="flex justify-between border-b py-2">
-                <span>{p.name}</span>
-                <span className="text-sm">{p.status}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+            {/* Participants List */}
+            <div className="max-h-[55vh] overflow-auto">
+              {activeActivity.participants?.length > 0 ? (
+                activeActivity.participants.map((p, i) => (
+                  <div key={i} className="flex justify-between items-center px-6 py-5 border-b">
+                    <div>
+                      <p className="font-medium">{p.name}</p>
+                      <p className="text-xs text-gray-500">{p.memberId}</p>
+                    </div>
+                    <span className={`px-5 py-1 rounded-2xl text-sm font-semibold ${
+                      p.status === "Present" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                    }`}>
+                      {p.status}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="p-12 text-center text-gray-400">No participants yet</div>
+              )}
+            </div>
+          </Card>
+        </div>
       )}
     </div>
   );

@@ -675,48 +675,303 @@
 
 ///////////////////////////////working code
 
+// ---> working code 05/05/26
+
+// import React, { useEffect, useMemo, useState } from "react";
+// import { api } from "../../../src/services/apiClient";
+// import { hasPermission } from "../../../src/utils/permissions";
+
+// function Card({ className = "", ...props }) {
+//   return (
+//     <div
+//       className={`rounded-2xl bg-white shadow-sm border border-gray-200 ${className}`}
+//       {...props}
+//     />
+//   );
+// }
+
+// function CardHeader({ className = "", ...props }) {
+//   return (
+//     <div className={`px-5 sm:px-6 pt-5 sm:pt-6 pb-4 ${className}`} {...props} />
+//   );
+// }
+
+// function CardTitle({ className = "", ...props }) {
+//   return <h3 className={`text-lg sm:text-xl font-bold ${className}`} {...props} />;
+// }
+
+// function CardContent({ className = "", ...props }) {
+//   return <div className={`px-5 sm:px-6 pb-5 sm:pb-6 ${className}`} {...props} />;
+// }
+
+// function Button({ children, className = "", ...props }) {
+//   return (
+//     <button
+//       className={`font-semibold transition-all duration-200 ${className}`}
+//       {...props}
+//     >
+//       {children}
+//     </button>
+//   );
+// }
+
+// export default function MySchedule() {
+//   if (!hasPermission("VIEW_OWN_SCHEDULE")) {
+//   return <div className="p-6">No access</div>;
+// }
+//   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
+//   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
+//   const [activeActivityId, setActiveActivityId] = useState(null);
+//   const [activeSlotId, setActiveSlotId] = useState(null);
+
+//   const [activities, setActivities] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [attendanceByActivity, setAttendanceByActivity] = useState({});
+
+//   const makeKey = (activityId, slotId) => `${activityId}_${slotId}`;
+
+//   // 🔥 TIME BASED STATUS
+//   const getStatusFromTime = (startTime, endTime) => {
+//     const now = new Date();
+//     const today = new Date().toISOString().split("T")[0];
+//     const end = new Date(`${today}T${endTime || startTime}`);
+//     return now >= end ? "Completed" : "Pending";
+//   };
+
+//   useEffect(() => {
+//   if (hasPermission("VIEW_OWN_SCHEDULE")) {
+//     fetchMySchedule();
+//   }
+// }, []);
+
+//   // 🔥 FETCH SCHEDULE
+//   const fetchMySchedule = async () => {
+//     try {
+//       setLoading(true);
+
+//       const res = await api.staffPanel.getMySchedule();
+//       const data = Array.isArray(res?.data?.data) ? res.data.data : [];
+
+//       const mapped = data.map((item, index) => {
+//         const status = getStatusFromTime(item.startTime, item.endTime);
+
+//         return {
+//           id: item.activityId || `activity-${index}`,
+//           slotId: item.slotId || `slot-${index}`,
+//           title: item.activityName || "Activity",
+//           time: `${item.startTime} - ${item.endTime}`,
+//           startTime: item.startTime,
+//           endTime: item.endTime,
+//           place: item.place || item.location || "",
+//           participants: Array.isArray(item.participants)
+//             ? item.participants.map((p) =>
+//                 typeof p === "string"
+//                   ? p
+//                   : p?.name || p?.customerName || "Participant"
+//               )
+//             : [],
+//           status,
+//         };
+//       });
+
+//       setActivities(mapped);
+
+//       // initialize attendance
+//       const attendanceObj = {};
+//       mapped.forEach((activity) => {
+//         const key = makeKey(activity.id, activity.slotId);
+//         attendanceObj[key] = activity.participants.reduce((acc, name) => {
+//           acc[name] = null;
+//           return acc;
+//         }, {});
+//       });
+
+//       setAttendanceByActivity(attendanceObj);
+//     } catch (err) {
+//       console.error("Schedule error:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // 🔥 AUTO FETCH ATTENDANCE AFTER COMPLETION
+//   useEffect(() => {
+//     activities.forEach((activity) => {
+//       if (
+//       activity.status === "Completed" &&
+//       hasPermission("VIEW_ATTENDANCE")
+//     ) {
+//         fetchAttendance(activity.id, activity.slotId);
+//       }
+//     });
+//   }, [activities]);
+
+//   const fetchAttendance = async (activityId, slotId) => {
+//     try {
+//       const res = await api.staffPanel.getAttendance(activityId, slotId);
+//       const key = makeKey(activityId, slotId);
+
+//       setAttendanceByActivity((prev) => ({
+//         ...prev,
+//         [key]: res?.data?.data || {},
+//       }));
+//     } catch (err) {
+//       console.error("Attendance fetch failed");
+//     }
+//   };
+
+//   const activeActivity = useMemo(() => {
+//     return (
+//       activities.find(
+//         (a) => a.id === activeActivityId && a.slotId === activeSlotId
+//       ) || null
+//     );
+//   }, [activities, activeActivityId, activeSlotId]);
+
+//   const currentAttendance = useMemo(() => {
+//     if (!activeActivityId || !activeSlotId) return {};
+//     return attendanceByActivity[makeKey(activeActivityId, activeSlotId)] || {};
+//   }, [attendanceByActivity, activeActivityId, activeSlotId]);
+
+//   const getCounts = (activityId, slotId) => {
+//     const activity = activities.find(
+//       (a) => a.id === activityId && a.slotId === slotId
+//     );
+//     const attendance = attendanceByActivity[makeKey(activityId, slotId)] || {};
+
+//     const total = activity?.participants.length || 0;
+//     const present = Object.values(attendance).filter(v => v === "Present").length;
+//     const absent = Object.values(attendance).filter(v => v === "Absent").length;
+
+//     return { total, present, absent };
+//   };
+
+//   const handleStatusChange = (name, value) => {
+//     const key = makeKey(activeActivityId, activeSlotId);
+
+//     setAttendanceByActivity((prev) => ({
+//       ...prev,
+//       [key]: {
+//         ...prev[key],
+//         [name]: value,
+//       },
+//     }));
+//   };
+
+//   const handleSaveAttendance = () => {
+//     setIsMarkingAttendance(false);
+//     setIsViewingAttendance(false);
+//   };
+
+//   const openMarkModal = (id, slotId) => {
+//     setActiveActivityId(id);
+//     setActiveSlotId(slotId);
+//     setIsMarkingAttendance(true);
+//     setIsViewingAttendance(false);
+//   };
+
+//   const openViewModal = (id, slotId) => {
+//     setActiveActivityId(id);
+//     setActiveSlotId(slotId);
+//     setIsViewingAttendance(true);
+//     setIsMarkingAttendance(false);
+//   };
+
+//   return (
+//     <div className="space-y-6 px-2 sm:px-0">
+//       <h2 className="text-xl sm:text-2xl font-bold text-[#000033]">
+//         My Schedule
+//       </h2>
+
+//       {loading ? (
+//         <div>Loading...</div>
+//       ) : (
+//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+//           {activities.map((activity) => {
+//             const counts = getCounts(activity.id, activity.slotId);
+
+//             return (
+//               <Card key={makeKey(activity.id, activity.slotId)} className="p-4 bg-[#EDE7F6] border-none">
+//                 <div className="flex justify-between">
+
+//                   {/* LEFT */}
+//                   <div>
+//                     <h3 className="text-sm font-bold">
+//                       {activity.title} - {activity.time}
+//                     </h3>
+//                     <p className="text-xs text-gray-600">{activity.place}</p>
+
+//                     {hasPermission("VIEW_ATTENDANCE") && (
+//                       <p className="text-sm font-semibold mt-2">
+//                         Participants - {counts.total}
+//                       </p>
+//                     )}
+//                   </div>
+
+//                   {/* RIGHT */}
+//                   <div className="flex flex-col items-end gap-2">
+//                     <span className={`text-xs px-2 py-1 rounded-full text-white ${
+//                       activity.status === "Completed"
+//                         ? "bg-green-500"
+//                         : "bg-red-500"
+//                     }`}>
+//                       {activity.status}
+//                     </span>
+
+//                     {activity.status !== "Completed" && hasPermission("MARK_ATTENDANCE") && (
+//                       <button
+//                         onClick={() => openMarkModal(activity.id, activity.slotId)}
+//                         className="text-xs bg-green-500 text-white px-2 py-1 rounded"
+//                       >
+//                         Mark
+//                       </button>
+//                     )}
+
+//                     {hasPermission("VIEW_ATTENDANCE") && (
+//                       <button
+//                         onClick={() => openViewModal(activity.id, activity.slotId)}
+//                         className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+//                       >
+//                         View
+//                       </button>
+//                     )}
+//                   </div>
+//                 </div>
+//               </Card>
+//             );
+//           })}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+/// <--- working code 05/05/26
+
+
+
 import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../../../src/services/apiClient";
 import { hasPermission } from "../../../src/utils/permissions";
 
-function Card({ className = "", ...props }) {
+function Card({ className = "", children, ...props }) {
   return (
     <div
-      className={`rounded-2xl bg-white shadow-sm border border-gray-200 ${className}`}
-      {...props}
-    />
-  );
-}
-
-function CardHeader({ className = "", ...props }) {
-  return (
-    <div className={`px-5 sm:px-6 pt-5 sm:pt-6 pb-4 ${className}`} {...props} />
-  );
-}
-
-function CardTitle({ className = "", ...props }) {
-  return <h3 className={`text-lg sm:text-xl font-bold ${className}`} {...props} />;
-}
-
-function CardContent({ className = "", ...props }) {
-  return <div className={`px-5 sm:px-6 pb-5 sm:pb-6 ${className}`} {...props} />;
-}
-
-function Button({ children, className = "", ...props }) {
-  return (
-    <button
-      className={`font-semibold transition-all duration-200 ${className}`}
+      className={`rounded-3xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 ${className}`}
       {...props}
     >
       {children}
-    </button>
+    </div>
   );
 }
 
 export default function MySchedule() {
   if (!hasPermission("VIEW_OWN_SCHEDULE")) {
-  return <div className="p-6">No access</div>;
-}
+    return <div className="p-8 text-center text-gray-500">No access to schedule</div>;
+  }
+
+  const [filter, setFilter] = useState("pending"); // "pending" | "all"
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
   const [activeActivityId, setActiveActivityId] = useState(null);
@@ -728,7 +983,6 @@ export default function MySchedule() {
 
   const makeKey = (activityId, slotId) => `${activityId}_${slotId}`;
 
-  // 🔥 TIME BASED STATUS
   const getStatusFromTime = (startTime, endTime) => {
     const now = new Date();
     const today = new Date().toISOString().split("T")[0];
@@ -737,53 +991,37 @@ export default function MySchedule() {
   };
 
   useEffect(() => {
-  if (hasPermission("VIEW_OWN_SCHEDULE")) {
     fetchMySchedule();
-  }
-}, []);
+  }, []);
 
-  // 🔥 FETCH SCHEDULE
   const fetchMySchedule = async () => {
     try {
       setLoading(true);
-
       const res = await api.staffPanel.getMySchedule();
       const data = Array.isArray(res?.data?.data) ? res.data.data : [];
 
       const mapped = data.map((item, index) => {
         const status = getStatusFromTime(item.startTime, item.endTime);
-
         return {
           id: item.activityId || `activity-${index}`,
           slotId: item.slotId || `slot-${index}`,
           title: item.activityName || "Activity",
-          time: `${item.startTime} - ${item.endTime}`,
+          time: `${item.startTime?.slice(0, 5)} - ${item.endTime?.slice(0, 5)}`,
           startTime: item.startTime,
           endTime: item.endTime,
-          place: item.place || item.location || "",
-          participants: Array.isArray(item.participants)
-            ? item.participants.map((p) =>
-                typeof p === "string"
-                  ? p
-                  : p?.name || p?.customerName || "Participant"
-              )
-            : [],
+          place: item.place || item.location || "N/A",
+          participants: Array.isArray(item.participants) ? item.participants : [],
           status,
         };
       });
 
       setActivities(mapped);
 
-      // initialize attendance
       const attendanceObj = {};
       mapped.forEach((activity) => {
         const key = makeKey(activity.id, activity.slotId);
-        attendanceObj[key] = activity.participants.reduce((acc, name) => {
-          acc[name] = null;
-          return acc;
-        }, {});
+        attendanceObj[key] = {};
       });
-
       setAttendanceByActivity(attendanceObj);
     } catch (err) {
       console.error("Schedule error:", err);
@@ -792,13 +1030,15 @@ export default function MySchedule() {
     }
   };
 
-  // 🔥 AUTO FETCH ATTENDANCE AFTER COMPLETION
+  // Filter activities based on selected filter
+  const filteredActivities = useMemo(() => {
+    if (filter === "all") return activities;
+    return activities.filter((act) => act.status === "Pending");
+  }, [activities, filter]);
+
   useEffect(() => {
     activities.forEach((activity) => {
-      if (
-      activity.status === "Completed" &&
-      hasPermission("VIEW_ATTENDANCE")
-    ) {
+      if (activity.status === "Completed" && hasPermission("VIEW_ATTENDANCE")) {
         fetchAttendance(activity.id, activity.slotId);
       }
     });
@@ -808,144 +1048,148 @@ export default function MySchedule() {
     try {
       const res = await api.staffPanel.getAttendance(activityId, slotId);
       const key = makeKey(activityId, slotId);
-
       setAttendanceByActivity((prev) => ({
         ...prev,
         [key]: res?.data?.data || {},
       }));
     } catch (err) {
-      console.error("Attendance fetch failed");
+      console.error(err);
     }
   };
 
-  const activeActivity = useMemo(() => {
-    return (
-      activities.find(
-        (a) => a.id === activeActivityId && a.slotId === activeSlotId
-      ) || null
-    );
-  }, [activities, activeActivityId, activeSlotId]);
-
-  const currentAttendance = useMemo(() => {
-    if (!activeActivityId || !activeSlotId) return {};
-    return attendanceByActivity[makeKey(activeActivityId, activeSlotId)] || {};
-  }, [attendanceByActivity, activeActivityId, activeSlotId]);
-
   const getCounts = (activityId, slotId) => {
-    const activity = activities.find(
-      (a) => a.id === activityId && a.slotId === slotId
-    );
+    const activity = activities.find((a) => a.id === activityId && a.slotId === slotId);
     const attendance = attendanceByActivity[makeKey(activityId, slotId)] || {};
-
     const total = activity?.participants.length || 0;
     const present = Object.values(attendance).filter(v => v === "Present").length;
     const absent = Object.values(attendance).filter(v => v === "Absent").length;
-
     return { total, present, absent };
   };
 
-  const handleStatusChange = (name, value) => {
-    const key = makeKey(activeActivityId, activeSlotId);
-
-    setAttendanceByActivity((prev) => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [name]: value,
-      },
-    }));
-  };
-
-  const handleSaveAttendance = () => {
-    setIsMarkingAttendance(false);
-    setIsViewingAttendance(false);
-  };
-
-  const openMarkModal = (id, slotId) => {
-    setActiveActivityId(id);
-    setActiveSlotId(slotId);
-    setIsMarkingAttendance(true);
-    setIsViewingAttendance(false);
-  };
-
-  const openViewModal = (id, slotId) => {
-    setActiveActivityId(id);
-    setActiveSlotId(slotId);
-    setIsViewingAttendance(true);
-    setIsMarkingAttendance(false);
+  const handleCardClick = (activity) => {
+    if (activity.status === "Completed" && hasPermission("VIEW_ATTENDANCE")) {
+      setActiveActivityId(activity.id);
+      setActiveSlotId(activity.slotId);
+      setIsViewingAttendance(true);
+      setIsMarkingAttendance(false);
+    } else if (hasPermission("MARK_ATTENDANCE")) {
+      setActiveActivityId(activity.id);
+      setActiveSlotId(activity.slotId);
+      setIsMarkingAttendance(true);
+      setIsViewingAttendance(false);
+    }
   };
 
   return (
-    <div className="space-y-6 px-2 sm:px-0">
-      <h2 className="text-xl sm:text-2xl font-bold text-[#000033]">
-        My Schedule
-      </h2>
+    <div className="space-y-8 px-4 pb-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-[#000033]">My Schedule</h1>
+          <p className="text-gray-500 mt-1">Manage your activities</p>
+        </div>
+
+        {/* Filter Toggle */}
+        <div className="flex bg-gray-100 rounded-2xl p-1 w-fit">
+          <button
+            onClick={() => setFilter("pending")}
+            className={`px-5 py-2 text-sm font-medium rounded-xl transition-all ${
+              filter === "pending"
+                ? "bg-white shadow text-[#000033]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Pending
+          </button>
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-5 py-2 text-sm font-medium rounded-xl transition-all ${
+              filter === "all"
+                ? "bg-white shadow text-[#000033]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            All Activities
+          </button>
+        </div>
+      </div>
 
       {loading ? (
-        <div>Loading...</div>
+        <div className="text-center py-12 text-gray-400">Loading your schedule...</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredActivities.length === 0 ? (
+            <Card className="col-span-full p-12 text-center text-gray-400">
+              {filter === "pending"
+                ? "No pending activities for today"
+                : "No activities found"}
+            </Card>
+          ) : (
+            filteredActivities.map((activity) => {
+              const counts = getCounts(activity.id, activity.slotId);
+              const isCompleted = activity.status === "Completed";
 
-          {activities.map((activity) => {
-            const counts = getCounts(activity.id, activity.slotId);
+              return (
+                <Card
+                  key={makeKey(activity.id, activity.slotId)}
+                  onClick={() => handleCardClick(activity)}
+                >
+                  <div className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-xl text-gray-900">
+                          {activity.title}
+                        </h3>
+                        <p className="text-blue-600 font-medium mt-2 flex items-center gap-2">
+                          🕒 {activity.time}
+                        </p>
+                        {/* {activity.place && (
+                          <p className="text-sm text-gray-500 mt-1">📍 {activity.place}</p>
+                        )} */}
+                      </div>
 
-            return (
-              <Card key={makeKey(activity.id, activity.slotId)} className="p-4 bg-[#EDE7F6] border-none">
-                <div className="flex justify-between">
+                      <span
+                        className={`text-xs px-4 py-1.5 font-medium rounded-full ${
+                          isCompleted
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {activity.status}
+                      </span>
+                    </div>
 
-                  {/* LEFT */}
-                  <div>
-                    <h3 className="text-sm font-bold">
-                      {activity.title} - {activity.time}
-                    </h3>
-                    <p className="text-xs text-gray-600">{activity.place}</p>
+                    {hasPermission("VIEW_ATTENDANCE") && isCompleted && (
+                      <div className="mt-8 flex items-center gap-8">
+                        <div>
+                          <div className="text-4xl font-bold text-gray-900">
+                            {counts.total}
+                          </div>
+                          <p className="text-xs uppercase tracking-widest text-gray-500">Participants</p>
+                        </div>
 
-                    {hasPermission("VIEW_ATTENDANCE") && (
-                      <p className="text-sm font-semibold mt-2">
-                        Participants - {counts.total}
-                      </p>
+                        <div className="text-sm space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-emerald-600 font-medium">Present</span>
+                            <span className="font-semibold">{counts.present}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-orange-600 font-medium">Absent</span>
+                            <span className="font-semibold">{counts.absent}</span>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-
-                  {/* RIGHT */}
-                  <div className="flex flex-col items-end gap-2">
-                    <span className={`text-xs px-2 py-1 rounded-full text-white ${
-                      activity.status === "Completed"
-                        ? "bg-green-500"
-                        : "bg-red-500"
-                    }`}>
-                      {activity.status}
-                    </span>
-
-                    {activity.status !== "Completed" && hasPermission("MARK_ATTENDANCE") && (
-                      <button
-                        onClick={() => openMarkModal(activity.id, activity.slotId)}
-                        className="text-xs bg-green-500 text-white px-2 py-1 rounded"
-                      >
-                        Mark
-                      </button>
-                    )}
-
-                    {hasPermission("VIEW_ATTENDANCE") && (
-                      <button
-                        onClick={() => openViewModal(activity.id, activity.slotId)}
-                        className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
-                      >
-                        View
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+                </Card>
+              );
+            })
+          )}
         </div>
       )}
     </div>
   );
 }
-
-
 
 
 // import React, { useMemo, useState } from "react";

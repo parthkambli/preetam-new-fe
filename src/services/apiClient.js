@@ -268,10 +268,11 @@ fitnessStaff: {
       apiClient.get('/attendance/summary', { params }),
 
     // For detailed student list
-    // getStudentAttendance: (activityId, date) => 
-    //   apiClient.get(`/attendance/details/${activityId}/${date}`),
-    getStudentAttendance: (activityId, date, params) =>
-  apiClient.get(`/attendance/${activityId}/${date}`, { params }),
+    getStudentAttendance: (activityId, date) => 
+      apiClient.get(`/attendance/details/${activityId}/${date}`),
+    
+  //   getStudentAttendance: (activityId, date, params) =>
+  // apiClient.get(`/attendance/${activityId}/${date}`, { params }),
 
     validate: (memberId, organizationId) =>
       apiClient.get(`/attendance/validate/${memberId}`, {
@@ -280,6 +281,7 @@ fitnessStaff: {
 
     mark: (data) => apiClient.post('/attendance/mark', data),
   },
+
 
 // ====================== FITNESS FEES ======================
 fitnessFees: {
