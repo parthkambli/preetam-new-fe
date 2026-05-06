@@ -354,13 +354,13 @@ export default function Sidebar({ isOpen, onClose }) {
     {
       to: "/fitness-staff/my-schedule",
       label: "My Schedule",
-      icon: "💰",
+      icon: "⏰",
       permission: ["VIEW_OWN_SCHEDULE"]
     },
     {
       to: "/fitness-staff/fees",   // ✅ ADD THIS
       label: "Fees",
-      icon: "💵",
+      icon: "💰",
       permission: ["VIEW_FEES", "MANAGE_FEES"]  // ✅ IMPORTANT
     },
     {
