@@ -24,13 +24,29 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
       setActivityName(editData.name || "");
       setCapacity(editData.capacity || "");
       setSlots(
-        editData.slots?.map((slot) => ({
-          _id: slot._id,           // ✅ preserve slot _id so existing bookings stay linked
-          startTime: slot.startTime || "",
-          endTime: slot.endTime || "",
-          staffId: slot.staffId || "",
-        })) || [{ startTime: "", endTime: "", staffId: "" }]
-      );
+  editData.slots?.map((slot) => ({
+    _id: slot._id,
+    startTime: slot.startTime || "",
+    endTime: slot.endTime || "",
+
+    staffId:
+      typeof slot.staffId === "object"
+        ? slot.staffId._id
+        : slot.staffId || "",
+
+    staffName:
+      typeof slot.staffId === "object"
+        ? `${slot.staffId.fullName} (${slot.staffId.role || "Staff"})`
+        : "",
+  })) || [
+    {
+      startTime: "",
+      endTime: "",
+      staffId: "",
+      staffName: "",
+    },
+  ]
+);
     }
   }, [editData]);
 
@@ -190,19 +206,27 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
                 className="input"
               />
 
-              <AsyncSelect
+             <AsyncSelect
   cacheOptions
   defaultOptions
   loadOptions={loadStaffOptions}
   placeholder="Search Instructor"
-  value={null}
-  onChange={(selected) =>
-    handleSlotChange(
-      index,
-      "staffId",
-      selected ? selected.value : ""
-    )
+  value={
+    slot.staffId
+      ? {
+          value: slot.staffId,
+          label: slot.staffName,
+        }
+      : null
   }
+  onChange={(selected) => {
+    const updated = [...slots];
+
+    updated[index].staffId = selected ? selected.value : "";
+    updated[index].staffName = selected ? selected.label : "";
+
+    setSlots(updated);
+  }}
   isClearable
   className="w-full"
   classNamePrefix="react-select"

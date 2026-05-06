@@ -1050,6 +1050,32 @@ const fetchAdmissions = async () => {
 
 
 
+// const fetchParticipants = async () => {
+//   try {
+//     const res = await api.staffPanel.getMembers({
+//       page,
+//       limit
+//     });
+
+//     console.log("Participants API:", res.data);
+
+//     setParticipantsData(
+//       res.data?.data || []
+//     );
+
+//     setTotalPages(
+//       res.data?.pagination?.totalPages || 1
+//     );
+
+//     setTotalCount(
+//       res.data?.pagination?.totalRecords || 0
+//     );
+
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+
 const fetchParticipants = async () => {
   try {
     const res = await api.staffPanel.getMembers({
@@ -1063,12 +1089,14 @@ const fetchParticipants = async () => {
       res.data?.data || []
     );
 
+    // ✅ FIXED
     setTotalPages(
-      res.data?.pagination?.totalPages || 1
+      res.data?.totalPages || 1
     );
 
+    // ✅ FIXED
     setTotalCount(
-      res.data?.pagination?.totalRecords || 0
+      res.data?.total || 0
     );
 
   } catch (err) {
@@ -1249,7 +1277,7 @@ await exportToExcel(
         <button
           onClick={() => {
   setActiveTab("admissions");
-  fetchAdmissions();
+  setPage(1);
 }}
           className={`text-left rounded-xl p-5 border-2 transition-all duration-150 bg-white shadow-sm ${
             isAdmissions ? "border-[#1a2a5e]" : "border-transparent"
@@ -1270,7 +1298,7 @@ await exportToExcel(
         <button
           onClick={() => {
   setActiveTab("participants");
-  fetchParticipants();
+  setPage(1);
 }}
           className={`text-left rounded-xl p-5 border-2 transition-all duration-150 bg-white shadow-sm ${
             !isAdmissions ? "border-[#1a2a5e]" : "border-transparent"
