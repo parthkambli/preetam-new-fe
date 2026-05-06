@@ -347,7 +347,11 @@ fitnessFees: {
   getEvents: () =>
   apiClient.get(`/fitness/staff-panel/events`),
 
-  getMembers: () => apiClient.get('/fitness/staff-panel/members'),
+  // getMembers: () => apiClient.get('/fitness/staff-panel/members'),
+  getMembers: (params) =>
+  apiClient.get('/fitness/staff-panel/members', {
+    params,
+  }),
   getStaff: () => apiClient.get('/fitness/staff-panel/staff'),
 
   scanQR: (memberId) =>

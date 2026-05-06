@@ -971,7 +971,7 @@ export default function MySchedule() {
     return <div className="p-8 text-center text-gray-500">No access to schedule</div>;
   }
 
-  const [filter, setFilter] = useState("pending"); // "pending" | "all"
+  const [filter, setFilter] = useState("all"); // "pending" | "all"
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [isViewingAttendance, setIsViewingAttendance] = useState(false);
   const [activeActivityId, setActiveActivityId] = useState(null);
@@ -983,12 +983,6 @@ export default function MySchedule() {
 
   const makeKey = (activityId, slotId) => `${activityId}_${slotId}`;
 
-  const getStatusFromTime = (startTime, endTime) => {
-    const now = new Date();
-    const today = new Date().toISOString().split("T")[0];
-    const end = new Date(`${today}T${endTime || startTime}`);
-    return now >= end ? "Completed" : "Pending";
-  };
 
   useEffect(() => {
     fetchMySchedule();
@@ -1001,7 +995,7 @@ export default function MySchedule() {
       const data = Array.isArray(res?.data?.data) ? res.data.data : [];
 
       const mapped = data.map((item, index) => {
-        const status = getStatusFromTime(item.startTime, item.endTime);
+
         return {
           id: item.activityId || `activity-${index}`,
           slotId: item.slotId || `slot-${index}`,
@@ -1011,7 +1005,12 @@ export default function MySchedule() {
           endTime: item.endTime,
           place: item.place || item.location || "N/A",
           participants: Array.isArray(item.participants) ? item.participants : [],
-          status,
+          status:
+  String(item.status || "")
+    .trim()
+    .toLowerCase() === "completed"
+    ? "Completed"
+    : "Pending",
         };
       });
 

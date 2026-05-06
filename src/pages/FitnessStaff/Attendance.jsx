@@ -2054,11 +2054,11 @@ export default function AttendancePage() {
 
               <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 rounded-b-3xl">
                 <button
-                  onClick={() => openViewModal(activity)}
-                  className="w-full bg-white border border-gray-200 hover:border-gray-300 py-3 rounded-2xl font-medium text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                  View Full Attendance →
-                </button>
+  onClick={() => openViewModal(activity)}
+  className="w-full bg-[#000359] hover:bg-[#000248] py-3 rounded-2xl font-medium text-white transition-colors"
+>
+  View Full Attendance →
+</button>
               </div>
             </Card>
           ))
