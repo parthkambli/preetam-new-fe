@@ -994,7 +994,7 @@ const MODULE_ACTIONS = {
   // Schedule: ["view"],
   // Activities: ["view"],
   // Events: ["view"],
-  Fees: ["view", "edit", "delete"],
+  Fees: ["view"],
   Reports: ["view"],
   // Participants: ["view", "edit", "delete"],
   // "Health Records": ["view", "edit", "delete"],
