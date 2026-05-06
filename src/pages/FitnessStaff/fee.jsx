@@ -407,7 +407,16 @@ export default function FitnessFeesPage() {
       const [statsRes, paymentsRes, allotmentsRes, membersRes, staffRes] =
         await Promise.all([
           api.fitnessFees.getStats(),
-          api.fitnessFees.getPayments({ page, limit }), // Backend pagination
+          api.fitnessFees.getPayments({
+  page,
+  limit,
+  member: filterMember,
+  status: filterStatus,
+  mode: filterMode,
+  staff: filterStaff,
+  fromDate,
+  toDate,
+}), // Backend pagination
           api.fitnessFees.getAllotments(),
           api.staffPanel.getMembers(),
           api.staffPanel.getStaff(),
@@ -464,39 +473,8 @@ export default function FitnessFeesPage() {
     return staffMap[staffIdOrObj] || 'N/A';
   };
 
-  // ── Filtered Payments (Client-side on current page data) ─────
-  const filteredPayments = payments.filter((p) => {
-    const name = p.memberId?.name || p.memberId?.fullName || '';
-    const matchesMember =
-      !filterMember || name.toLowerCase().includes(filterMember.toLowerCase());
-
-    const matchesStatus =
-      filterStatus === 'All' || p.allotmentId?.status === filterStatus;
-
-    const matchesMode =
-      !filterMode || p.paymentMode?.toLowerCase().includes(filterMode.toLowerCase());
-
-    const staffId = p.allotmentId?.responsibleStaff;
-    const resolvedStaffId = typeof staffId === 'object' ? staffId?._id : staffId;
-    const matchesStaff = !filterStaff || resolvedStaffId === filterStaff;
-
-    const paymentDate = p.paymentDate ? new Date(p.paymentDate) : null;
-    const from = fromDate ? new Date(fromDate) : null;
-    const to = toDate ? new Date(toDate) : null;
-    if (to) to.setHours(23, 59, 59, 999);
-
-    const matchesDateRange =
-      (!from || (paymentDate && paymentDate >= from)) &&
-      (!to || (paymentDate && paymentDate <= to));
-
-    return (
-      matchesMember &&
-      matchesStatus &&
-      matchesMode &&
-      matchesStaff &&
-      matchesDateRange
-    );
-  });
+  // ── Filtered Payments (Server-side ) ─────
+ const filteredPayments = payments;
 
   const staffOptions = staffList.map((s) => ({
     value: s._id,
@@ -591,7 +569,7 @@ export default function FitnessFeesPage() {
           onChange={(e) => setFilterMember(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm min-w-[200px]"
         />
-        <select
+        {/* <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
@@ -599,7 +577,7 @@ export default function FitnessFeesPage() {
           {STATUS_OPTS.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
-        </select>
+        </select> */}
         <select
           value={filterMode}
           onChange={(e) => setFilterMode(e.target.value)}
