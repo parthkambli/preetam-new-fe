@@ -840,7 +840,7 @@ await exportToExcel(
             isAdmissions ? "border-[#1a2a5e]" : "border-transparent"
           }`}
         >
-          <h2 className="text-lg font-bold text-[#1a2a5e] mb-1">Admissions</h2>
+          <h2 className="text-lg font-bold text-[#1a2a5e] mb-1">Enquiries</h2>
           <p className="text-sm text-gray-500 mb-4">Total enquiries & confirmed admissions</p>
           <span className={`inline-block px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
             isAdmissions

@@ -1089,14 +1089,14 @@ const fetchParticipants = async () => {
       res.data?.data || []
     );
 
-    // ✅ FIXED
+    // ✅ FIX
     setTotalPages(
-      res.data?.totalPages || 1
+      res.data?.pagination?.totalPages || 1
     );
 
-    // ✅ FIXED
+    // ✅ FIX
     setTotalCount(
-      res.data?.total || 0
+      res.data?.pagination?.totalRecords || 0
     );
 
   } catch (err) {
@@ -1283,7 +1283,7 @@ await exportToExcel(
             isAdmissions ? "border-[#1a2a5e]" : "border-transparent"
           }`}
         >
-          <h2 className="text-lg font-bold text-[#1a2a5e] mb-1">Admissions</h2>
+          <h2 className="text-lg font-bold text-[#1a2a5e] mb-1">Enquiries</h2>
           <p className="text-sm text-gray-500 mb-4">Total enquiries & confirmed admissions</p>
           <span className={`inline-block px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
             isAdmissions
