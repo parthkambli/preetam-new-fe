@@ -530,7 +530,10 @@ const validatePhoto = (file) => {
               discount:      af.discount ?? "",
               finalAmount:   af.finalAmount ?? "",
               paymentStatus: af.paymentStatus || "Pending",
-              paymentMode:   af.paymentMode || "",
+              paymentMode:
+                ["Cash", "Bank Transfer"].includes(af.paymentMode)
+                  ? af.paymentMode
+                  : "",
               paymentDate:   formatDateForInput(af.paymentDate) || todayString(),
               planNotes:     af.planNotes || "",
               startDate:     formatDateForInput(af.startDate),
