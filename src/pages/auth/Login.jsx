@@ -313,10 +313,18 @@ export default function Login() {
   setLoading(true);
 
   try {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
-      userId,
-      password
-    });
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/auth/login`,
+      {
+        userId,
+        password
+      },
+      {
+        headers: {
+          'x-platform': 'web'
+        }
+      }
+    );
 
     const { token, organizations, defaultOrg, user } = response.data;
 

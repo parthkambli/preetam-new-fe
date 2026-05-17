@@ -1,10 +1,23 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ViewMember.jsx — mirrors AddMember's multi-activity structure
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // ── Small display helpers ─────────────────────────────────────────────────────
 function ReadField({ label, value, className = "" }) {
@@ -20,9 +33,7 @@ function ReadField({ label, value, className = "" }) {
 
 function SectionTitle({ children }) {
   return (
-    <h2 className="text-base font-bold text-[#1a2a5e] mb-4 mt-8 first:mt-0">
-      {children}
-    </h2>
+    <h2 className="text-base font-bold text-[#1a2a5e] mb-4 mt-8 first:mt-0">{children}</h2>
   );
 }
 
@@ -30,16 +41,10 @@ function SectionTitle({ children }) {
 function StatusBadge({ status }) {
   const active = status === "Active";
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-        active
-          ? "bg-green-50 border-green-300 text-green-700"
-          : "bg-gray-100 border-gray-300 text-gray-500"
-      }`}
-    >
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${active ? "bg-green-500" : "bg-gray-400"}`}
-      />
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+      active ? "bg-green-50 border-green-300 text-green-700" : "bg-gray-100 border-gray-300 text-gray-500"
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-green-500" : "bg-gray-400"}`} />
       {status}
     </span>
   );
@@ -49,12 +54,9 @@ function StatusBadge({ status }) {
 const computeActivityStatus = (af) => {
   if (af.paymentStatus !== "Paid") return "Inactive";
   if (!af.startDate || !af.endDate) return "Inactive";
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const start = new Date(af.startDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(af.endDate);
-  end.setHours(23, 59, 59, 999);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date(af.startDate); start.setHours(0, 0, 0, 0);
+  const end   = new Date(af.endDate);   end.setHours(23, 59, 59, 999);
   return today >= start && today <= end ? "Active" : "Inactive";
 };
 
@@ -63,11 +65,7 @@ const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   const dt = new Date(dateStr);
   if (isNaN(dt.getTime())) return "—";
-  return dt.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
 const formatCurrency = (amount) => {
@@ -80,8 +78,7 @@ function ActivityCard({ af, index }) {
   const status = computeActivityStatus(af);
 
   // Future activation indicator
-  const showFutureMsg =
-    af.paymentStatus === "Paid" &&
+  const showFutureMsg = af.paymentStatus === "Paid" &&
     af.startDate &&
     new Date(af.startDate) > new Date();
 
@@ -96,12 +93,7 @@ function ActivityCard({ af, index }) {
         {showFutureMsg && (
           <p className="text-amber-600 text-xs flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
             <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-            Activates on{" "}
-            {new Date(af.startDate).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
+            Activates on {new Date(af.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
           </p>
         )}
       </div>
@@ -129,30 +121,21 @@ function ActivityCard({ af, index }) {
 
       {/* Fees */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-        <ReadField label="Plan Fee" value={formatCurrency(af.planFee)} />
-        <ReadField label="Discount" value={formatCurrency(af.discount)} />
-        <ReadField
-          label="Final Amount"
-          value={formatCurrency(af.finalAmount)}
-        />
+        <ReadField label="Plan Fee"      value={formatCurrency(af.planFee)} />
+        <ReadField label="Discount"      value={formatCurrency(af.discount)} />
+        <ReadField label="Final Amount"  value={formatCurrency(af.finalAmount)} />
       </div>
 
       {/* Payment */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">
-            Payment Status
-          </label>
-          <div
-            className={`w-full border rounded-lg px-3 py-2.5 text-sm font-semibold flex items-center gap-1.5 ${
-              af.paymentStatus === "Paid"
-                ? "bg-green-50 border-green-300 text-green-700"
-                : "bg-amber-50 border-amber-300 text-amber-700"
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${af.paymentStatus === "Paid" ? "bg-green-500" : "bg-amber-400"}`}
-            />
+          <label className="block text-xs text-gray-500 mb-1">Payment Status</label>
+          <div className={`w-full border rounded-lg px-3 py-2.5 text-sm font-semibold flex items-center gap-1.5 ${
+            af.paymentStatus === "Paid"
+              ? "bg-green-50 border-green-300 text-green-700"
+              : "bg-amber-50 border-amber-300 text-amber-700"
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${af.paymentStatus === "Paid" ? "bg-green-500" : "bg-amber-400"}`} />
             {af.paymentStatus || "—"}
           </div>
         </div>
@@ -163,15 +146,12 @@ function ActivityCard({ af, index }) {
       {/* Dates */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <ReadField label="Start Date" value={formatDate(af.startDate)} />
-        <ReadField label="End Date" value={formatDate(af.endDate)} />
+        <ReadField label="End Date"   value={formatDate(af.endDate)} />
       </div>
 
       {/* Slot + Staff */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <ReadField
-          label="Slot"
-          value={typeof af.slot === "object" ? af.slot?.label : af.slot || "—"}
-        />
+        <ReadField label="Slot" value={af.slot || "—"} />
         <ReadField
           label="Responsible Person"
           value={
@@ -197,12 +177,12 @@ function ActivityCard({ af, index }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function ViewMember() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id }    = useParams();
+  const navigate  = useNavigate();
 
-  const [member, setMember] = useState(null);
+  const [member, setMember]   = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError]     = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -238,13 +218,9 @@ export default function ViewMember() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 mb-4">
-            Member not found or failed to load.
-          </p>
-          <button
-            onClick={() => navigate("/fitness/members")}
-            className="bg-[#1a2a5e] text-white px-6 py-2.5 rounded-lg text-sm hover:bg-[#152147]"
-          >
+          <p className="text-gray-500 mb-4">Member not found or failed to load.</p>
+          <button onClick={() => navigate("/fitness/members")}
+            className="bg-[#1a2a5e] text-white px-6 py-2.5 rounded-lg text-sm hover:bg-[#152147]">
             Back to Members
           </button>
         </div>
@@ -252,18 +228,12 @@ export default function ViewMember() {
     );
   }
 
-  const activityFees = Array.isArray(member.activityFees)
-    ? member.activityFees
-    : [];
-  const overallStatus = activityFees.some(
-    (af) => computeActivityStatus(af) === "Active",
-  )
-    ? "Active"
-    : "Inactive";
+  const activityFees = Array.isArray(member.activityFees) ? member.activityFees : [];
+  const overallStatus = activityFees.some((af) => computeActivityStatus(af) === "Active")
+    ? "Active" : "Inactive";
 
   const totalFinalAmount = activityFees.reduce(
-    (sum, af) => sum + (Number(af.finalAmount) || 0),
-    0,
+    (sum, af) => sum + (Number(af.finalAmount) || 0), 0
   );
 
   return (
@@ -271,10 +241,8 @@ export default function ViewMember() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Member Details</h1>
-        <button
-          onClick={() => navigate("/fitness/members")}
-          className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-        >
+        <button onClick={() => navigate("/fitness/members")}
+          className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
           Back to Members
         </button>
       </div>
@@ -282,9 +250,7 @@ export default function ViewMember() {
       <div className="bg-white rounded-xl shadow p-6 sm:p-8 max-w-5xl mx-auto space-y-0">
         {/* QR CODE SECTION */}
         <div className="mb-6 flex flex-col items-center">
-          <h2 className="text-base font-bold text-[#1a2a5e] mb-3">
-            Member QR Code
-          </h2>
+          <h2 className="text-base font-bold text-[#1a2a5e] mb-3">Member QR Code</h2>
 
           {member.qrCode ? (
             <>
@@ -312,9 +278,7 @@ export default function ViewMember() {
         <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_1fr] gap-6 mb-6">
           {/* Photo */}
           <div>
-            <label className="block text-xs text-gray-500 mb-2">
-              Profile Photo
-            </label>
+            <label className="block text-xs text-gray-500 mb-2">Profile Photo</label>
             {/* <div className="w-32 h-32 border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
               {member.photo ? (
                 <img src={member.photo} alt={member.name} className="w-full h-full object-cover" />
@@ -324,13 +288,13 @@ export default function ViewMember() {
             </div> */}
             <div className="w-32 h-32 border border-gray-200 rounded-xl overflow-hidden bg-gray-100">
               {member.photo ? (
-                <img
-                  src={`${BASE_URL}${member.photo}`}
-                  alt={member.name}
+                <img 
+                  src={`${BASE_URL}${member.photo}`} 
+                  alt={member.name} 
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = "/placeholder-avatar.jpg"; // optional fallback
+                    e.target.src = '/placeholder-avatar.jpg'; // optional fallback
                   }}
                 />
               ) : (
@@ -342,16 +306,16 @@ export default function ViewMember() {
           </div>
 
           <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <ReadField label="Full Name" value={member.name} />
+            <ReadField label="Full Name"     value={member.name} />
             <ReadField label="Mobile Number" value={member.mobile} />
-            <ReadField label="Member ID" value={member.memberId} />
-            <ReadField label="User ID" value={member.userId} />
+            <ReadField label="Member ID"     value={member.memberId} />
+            <ReadField label="User ID"       value={member.userId} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <ReadField label="Email" value={member.email} />
-          <ReadField label="Age" value={member.age} />
+          <ReadField label="Email"  value={member.email} />
+          <ReadField label="Age"    value={member.age} />
           <ReadField label="Gender" value={member.gender} />
         </div>
 
@@ -363,17 +327,12 @@ export default function ViewMember() {
         {/* Overall status + total */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-gray-700">
-              Overall Membership
-            </span>
+            <span className="text-sm font-semibold text-gray-700">Overall Membership</span>
             <StatusBadge status={overallStatus} />
           </div>
           {activityFees.length > 1 && (
             <div className="text-sm font-semibold text-[#1a2a5e]">
-              Total:{" "}
-              <span className="text-base">
-                {formatCurrency(totalFinalAmount)}
-              </span>
+              Total: <span className="text-base">{formatCurrency(totalFinalAmount)}</span>
               <span className="ml-1 text-xs text-gray-400 font-normal">
                 ({activityFees.length} activities)
               </span>
@@ -413,19 +372,8 @@ export default function ViewMember() {
           onClick={() => navigate(`/fitness/members/edit-member/${id}`)}
           className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-6 py-3.5 rounded-2xl shadow-xl flex items-center gap-2 transition-all active:scale-95"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
           Edit Member
         </button>

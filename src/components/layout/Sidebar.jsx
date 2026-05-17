@@ -346,16 +346,32 @@ export default function Sidebar({ isOpen, onClose }) {
       permission: ["VIEW_OWN_SCHEDULE", "VIEW_EVENTS"]
     },
     {
-      to: "/fitness-staff/attendance",
-      label: "Attendance",
-      icon: "📅",
-      permission: ["VIEW_ATTENDANCE", "MARK_ATTENDANCE"]
-    },
-    {
       to: "/fitness-staff/my-schedule",
       label: "My Schedule",
       icon: "⏰",
       permission: ["VIEW_OWN_SCHEDULE"]
+    },
+    {
+      to: "/fitness-staff/enquiry",
+      label: "Enquiry",
+      icon: "✏️",
+    },
+    {
+      to: "/fitness-staff/follow-ups",
+      label: "Follow-Ups",
+      icon: "💬",
+    },
+    {
+      to: "/fitness-staff/members",
+      label: "Members",
+      icon: "👥",
+      permission: ["VIEW_MEMBER"]
+    },
+    {
+      to: "/fitness-staff/attendance",
+      label: "Attendance",
+      icon: "📅",
+      permission: ["VIEW_ATTENDANCE", "MARK_ATTENDANCE"]
     },
     {
       to: "/fitness-staff/fees",   // ✅ ADD THIS
@@ -371,9 +387,10 @@ export default function Sidebar({ isOpen, onClose }) {
     }
   ];
 
-  menu = fullMenu.filter(item =>
-    item.permission.some(p => hasPermission(p))
-  );
+    menu = fullMenu.filter(item =>
+      !item.permission ||
+      item.permission.some(p => hasPermission(p))
+    );
 }
   else {
     // Fallback for Admin or other roles - keep your original full menus

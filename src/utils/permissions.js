@@ -21,23 +21,27 @@
     }
   };
 
+  // export const hasPermission = (permission) => {
+  //   try {
+  //     const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  //     const rolePermissions = user?.accessRoleId?.permissions || [];
+  //     const custom = user?.customPermissions || [];
+  //     const removed = user?.removedPermissions || [];
+
+  //     const final = [
+  //       ...new Set([
+  //         ...rolePermissions.filter((p) => !removed.includes(p)),
+  //         ...custom,
+  //       ]),
+  //     ];
+
+  //     return final.includes(permission);
+  //   } catch {
+  //     return false;
+  //   }
+  // };
+
   export const hasPermission = (permission) => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-      const rolePermissions = user?.accessRoleId?.permissions || [];
-      const custom = user?.customPermissions || [];
-      const removed = user?.removedPermissions || [];
-
-      const final = [
-        ...new Set([
-          ...rolePermissions.filter((p) => !removed.includes(p)),
-          ...custom,
-        ]),
-      ];
-
-      return final.includes(permission);
-    } catch {
-      return false;
-    }
-  };
+  return getUserPermissions().includes(permission);
+};

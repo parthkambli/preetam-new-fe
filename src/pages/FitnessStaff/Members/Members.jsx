@@ -6,6 +6,8 @@ import { api } from "../../../services/apiClient";
 import PassRenewModal from "./PassRenewModal";
 import Pagination from "../../../components/Pagination";
 
+import { hasPermission } from "../../../utils/permissions";
+
 const PLAN_OPTIONS = [
   { value: "Annual", label: "Annual", months: 12 },
   { value: "Monthly", label: "Monthly", months: 1 },
@@ -471,12 +473,6 @@ function RenewModal({ member, onClose, onRenewed }) {
         feeTypeId:
           typeof af.feeType === "object" ? af.feeType?._id : af.feeType,
         staffId: typeof af.staff === "object" ? af.staff?._id : af.staff,
-        slot: af.slot
-          ? {
-              value: af.slot.slotId,
-              label: af.slot.label,
-            }
-          : null,
       };
     });
 
@@ -548,7 +544,6 @@ function RenewModal({ member, onClose, onRenewed }) {
         paymentStatus: r.paymentStatus,
         paymentMode: r.paymentMode || "",
         paymentDate: r.paymentDate || null,
-        slot: r.slot || null,
       }));
 
     setLoading(true);
@@ -714,6 +709,18 @@ function RenewModal({ member, onClose, onRenewed }) {
 export default function Members() {
   const navigate = useNavigate();
 
+  const canViewMember = hasPermission("VIEW_MEMBER");
+  const canAddMember = hasPermission("ADD_MEMBER");
+  const canEditMember = hasPermission("EDIT_MEMBER");
+  const canDeleteMember = hasPermission("DELETE_MEMBER");
+  const canRenewMember = hasPermission("RENEW_MEMBER");
+
+  useEffect(() => {
+    if (!canViewMember) {
+      navigate("/unauthorized");
+    }
+  }, [canViewMember, navigate]);
+
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -824,18 +831,20 @@ export default function Members() {
           >
             ↻ Refresh
           </button>
+          {canAddMember && (
           <button
-            onClick={() => navigate("/fitness/members/add-members")}
+            onClick={() => navigate("/fitness-staff/members/add-members")}
             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
           >
             + Add Member
-          </button>
+          </button>)}
+          {canAddMember && (
           <button
-            onClick={() => navigate("/fitness/members/add-pass")}
+            onClick={() => navigate("/fitness-staff/members/add-pass")}
             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
           >
             + Add Pass Member
-          </button>
+          </button>)}
         </div>
       </div>
 
@@ -1072,41 +1081,44 @@ export default function Members() {
                       {/* Actions */}
                       <td className="px-5 py-4">
                         <div className="flex gap-2 flex-wrap">
-                          <button
-                            onClick={() => {
-                              if (isPassMemberFn(member)) {
-                                navigate(
-                                  `/fitness/members/view-pass/${member._id}`,
-                                );
-                              } else {
-                                navigate(
-                                  `/fitness/members/view-member/${member._id}`,
-                                );
-                              }
-                            }}
-                            className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (isPassMemberFn(member)) {
-                                navigate(
-                                  `/fitness/members/edit-pass/${member._id}`,
-                                );
-                              } else {
-                                navigate(
-                                  `/fitness/members/edit-member/${member._id}`,
-                                );
-                              }
-                            }}
-                            className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                          >
-                            Edit
-                          </button>
+                          {canViewMember && (
+                            <button
+                              onClick={() => {
+                                if (isPassMemberFn(member)) {
+                                  navigate(
+                                    `/fitness-staff/members/view-pass/${member._id}`,
+                                  );
+                                } else {
+                                  navigate(
+                                    `/fitness-staff/members/view-member/${member._id}`,
+                                  );
+                                }
+                              }}
+                              className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                            >
+                              View
+                            </button>)}
+                            {canEditMember && (
+                            <button
+                              onClick={() => {
+                                if (isPassMemberFn(member)) {
+                                  navigate(
+                                    `/fitness-staff/members/edit-pass/${member._id}`,
+                                  );
+                                } else {
+                                  navigate(
+                                    `/fitness-staff/members/edit-member/${member._id}`,
+                                  );
+                                }
+                              }}
+                              className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
+                            >
+                              Edit
+                            </button>)}
 
                           {/* w — show if any activity is inactive/expired */}
-                          {(isPassMember
+                          {canRenewMember &&
+                          (isPassMember
                             ? overallStatus !== "Active"
                             : inactiveCount > 0) && (
                             <button
@@ -1124,13 +1136,13 @@ export default function Members() {
                               {inactiveCount > 1 ? ` (${inactiveCount})` : ""}
                             </button>
                           )}
-
+                          {canDeleteMember && (
                           <button
                             onClick={() => handleDelete(member._id)}
                             className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
                           >
                             Delete
-                          </button>
+                          </button>)}
                         </div>
                       </td>
                     </tr>

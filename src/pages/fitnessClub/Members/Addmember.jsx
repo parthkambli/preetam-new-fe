@@ -6,19 +6,18 @@ import Select from "react-select";
 import AsyncSelect from "react-select/async";
 // Plan keys must match AllotFees fieldMap exactly
 const PLAN_OPTIONS = [
-  { value: "Annual",    label: "Annual",    feeKey: "annual"   },
-  { value: "halfYearly",    label: "halfYearly",    feeKey: "halfYearly"   },
-  { value: "quarterly",    label: "quarterly",    feeKey: "quarterly"   },
-  { value: "Monthly",   label: "Monthly",   feeKey: "monthly"  },
-  { value: "Weekly",    label: "Weekly",    feeKey: "weekly"   },
-  { value: "Daily",     label: "Daily",     feeKey: "daily"    },
-  { value: "Hourly",    label: "Hourly",    feeKey: "hourly"   },
+  { value: "Annual", label: "Annual", feeKey: "annual" },
+  { value: "halfYearly", label: "halfYearly", feeKey: "halfYearly" },
+  { value: "quarterly", label: "quarterly", feeKey: "quarterly" },
+  { value: "Monthly", label: "Monthly", feeKey: "monthly" },
+  { value: "Weekly", label: "Weekly", feeKey: "weekly" },
+  { value: "Daily", label: "Daily", feeKey: "daily" },
+  { value: "Hourly", label: "Hourly", feeKey: "hourly" },
 ];
 
-const GENDERS          = ["Male", "Female", "Other"];
+const GENDERS = ["Male", "Female", "Other"];
 const PAYMENT_STATUSES = ["Paid", "Pending"];
-const PAYMENT_MODES    = ["Cash", "Bank Transfer"];
-
+const PAYMENT_MODES = ["Cash", "Bank Transfer"];
 
 // ── Helper: compute end date from start date + plan ──────────────────────────
 // const computeEndDate = (startDate, plan) => {
@@ -81,15 +80,16 @@ const computeEndDate = (startDate, plan) => {
   return d.toISOString().split("T")[0];
 };
 
-
 // ── Helper: compute activity-level membership status ────────────────────────
 const computeActivityStatus = (af) => {
   if (af.paymentStatus !== "Paid") return "Inactive";
   if (!af.startDate || !af.endDate) return "Inactive";
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const start = new Date(af.startDate); start.setHours(0, 0, 0, 0);
-  const end   = new Date(af.endDate);   end.setHours(23, 59, 59, 999);
+  const start = new Date(af.startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(af.endDate);
+  end.setHours(23, 59, 59, 999);
   return today >= start && today <= end ? "Active" : "Inactive";
 };
 
@@ -97,39 +97,39 @@ const computeActivityStatus = (af) => {
 const todayString = () => new Date().toISOString().split("T")[0];
 
 const emptyActivityFee = {
-  activity:         null,
-  feeType:          null,
-  plan:             "Monthly",
-  planFee:          "",
-  discount:         "",
-  finalAmount:      "",
-  paymentStatus:    "Paid",
-  paymentMode:      "",
-  paymentDate:      todayString(),   // ← default to today
-  planNotes:        "",
-  startDate:        "",
-  endDate:          "",
-  slot:             null,
+  activity: null,
+  feeType: null,
+  plan: "Monthly",
+  planFee: "",
+  discount: "",
+  finalAmount: "",
+  paymentStatus: "Paid",
+  paymentMode: "",
+  paymentDate: todayString(), // ← default to today
+  planNotes: "",
+  startDate: "",
+  endDate: "",
+  slot: null,
 };
 
 const emptyForm = {
-  name:             "",
-  mobile:           "",
-  email:            "",
-  age:              "",
-  gender:           "Male",
-  address:          "",
-  photo:            null,
-  photoPreview:     null,
+  name: "",
+  mobile: "",
+  email: "",
+  age: "",
+  gender: "Male",
+  address: "",
+  photo: null,
+  photoPreview: null,
   membershipStatus: "Active",
-  status:           "Active",
-  startDate:        "",
-  endDate:          "",
-  staff:            "",
-  userId:           "",
-  password:         "",
-  enquiryId:        null,
-  activityFees:     [{ ...emptyActivityFee }],
+  status: "Active",
+  startDate: "",
+  endDate: "",
+  staff: "",
+  userId: "",
+  password: "",
+  enquiryId: null,
+  activityFees: [{ ...emptyActivityFee }],
 };
 
 const formatDateForInput = (v) => {
@@ -152,41 +152,75 @@ const generatePassword = (name = "", mobile = "") => {
 };
 
 // ── Generic Field Component ───────────────────────────────────────────────
-const Field = ({ label, name, type = "text", placeholder = "", required = false, readOnly = false, options, form, errors, onChange }) => (
+const Field = ({
+  label,
+  name,
+  type = "text",
+  placeholder = "",
+  required = false,
+  readOnly = false,
+  options,
+  form,
+  errors,
+  onChange,
+}) => (
   <div>
     <label className="block text-xs text-gray-600 mb-1">
-      {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+      {label}
+      {required && <span className="text-red-400 ml-0.5">*</span>}
     </label>
     {options ? (
       <select
-        name={name} value={form[name] || ""} onChange={onChange} disabled={readOnly}
+        name={name}
+        value={form[name] || ""}
+        onChange={onChange}
+        disabled={readOnly}
         className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white disabled:bg-gray-50 ${errors[name] ? "border-red-400" : "border-gray-300"}`}
       >
         <option value="">Select {label}</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
       </select>
     ) : (
       <input
-        type={type} name={name} value={form[name] || ""} onChange={onChange}
-        placeholder={placeholder} readOnly={readOnly}
+        type={type}
+        name={name}
+        value={form[name] || ""}
+        onChange={onChange}
+        placeholder={placeholder}
+        readOnly={readOnly}
         maxLength={name === "mobile" ? 10 : undefined}
         className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white read-only:bg-gray-50 read-only:text-gray-500 ${errors[name] ? "border-red-400" : "border-gray-300"}`}
       />
     )}
-    {errors[name] && <p className="mt-1 text-xs text-red-500">{errors[name]}</p>}
+    {errors[name] && (
+      <p className="mt-1 text-xs text-red-500">{errors[name]}</p>
+    )}
   </div>
 );
 
 // ── Per Activity Row ──────────────────────────────────────────────────────
 const ActivityFeeRow = ({
-  index, entry,
-  activityOptions, feeTypeOptions, staffOptions,
-  loadingActivities, loadingFeeTypes, loadingStaff,
-  errors, onChange, onChangeBatch, onRemove, canRemove,
+  index,
+  entry,
+  activityOptions,
+  feeTypeOptions,
+  staffOptions,
+  loadingActivities,
+  loadingFeeTypes,
+  loadingStaff,
+  errors,
+  onChange,
+  onChangeBatch,
+  onRemove,
+  canRemove,
   onSlotFetch,
 }) => {
-  const fee      = parseFloat(entry.planFee)  || 0;
-  const disc     = parseFloat(entry.discount) || 0;
+  const fee = parseFloat(entry.planFee) || 0;
+  const disc = parseFloat(entry.discount) || 0;
   const computed = fee > 0 ? Math.max(0, fee - disc) : "";
 
   // ── Compute display-only activity membership status ─────────────────────
@@ -196,28 +230,32 @@ const ActivityFeeRow = ({
 
   const handleFeeTypeChange = (selected) => {
     const planMeta = PLAN_OPTIONS.find((p) => p.value === entry.plan);
-    const autoFee  = selected?.data && planMeta ? (selected.data[planMeta.feeKey] ?? "") : "";
+    const autoFee =
+      selected?.data && planMeta ? (selected.data[planMeta.feeKey] ?? "") : "";
     onChangeBatch(index, {
-      feeType:  selected,
-      planFee:  autoFee !== "" ? String(autoFee) : "",
+      feeType: selected,
+      planFee: autoFee !== "" ? String(autoFee) : "",
     });
   };
 
   const filteredFeeTypeOptions = feeTypeOptions.filter(
-  (opt) => opt.data?.type !== "Membership Pass"
-);
+    (opt) => opt.data?.type !== "Membership Pass",
+  );
 
   const handlePlanChange = (e) => {
     const newPlan = e.target.value;
     const planMeta = PLAN_OPTIONS.find((p) => p.value === newPlan);
-    const autoFee  = entry.feeType?.data && planMeta
-      ? (entry.feeType.data[planMeta.feeKey] ?? "")
-      : null;
-    const newEnd = entry.startDate ? computeEndDate(entry.startDate, newPlan) : "";
+    const autoFee =
+      entry.feeType?.data && planMeta
+        ? (entry.feeType.data[planMeta.feeKey] ?? "")
+        : null;
+    const newEnd = entry.startDate
+      ? computeEndDate(entry.startDate, newPlan)
+      : "";
 
     const patch = { plan: newPlan };
     if (autoFee !== null) patch.planFee = autoFee !== "" ? String(autoFee) : "";
-    if (newEnd)           patch.endDate = newEnd;
+    if (newEnd) patch.endDate = newEnd;
     onChangeBatch(index, patch);
   };
 
@@ -246,8 +284,18 @@ const ActivityFeeRow = ({
           className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 transition-colors"
           title="Remove activity"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       )}
@@ -270,16 +318,23 @@ const ActivityFeeRow = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Activity<span className="text-red-400 ml-0.5">*</span></label>
+          <label className="block text-xs text-gray-600 mb-1">
+            Activity<span className="text-red-400 ml-0.5">*</span>
+          </label>
           <Select
             options={activityOptions}
             value={entry.activity}
             onChange={(sel) => onChange(index, "activity", sel)}
             placeholder={loadingActivities ? "Loading…" : "Select activity"}
-            isClearable isLoading={loadingActivities}
+            isClearable
+            isLoading={loadingActivities}
             classNamePrefix="react-select"
           />
-          {errors[`activityFees_${index}_activity`] && <p className="mt-1 text-xs text-red-500">{errors[`activityFees_${index}_activity`]}</p>}
+          {errors[`activityFees_${index}_activity`] && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors[`activityFees_${index}_activity`]}
+            </p>
+          )}
         </div>
 
         <div>
@@ -290,36 +345,72 @@ const ActivityFeeRow = ({
             value={entry.feeType}
             onChange={handleFeeTypeChange}
             placeholder={loadingFeeTypes ? "Loading…" : "Select fee type"}
-            isClearable isLoading={loadingFeeTypes}
+            isClearable
+            isLoading={loadingFeeTypes}
             classNamePrefix="react-select"
           />
-          <p className="mt-0.5 text-[10px] text-gray-400">Auto-fills fee amount from plan</p>
+          <p className="mt-0.5 text-[10px] text-gray-400">
+            Auto-fills fee amount from plan
+          </p>
         </div>
 
         <div>
           <label className="block text-xs text-gray-600 mb-1">Plan</label>
-          <select name="plan" value={entry.plan} onChange={handlePlanChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white">
-            {PLAN_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+          <select
+            name="plan"
+            value={entry.plan}
+            onChange={handlePlanChange}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white"
+          >
+            {PLAN_OPTIONS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Plan Fee (₹)</label>
-          <input type="number" name="planFee" value={entry.planFee} onChange={handleField} placeholder="0" min="0"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]" />
+          <label className="block text-xs text-gray-600 mb-1">
+            Plan Fee (₹)
+          </label>
+          <input
+            type="number"
+            name="planFee"
+            value={entry.planFee}
+            onChange={handleField}
+            placeholder="0"
+            min="0"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+          />
         </div>
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Discount (₹)</label>
-          <input type="number" name="discount" value={entry.discount} onChange={handleField} placeholder="0" min="0"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]" />
+          <label className="block text-xs text-gray-600 mb-1">
+            Discount (₹)
+          </label>
+          <input
+            type="number"
+            name="discount"
+            value={entry.discount}
+            onChange={handleField}
+            placeholder="0"
+            min="0"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+          />
         </div>
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Final Amount (₹)</label>
-          <input type="text" value={computed !== "" ? computed : ""} readOnly placeholder="Auto calculated"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-500 bg-gray-100 focus:outline-none" />
+          <label className="block text-xs text-gray-600 mb-1">
+            Final Amount (₹)
+          </label>
+          <input
+            type="text"
+            value={computed !== "" ? computed : ""}
+            readOnly
+            placeholder="Auto calculated"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-500 bg-gray-100 focus:outline-none"
+          />
         </div>
       </div>
 
@@ -333,43 +424,87 @@ const ActivityFeeRow = ({
           </select>
         </div> */}
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Payment Mode</label>
-          <select name="paymentMode" value={entry.paymentMode ||"Cash"} onChange={handleField}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white">
+          <label className="block text-xs text-gray-600 mb-1">
+            Payment Mode
+          </label>
+          <select
+            name="paymentMode"
+            value={entry.paymentMode || "Cash"}
+            onChange={handleField}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white"
+          >
             <option value="">Select Mode</option>
-            {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
+            {PAYMENT_MODES.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Payment Date</label>
-          <input type="date" name="paymentDate" value={entry.paymentDate} onChange={handleField}
-            min="1900-01-01" max={todayString()}
-            className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors[`activityFees_${index}_paymentDate`] ? "border-red-400" : "border-gray-300"}`} />
+          <label className="block text-xs text-gray-600 mb-1">
+            Payment Date
+          </label>
+          <input
+            type="date"
+            name="paymentDate"
+            value={entry.paymentDate}
+            onChange={handleField}
+            min="1900-01-01"
+            max={todayString()}
+            className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors[`activityFees_${index}_paymentDate`] ? "border-red-400" : "border-gray-300"}`}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Start Date<span className="text-red-400 ml-0.5">*</span></label>
-          <input type="date" name="startDate" value={entry.startDate} onChange={handleStartDateChange}
-            min="1900-01-01" max="9999-12-31"
-            className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors[`activityFees_${index}_startDate`] ? "border-red-400" : "border-gray-300"}`} />
-          {errors[`activityFees_${index}_startDate`] && <p className="mt-1 text-xs text-red-500">{errors[`activityFees_${index}_startDate`]}</p>}
+          <label className="block text-xs text-gray-600 mb-1">
+            Start Date<span className="text-red-400 ml-0.5">*</span>
+          </label>
+          <input
+            type="date"
+            name="startDate"
+            value={entry.startDate}
+            onChange={handleStartDateChange}
+            min="1900-01-01"
+            max="9999-12-31"
+            className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors[`activityFees_${index}_startDate`] ? "border-red-400" : "border-gray-300"}`}
+          />
+          {errors[`activityFees_${index}_startDate`] && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors[`activityFees_${index}_startDate`]}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-xs text-gray-600 mb-1">
             End Date<span className="text-red-400 ml-0.5">*</span>
-            <span className="ml-1 text-[10px] text-gray-400 font-normal">(auto-filled from plan)</span>
+            <span className="ml-1 text-[10px] text-gray-400 font-normal">
+              (auto-filled from plan)
+            </span>
           </label>
-          <input type="date" name="endDate" value={entry.endDate} onChange={handleField}
-            min={entry.startDate || "1900-01-01"} max="9999-12-31"
-            className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors[`activityFees_${index}_endDate`] ? "border-red-400" : "border-gray-300"}`} />
-          {errors[`activityFees_${index}_endDate`] && <p className="mt-1 text-xs text-red-500">{errors[`activityFees_${index}_endDate`]}</p>}
+          <input
+            type="date"
+            name="endDate"
+            value={entry.endDate}
+            onChange={handleField}
+            min={entry.startDate || "1900-01-01"}
+            max="9999-12-31"
+            className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] ${errors[`activityFees_${index}_endDate`] ? "border-red-400" : "border-gray-300"}`}
+          />
+          {errors[`activityFees_${index}_endDate`] && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors[`activityFees_${index}_endDate`]}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs text-gray-600 mb-1">Available Slot</label>
+        <label className="block text-xs text-gray-600 mb-1">
+          Available Slot
+        </label>
         <Select
           options={entry.availableSlots || []}
           value={entry.slot}
@@ -382,45 +517,61 @@ const ActivityFeeRow = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-      {/* Membership Status: read-only, computed */}
-      <div>
-        <label className="block text-xs text-gray-600 mb-1">
-          Membership Status
-          <span className="ml-1 text-[10px] text-gray-400 font-normal">(auto-computed)</span>
-        </label>
-        <div className={`w-full border rounded-lg px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${
-          activityStatus === "Active"
-            ? "bg-green-50 border-green-300 text-green-700"
-            : "bg-gray-100 border-gray-300 text-gray-500"
-        }`}>
-          <span className={`w-2 h-2 rounded-full ${activityStatus === "Active" ? "bg-green-500" : "bg-gray-400"}`} />
-          {activityStatus}
-        </div>
-        <p className="mt-0.5 text-[10px] text-gray-400">Active when Paid &amp; within date range</p>
-
-        {/* Future Activation Message */}
-        {entry.paymentStatus === "Paid" && 
-        entry.startDate && 
-        new Date(entry.startDate) > new Date() && (
-          <p className="mt-2 text-amber-600 text-xs flex items-center gap-1 bg-amber-50 p-2 rounded-lg border border-amber-200">
-            <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-            Membership will become <span className="font-semibold">Active</span> on{" "}
-            {new Date(entry.startDate).toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric'
-            })}
-          </p>
-        )}
-      </div>
+        {/* Membership Status: read-only, computed */}
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Responsible Person</label>
+          <label className="block text-xs text-gray-600 mb-1">
+            Membership Status
+            <span className="ml-1 text-[10px] text-gray-400 font-normal">
+              (auto-computed)
+            </span>
+          </label>
+          <div
+            className={`w-full border rounded-lg px-3 py-2 text-sm font-semibold flex items-center gap-1.5 ${
+              activityStatus === "Active"
+                ? "bg-green-50 border-green-300 text-green-700"
+                : "bg-gray-100 border-gray-300 text-gray-500"
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${activityStatus === "Active" ? "bg-green-500" : "bg-gray-400"}`}
+            />
+            {activityStatus}
+          </div>
+          <p className="mt-0.5 text-[10px] text-gray-400">
+            Active when Paid &amp; within date range
+          </p>
+
+          {/* Future Activation Message */}
+          {entry.paymentStatus === "Paid" &&
+            entry.startDate &&
+            new Date(entry.startDate) > new Date() && (
+              <p className="mt-2 text-amber-600 text-xs flex items-center gap-1 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                Membership will become{" "}
+                <span className="font-semibold">Active</span> on{" "}
+                {new Date(entry.startDate).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+        </div>
+        <div>
+          <label className="block text-xs text-gray-600 mb-1">
+            Responsible Person
+          </label>
           <Select
             options={staffOptions}
-            value={staffOptions.find((opt) => opt.value === entry.staff) || null}
+            value={
+              staffOptions.find((opt) => opt.value === entry.staff) || null
+            }
             onChange={(sel) => onChange(index, "staff", sel?.value || null)}
-            placeholder={loadingStaff ? "Loading..." : "Select Responsible Staff"}
-            isClearable isLoading={loadingStaff}
+            placeholder={
+              loadingStaff ? "Loading..." : "Select Responsible Staff"
+            }
+            isClearable
+            isLoading={loadingStaff}
             classNamePrefix="react-select"
           />
         </div>
@@ -428,9 +579,14 @@ const ActivityFeeRow = ({
 
       <div>
         <label className="block text-xs text-gray-600 mb-1">Plan Notes</label>
-        <textarea name="planNotes" value={entry.planNotes} onChange={handleField} rows={2}
+        <textarea
+          name="planNotes"
+          value={entry.planNotes}
+          onChange={handleField}
+          rows={2}
           placeholder="Any additional notes for this activity…"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+        />
       </div>
     </div>
   );
@@ -440,55 +596,55 @@ const ActivityFeeRow = ({
 export default function AddMember() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { id }   = useParams();
-  const isEdit   = Boolean(id);
-  const fileRef  = useRef();
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+  const fileRef = useRef();
 
-  const [form, setForm]     = useState(emptyForm);
+  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
-  const [saved, setSaved]   = useState(false);
+  const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [selectedEnquiry, setSelectedEnquiry]     = useState(null);
-  const [loadingEnquiries, setLoadingEnquiries]   = useState(false);
+  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [loadingEnquiries, setLoadingEnquiries] = useState(false);
 
-  const [staffOptions, setStaffOptions]           = useState([]);
-  const [loadingStaff, setLoadingStaff]           = useState(false);
+  const [staffOptions, setStaffOptions] = useState([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
 
-  const [activityOptions, setActivityOptions]     = useState([]);
+  const [activityOptions, setActivityOptions] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
 
-  const [feeTypes, setFeeTypes]             = useState([]);
+  const [feeTypes, setFeeTypes] = useState([]);
   const [feeTypeOptions, setFeeTypeOptions] = useState([]);
   const [loadingFeeTypes, setLoadingFeeTypes] = useState(false);
 
   const [availableSlots, setAvailableSlots] = useState({});
 
-
-
   //Photo Validatation
 
-const validatePhoto = (file) => {
-  if (!file) return null;
+  const validatePhoto = (file) => {
+    if (!file) return null;
 
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  const maxSize = 5 * 1024 * 1024;
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const maxSize = 5 * 1024 * 1024;
 
-  if (!allowedTypes.includes(file.type)) {
-    return "Only JPG, JPEG, PNG, WEBP allowed";
-  }
+    if (!allowedTypes.includes(file.type)) {
+      return "Only JPG, JPEG, PNG, WEBP allowed";
+    }
 
-  if (file.size > maxSize) {
-    return "File size must be less than 5MB";
-  }
+    if (file.size > maxSize) {
+      return "File size must be less than 5MB";
+    }
 
-  return null;
-};
+    return null;
+  };
 
   // ── Derive overall membership status from activity fees ──────────────────
   const overallMembershipStatus = form.activityFees.some(
-    (af) => computeActivityStatus(af) === "Active"
-  ) ? "Active" : "Inactive";
+    (af) => computeActivityStatus(af) === "Active",
+  )
+    ? "Active"
+    : "Inactive";
 
   // Load Enquiries
   // useEffect(() => {
@@ -518,11 +674,18 @@ const validatePhoto = (file) => {
       try {
         setLoadingStaff(true);
         const res = await api.fitnessStaff.getAll({ limit: 200 });
-        const raw = res?.data?.data?.staff || res?.data?.staff || res?.data?.data || res?.data || [];
-        setStaffOptions((Array.isArray(raw) ? raw : []).map((s) => ({
-          value: s._id,
-          label: s.fullName || s.name || "Unnamed Staff",
-        })));
+        const raw =
+          res?.data?.data?.staff ||
+          res?.data?.staff ||
+          res?.data?.data ||
+          res?.data ||
+          [];
+        setStaffOptions(
+          (Array.isArray(raw) ? raw : []).map((s) => ({
+            value: s._id,
+            label: s.fullName || s.name || "Unnamed Staff",
+          })),
+        );
       } catch {
         toast.error("Could not load staff list.");
       } finally {
@@ -538,10 +701,12 @@ const validatePhoto = (file) => {
         setLoadingActivities(true);
         const res = await api.fitnessActivities.getAll();
         const raw = res?.data?.data || res?.data || res || [];
-        setActivityOptions((Array.isArray(raw) ? raw : []).map((a) => ({
-          value: a._id,
-          label: a.name || a.activityName || "Unnamed Activity",
-        })));
+        setActivityOptions(
+          (Array.isArray(raw) ? raw : []).map((a) => ({
+            value: a._id,
+            label: a.name || a.activityName || "Unnamed Activity",
+          })),
+        );
       } catch {
         toast.error("Could not load activities.");
       } finally {
@@ -558,13 +723,15 @@ const validatePhoto = (file) => {
         const res = await api.fitnessFees.getTypes();
         const fullList = res?.data || [];
         setFeeTypes(fullList);
-        setFeeTypeOptions(fullList
-          .filter((ft) => ft.type !=="Membership Pass")
-          .map((ft) => ({
-          value: ft._id,
-          label: ft.description,
-          data: ft,
-        })));
+        setFeeTypeOptions(
+          fullList
+            .filter((ft) => ft.type !== "Membership Pass")
+            .map((ft) => ({
+              value: ft._id,
+              label: ft.description,
+              data: ft,
+            })),
+        );
       } catch {
         toast.error("Could not load fee types.");
       } finally {
@@ -586,7 +753,10 @@ const validatePhoto = (file) => {
         age: enq.age || "",
         gender: enq.gender || "Male",
         address: enq.address || "",
-        staff: typeof enq.responsibleStaff === "object" ? enq.responsibleStaff?._id || "" : enq.responsibleStaff || prev.staff,
+        staff:
+          typeof enq.responsibleStaff === "object"
+            ? enq.responsibleStaff?._id || ""
+            : enq.responsibleStaff || prev.staff,
       }));
       setSelectedEnquiry({
         value: enq._id,
@@ -596,34 +766,33 @@ const validatePhoto = (file) => {
     }
   }, [isEdit, location.state]);
 
- const loadEnquiryOptions = async (inputValue) => {
-  try {
-    setLoadingEnquiries(true);
+  const loadEnquiryOptions = async (inputValue) => {
+    try {
+      setLoadingEnquiries(true);
 
-    const res = await api.fitnessEnquiry.getAll({
-      search: inputValue || "",
-      page: 1,
-      limit: 20
-    });
+      const res = await api.fitnessEnquiry.getAll({
+        search: inputValue || "",
+        page: 1,
+        limit: 20,
+      });
 
-    const data = (res?.data?.data || []).filter(
-      (item) => item.status !== "Admitted"
-    );
+      const data = (res?.data?.data || []).filter(
+        (item) => item.status !== "Admitted",
+      );
 
-    return data.map((e) => ({
-      value: e._id,
-      label: `${e.enquiryId || "ENQ"} - ${e.fullName} (${e.mobile})`,
-      data: e,
-    }));
-
-  } catch (error) {
-    console.error(error);
-    toast.error("Could not load enquiries");
-    return [];
-  } finally {
-    setLoadingEnquiries(false);
-  }
-};
+      return data.map((e) => ({
+        value: e._id,
+        label: `${e.enquiryId || "ENQ"} - ${e.fullName} (${e.mobile})`,
+        data: e,
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not load enquiries");
+      return [];
+    } finally {
+      setLoadingEnquiries(false);
+    }
+  };
 
   // Load Member for Edit
   useEffect(() => {
@@ -635,13 +804,24 @@ const validatePhoto = (file) => {
         if (!member) return;
 
         let activityFees = [{ ...emptyActivityFee }];
-        if (Array.isArray(member.activityFees) && member.activityFees.length > 0) {
+        if (
+          Array.isArray(member.activityFees) &&
+          member.activityFees.length > 0
+        ) {
           activityFees = member.activityFees.map((af) => {
-            const ftId = typeof af.feeType === "object" ? af.feeType?._id : af.feeType;
+            const ftId =
+              typeof af.feeType === "object" ? af.feeType?._id : af.feeType;
             const ftData = feeTypes.find((f) => f._id === ftId);
             return {
-              activity: af.activity ? { value: af.activity._id || af.activity, label: af.activity.name || af.activity.activityName || "" } : null,
-              feeType: ftData ? { value: ftData._id, label: ftData.description, data: ftData } : null,
+              activity: af.activity
+                ? {
+                    value: af.activity._id || af.activity,
+                    label: af.activity.name || af.activity.activityName || "",
+                  }
+                : null,
+              feeType: ftData
+                ? { value: ftData._id, label: ftData.description, data: ftData }
+                : null,
               plan: af.plan || "Monthly",
               planFee: af.planFee ?? "",
               discount: af.discount ?? "",
@@ -652,7 +832,10 @@ const validatePhoto = (file) => {
               planNotes: af.planNotes || "",
               startDate: formatDateForInput(af.startDate),
               endDate: formatDateForInput(af.endDate),
-              staff: typeof af.staff === "object" ? af.staff?._id || "" : af.staff || "",
+              staff:
+                typeof af.staff === "object"
+                  ? af.staff?._id || ""
+                  : af.staff || "",
               slot: af.slot ? { value: af.slot, label: af.slot } : null,
             };
           });
@@ -664,7 +847,10 @@ const validatePhoto = (file) => {
           startDate: formatDateForInput(member.startDate),
           endDate: formatDateForInput(member.endDate),
           photoPreview: member.photo || null,
-          staff: typeof member.staff === "object" ? member.staff?._id || "" : member.staff || "",
+          staff:
+            typeof member.staff === "object"
+              ? member.staff?._id || ""
+              : member.staff || "",
           activityFees,
         });
       } catch {
@@ -683,13 +869,13 @@ const validatePhoto = (file) => {
   // }, [isEdit]);
 
   useEffect(() => {
-  if (!isEdit && form.mobile) {
-    setForm((prev) => ({
-      ...prev,
-      password: generatePassword(prev.name, prev.mobile),
-    }));
-  }
-}, [form.name, form.mobile, isEdit]);
+    if (!isEdit && form.mobile) {
+      setForm((prev) => ({
+        ...prev,
+        password: generatePassword(prev.name, prev.mobile),
+      }));
+    }
+  }, [form.name, form.mobile, isEdit]);
 
   const prefillFromEnquiry = (enq) => {
     setForm((prev) => ({
@@ -701,7 +887,10 @@ const validatePhoto = (file) => {
       age: enq.age || "",
       gender: enq.gender || "Male",
       address: enq.address || "",
-      staff: typeof enq.responsibleStaff === "object" ? enq.responsibleStaff?._id || "" : enq.responsibleStaff || prev.staff,
+      staff:
+        typeof enq.responsibleStaff === "object"
+          ? enq.responsibleStaff?._id || ""
+          : enq.responsibleStaff || prev.staff,
     }));
   };
 
@@ -728,7 +917,8 @@ const validatePhoto = (file) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => setForm((p) => ({ ...p, photo: file, photoPreview: ev.target.result }));
+    reader.onload = (ev) =>
+      setForm((p) => ({ ...p, photo: file, photoPreview: ev.target.result }));
     reader.readAsDataURL(file);
   };
 
@@ -773,52 +963,52 @@ const validatePhoto = (file) => {
   // };
 
   const fetchAvailableSlots = async (index, activityId, startDate, endDate) => {
-  if (!activityId || !startDate || !endDate) return;
+    if (!activityId || !startDate || !endDate) return;
 
-  try {
-    const res = await api.fitnessActivities.availability({
-      activityId,
-      startDate,
-      endDate,
-    });
+    try {
+      const res = await api.fitnessActivities.availability({
+        activityId,
+        startDate,
+        endDate,
+      });
 
-    const availabilityData = res.data?.data || res.data || [];
+      const availabilityData = res.data?.data || res.data || [];
 
-    const slots = availabilityData.map((slotInfo) => ({
-      value: slotInfo.slotId || slotInfo._id || slotInfo.id,
-      label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.remaining}/${slotInfo.capacity} remaining)`,
-      disabled: slotInfo.isFull || slotInfo.remaining <= 0,
-    }));
+      const slots = availabilityData.map((slotInfo) => ({
+        value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+        label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.remaining}/${slotInfo.capacity} remaining)`,
+        disabled: slotInfo.isFull || slotInfo.remaining <= 0,
+      }));
 
-    // const slots = availabilityData
-    //   .map((slotInfo) => ({
-    //     value: slotInfo.slotId || slotInfo._id || slotInfo.id,
-    //     label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays || 0}/${slotInfo.totalDays || 0} days - ${slotInfo.availabilityPercentage || 0}%)`,
-    //     disabled: (slotInfo.fullyAvailableDays || 0) === 0,
-    //   }))
+      // const slots = availabilityData
+      //   .map((slotInfo) => ({
+      //     value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+      //     label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays || 0}/${slotInfo.totalDays || 0} days - ${slotInfo.availabilityPercentage || 0}%)`,
+      //     disabled: (slotInfo.fullyAvailableDays || 0) === 0,
+      //   }))
       // Removed strict membersOnly filter - show all returned slots
       // (Backend should already return relevant ones)
 
-    setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
+      setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
 
-    // Auto-select first available slot
-    setForm((prev) => {
-      const current = prev.activityFees[index];
-      if (!current.slot && slots.length > 0) {
-        const firstAvailable = slots.find((s) => !s.disabled);
-        if (firstAvailable) {
-          const updated = [...prev.activityFees];
-          updated[index] = { ...updated[index], slot: firstAvailable };
-          return { ...prev, activityFees: updated };
+      // Auto-select first available slot
+      setForm((prev) => {
+        const current = prev.activityFees[index];
+        if (!current.slot && slots.length > 0) {
+          const firstAvailable = slots.find((s) => !s.disabled);
+          if (firstAvailable) {
+            const updated = [...prev.activityFees];
+            updated[index] = { ...updated[index], slot: firstAvailable };
+            return { ...prev, activityFees: updated };
+          }
         }
-      }
-      return prev;
-    });
-  } catch (err) {
-    console.error("Failed to fetch slot availability", err);
-    toast.error("Could not load available slots for the selected date range");
-  }
-};
+        return prev;
+      });
+    } catch (err) {
+      console.error("Failed to fetch slot availability", err);
+      toast.error("Could not load available slots for the selected date range");
+    }
+  };
 
   const handleActivityFeeChange = (index, field, value) => {
     setForm((prev) => {
@@ -826,8 +1016,11 @@ const validatePhoto = (file) => {
       updated[index] = { ...updated[index], [field]: value };
 
       if (field === "planFee" || field === "discount") {
-        const f = parseFloat(field === "planFee" ? value : updated[index].planFee) || 0;
-        const d = parseFloat(field === "discount" ? value : updated[index].discount) || 0;
+        const f =
+          parseFloat(field === "planFee" ? value : updated[index].planFee) || 0;
+        const d =
+          parseFloat(field === "discount" ? value : updated[index].discount) ||
+          0;
         updated[index].finalAmount = f > 0 ? String(Math.max(0, f - d)) : "";
       }
       return { ...prev, activityFees: updated };
@@ -846,7 +1039,7 @@ const validatePhoto = (file) => {
 
       // Recompute finalAmount if planFee or discount changed
       if ("planFee" in patch || "discount" in patch) {
-        const f = parseFloat(updated[index].planFee)  || 0;
+        const f = parseFloat(updated[index].planFee) || 0;
         const d = parseFloat(updated[index].discount) || 0;
         updated[index].finalAmount = f > 0 ? String(Math.max(0, f - d)) : "";
       }
@@ -855,11 +1048,17 @@ const validatePhoto = (file) => {
   };
 
   const addActivityFee = () => {
-    setForm((prev) => ({ ...prev, activityFees: [...prev.activityFees, { ...emptyActivityFee }] }));
+    setForm((prev) => ({
+      ...prev,
+      activityFees: [...prev.activityFees, { ...emptyActivityFee }],
+    }));
   };
 
   const removeActivityFee = (index) => {
-    setForm((prev) => ({ ...prev, activityFees: prev.activityFees.filter((_, i) => i !== index) }));
+    setForm((prev) => ({
+      ...prev,
+      activityFees: prev.activityFees.filter((_, i) => i !== index),
+    }));
     setAvailableSlots((prev) => {
       const updated = { ...prev };
       delete updated[index];
@@ -871,16 +1070,21 @@ const validatePhoto = (file) => {
     const e = {};
     if (!form.name.trim()) e.name = "Full name is required.";
     if (!form.mobile.trim()) e.mobile = "Mobile number is required.";
-    else if (!/^\d{10}$/.test(form.mobile)) e.mobile = "Enter a valid 10-digit mobile.";
-    if (form.email && !/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email.";
+    else if (!/^\d{10}$/.test(form.mobile))
+      e.mobile = "Enter a valid 10-digit mobile.";
+    if (form.email && !/\S+@\S+\.\S+/.test(form.email))
+      e.email = "Enter a valid email.";
     if (!form.password?.trim()) e.password = "Password is required.";
 
     form.activityFees.forEach((af, i) => {
-      if (!af.activity) e[`activityFees_${i}_activity`] = "Activity is required.";
-      if (!af.startDate) e[`activityFees_${i}_startDate`] = "Start date is required.";
+      if (!af.activity)
+        e[`activityFees_${i}_activity`] = "Activity is required.";
+      if (!af.startDate)
+        e[`activityFees_${i}_startDate`] = "Start date is required.";
       if (!af.endDate) e[`activityFees_${i}_endDate`] = "End date is required.";
       if (af.startDate && af.endDate && af.endDate < af.startDate) {
-        e[`activityFees_${i}_endDate`] = "End date cannot be before start date.";
+        e[`activityFees_${i}_endDate`] =
+          "End date cannot be before start date.";
       }
     });
     return e;
@@ -897,14 +1101,19 @@ const validatePhoto = (file) => {
     setLoading(true);
     try {
       const formData = new FormData();
-      const skip = new Set(["photo", "photoPreview", "enquiryId", "activityFees"]);
+      const skip = new Set([
+        "photo",
+        "photoPreview",
+        "enquiryId",
+        "activityFees",
+      ]);
 
       Object.keys(form).forEach((key) => {
         if (skip.has(key)) return;
 
         let value = form[key];
         if (key === "staff") {
-          value = (value && value !== "" && value !== "-") ? value : "";
+          value = value && value !== "" && value !== "-" ? value : "";
         }
 
         if (value !== null && value !== undefined && value !== "") {
@@ -914,29 +1123,35 @@ const validatePhoto = (file) => {
 
       if (form.enquiryId) formData.append("enquiryId", form.enquiryId);
       if (form.photo instanceof File) {
-        formData.append('profilePhoto', form.photo);
+        formData.append("profilePhoto", form.photo);
       }
       if (errors.photo) {
-  toast.error("Fix photo error before submitting");
-  return;
-}
+        toast.error("Fix photo error before submitting");
+        return;
+      }
 
       const serialized = form.activityFees.map((af, index) => ({
-        activity:        af.activity?.value || null,
-        feeType:         af.feeType?.value || null,
-        plan:            af.plan,
-        planFee:         Number(af.planFee) || 0,
-        discount:        Number(af.discount) || 0,
-        finalAmount:     Number(af.finalAmount) || 0,
-        paymentStatus:   af.paymentStatus || "Pending",
-        paymentMode:     af.paymentMode || "",
-        paymentDate:     af.paymentDate || null,
-        planNotes:       af.planNotes || "",
-        startDate:       af.startDate,
-        endDate:         af.endDate,
+        activity: af.activity?.value || null,
+        feeType: af.feeType?.value || null,
+        plan: af.plan,
+        planFee: Number(af.planFee) || 0,
+        discount: Number(af.discount) || 0,
+        finalAmount: Number(af.finalAmount) || 0,
+        paymentStatus: af.paymentStatus || "Pending",
+        paymentMode: af.paymentMode || "",
+        paymentDate: af.paymentDate || null,
+        planNotes: af.planNotes || "",
+        startDate: af.startDate,
+        endDate: af.endDate,
         // membershipStatus is computed server-side; no need to send
-        staff:           (af.staff && af.staff !== "" && af.staff !== "-") ? af.staff : null,
-        slot:            af.slot?.value || null,
+        staff:
+          af.staff && af.staff !== "" && af.staff !== "-" ? af.staff : null,
+        slot: af.slot
+          ? {
+              slotId: af.slot.value,
+              label: af.slot.label,
+            }
+          : null,
         activityFeeIndex: index,
       }));
 
@@ -953,35 +1168,35 @@ const validatePhoto = (file) => {
       setSaved(true);
       setTimeout(() => navigate("/fitness/members"), 1500);
     } catch (err) {
-  console.error("Save Error:", err?.response?.data || err);
+      console.error("Save Error:", err?.response?.data || err);
 
-  const msg =
-    err?.response?.data?.message ||
-    err?.message ||
-    "Failed to save member.";
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to save member.";
 
-  const code = err?.response?.data?.code;
+      const code = err?.response?.data?.code;
 
-  // 🎯 Handle file-specific errors properly
-  if (code === "FILE_TOO_LARGE" || code === "INVALID_FILE_TYPE") {
-    setErrors((prev) => ({ ...prev, photo: msg }));
-    return;
-  }
+      // 🎯 Handle file-specific errors properly
+      if (code === "FILE_TOO_LARGE" || code === "INVALID_FILE_TYPE") {
+        setErrors((prev) => ({ ...prev, photo: msg }));
+        return;
+      }
 
-  // 🎯 Handle validation errors (backend field errors)
-  if (msg.toLowerCase().includes("mobile")) {
-    setErrors((prev) => ({ ...prev, mobile: msg }));
-    return;
-  }
+      // 🎯 Handle validation errors (backend field errors)
+      if (msg.toLowerCase().includes("mobile")) {
+        setErrors((prev) => ({ ...prev, mobile: msg }));
+        return;
+      }
 
-  if (msg.toLowerCase().includes("name")) {
-    setErrors((prev) => ({ ...prev, name: msg }));
-    return;
-  }
+      if (msg.toLowerCase().includes("name")) {
+        setErrors((prev) => ({ ...prev, name: msg }));
+        return;
+      }
 
-  // fallback
-  toast.error(msg);
-} finally {
+      // fallback
+      toast.error(msg);
+    } finally {
       setLoading(false);
     }
   };
@@ -991,11 +1206,23 @@ const validatePhoto = (file) => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-lg p-10 flex flex-col items-center gap-4">
           <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-8 h-8 text-green-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <p className="text-lg font-semibold text-gray-800">Member {isEdit ? "updated" : "added"} successfully!</p>
+          <p className="text-lg font-semibold text-gray-800">
+            Member {isEdit ? "updated" : "added"} successfully!
+          </p>
           <p className="text-sm text-gray-500">Redirecting to members list…</p>
         </div>
       </div>
@@ -1007,97 +1234,166 @@ const validatePhoto = (file) => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{isEdit ? "Edit Member" : "Add Member"}</h1>
-        <button onClick={() => navigate("/fitness/members")} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+        <h1 className="text-2xl font-bold text-gray-800">
+          {isEdit ? "Edit Member" : "Add Member"}
+        </h1>
+        <button
+          onClick={() => navigate("/fitness/members")}
+          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
           Back to Members
         </button>
       </div>
 
       {!isEdit && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Select Enquiry (Optional)</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">
+            Select Enquiry (Optional)
+          </h2>
           <div className="max-w-md">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Choose an existing enquiry to auto-fill details</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Choose an existing enquiry to auto-fill details
+            </label>
             <AsyncSelect
-  cacheOptions
-  defaultOptions
-  loadOptions={loadEnquiryOptions}
-  onChange={handleEnquirySelect}
-  value={selectedEnquiry}
-  placeholder="Search and select fitness enquiry..."
-  isClearable
-  isLoading={loadingEnquiries}
-  noOptionsMessage={() => "No converted enquiries found"}
-  classNamePrefix="react-select"
-/>
+              cacheOptions
+              defaultOptions
+              loadOptions={loadEnquiryOptions}
+              onChange={handleEnquirySelect}
+              value={selectedEnquiry}
+              placeholder="Search and select fitness enquiry..."
+              isClearable
+              isLoading={loadingEnquiries}
+              noOptionsMessage={() => "No converted enquiries found"}
+              classNamePrefix="react-select"
+            />
           </div>
-          <p className="text-sm text-gray-500 mt-2">OR fill the member form manually below</p>
+          <p className="text-sm text-gray-500 mt-2">
+            OR fill the member form manually below
+          </p>
         </div>
       )}
 
       <div className="bg-white rounded-xl shadow p-6 sm:p-8 max-w-5xl space-y-8">
         {/* Personal Information */}
         <div>
-          <h2 className="text-base font-bold text-[#1a2a5e] mb-4">Personal Information</h2>
+          <h2 className="text-base font-bold text-[#1a2a5e] mb-4">
+            Personal Information
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_1fr] gap-4 mb-4">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Profile Photo</label>
-              <div onClick={() => fileRef.current.click()} className="w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center cursor-pointer hover:border-[#1a2a5e] transition-colors overflow-hidden">
+              <label className="block text-xs text-gray-600 mb-1">
+                Profile Photo
+              </label>
+              <div
+                onClick={() => fileRef.current.click()}
+                className="w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center cursor-pointer hover:border-[#1a2a5e] transition-colors overflow-hidden"
+              >
                 {form.photoPreview ? (
-                  <img src={form.photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={form.photoPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="text-center">
-                    <svg className="w-7 h-7 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-7 h-7 text-gray-400 mx-auto"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                     <p className="text-xs text-gray-400 mt-1">Photo</p>
                   </div>
                 )}
               </div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
-  const file = e.target.files[0];
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files[0];
 
-  const error = validatePhoto(file);
-  if (error) {
-    setErrors((prev) => ({ ...prev, photo: error }));
-    e.target.value = null;
-    return;
-  }
+                  const error = validatePhoto(file);
+                  if (error) {
+                    setErrors((prev) => ({ ...prev, photo: error }));
+                    e.target.value = null;
+                    return;
+                  }
 
-  setErrors((prev) => ({ ...prev, photo: null }));
+                  setErrors((prev) => ({ ...prev, photo: null }));
 
-  setForm((prev) => ({
-    ...prev,
-    photo: file,
-    photoPreview: URL.createObjectURL(file),
-  }));
-}} />{errors.photo && (
-  <p className="mt-1 text-xs text-red-500">{errors.photo}</p>
-)}
+                  setForm((prev) => ({
+                    ...prev,
+                    photo: file,
+                    photoPreview: URL.createObjectURL(file),
+                  }));
+                }}
+              />
+              {errors.photo && (
+                <p className="mt-1 text-xs text-red-500">{errors.photo}</p>
+              )}
             </div>
             <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Full Name" name="name" placeholder="Enter full name" required {...fieldProps} />
-              <Field label="Mobile Number" name="mobile" placeholder="10-digit number" required {...fieldProps} />
+              <Field
+                label="Full Name"
+                name="name"
+                placeholder="Enter full name"
+                required
+                {...fieldProps}
+              />
+              <Field
+                label="Mobile Number"
+                name="mobile"
+                placeholder="10-digit number"
+                required
+                {...fieldProps}
+              />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <Field label="Email" name="email" type="email" placeholder="email@example.com" {...fieldProps} />
-<Field
-  label="Age"
-  name="age"
-  type="text"
-  placeholder="Age"
-  onChange={(e) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 2);
-    fieldProps.onChange({ target: { name: "age", value } });
-  }}
-  {...fieldProps}
-/>            <Field label="Gender" name="gender" options={GENDERS} {...fieldProps} />
+            <Field
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="email@example.com"
+              {...fieldProps}
+            />
+            <Field
+              label="Age"
+              name="age"
+              type="text"
+              placeholder="Age"
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 2);
+                fieldProps.onChange({ target: { name: "age", value } });
+              }}
+              {...fieldProps}
+            />{" "}
+            <Field
+              label="Gender"
+              name="gender"
+              options={GENDERS}
+              {...fieldProps}
+            />
           </div>
           <div>
             <label className="block text-xs text-gray-600 mb-1">Address</label>
-            <input type="text" name="address" value={form.address} onChange={handleChange} placeholder="Full address"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]" />
+            <input
+              type="text"
+              name="address"
+              value={form.address}
+              onChange={handleChange}
+              placeholder="Full address"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+            />
           </div>
         </div>
 
@@ -1105,27 +1401,48 @@ const validatePhoto = (file) => {
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <h2 className="text-base font-bold text-[#1a2a5e]">Activities &amp; Fee Details</h2>
+              <h2 className="text-base font-bold text-[#1a2a5e]">
+                Activities &amp; Fee Details
+              </h2>
               {/* Overall Membership Status Badge */}
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                overallMembershipStatus === "Active"
-                  ? "bg-green-50 border-green-300 text-green-700"
-                  : "bg-gray-100 border-gray-300 text-gray-500"
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${overallMembershipStatus === "Active" ? "bg-green-500" : "bg-gray-400"}`} />
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                  overallMembershipStatus === "Active"
+                    ? "bg-green-50 border-green-300 text-green-700"
+                    : "bg-gray-100 border-gray-300 text-gray-500"
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${overallMembershipStatus === "Active" ? "bg-green-500" : "bg-gray-400"}`}
+                />
                 Overall: {overallMembershipStatus}
               </span>
             </div>
-            <button type="button" onClick={addActivityFee}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#1a2a5e] hover:bg-[#152147] text-white text-sm font-semibold rounded-lg transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            <button
+              type="button"
+              onClick={addActivityFee}
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#1a2a5e] hover:bg-[#152147] text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Activity
             </button>
           </div>
           <p className="text-xs text-gray-500 mb-4">
-            Select a <span className="font-medium text-gray-700">Fee Type</span> and <span className="font-medium text-gray-700">Plan</span> — the fee amount and end date auto-fill.
+            Select a <span className="font-medium text-gray-700">Fee Type</span>{" "}
+            and <span className="font-medium text-gray-700">Plan</span> — the
+            fee amount and end date auto-fill.
           </p>
 
           <div className="space-y-4">
@@ -1153,10 +1470,19 @@ const validatePhoto = (file) => {
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold text-gray-700">
-                Total Final Amount{form.activityFees.length > 1 ? ` (${form.activityFees.length} activities)` : ""}
+                Total Final Amount
+                {form.activityFees.length > 1
+                  ? ` (${form.activityFees.length} activities)`
+                  : ""}
               </span>
               <span className="font-bold text-[#1a2a5e] text-base">
-                ₹{form.activityFees.reduce((sum, af) => sum + (parseFloat(af.finalAmount) || 0), 0).toLocaleString("en-IN")}
+                ₹
+                {form.activityFees
+                  .reduce(
+                    (sum, af) => sum + (parseFloat(af.finalAmount) || 0),
+                    0,
+                  )
+                  .toLocaleString("en-IN")}
               </span>
             </div>
           </div>
@@ -1164,26 +1490,42 @@ const validatePhoto = (file) => {
 
         {/* Login Details */}
         <div>
-          <h2 className="text-base font-bold text-[#1a2a5e] mb-4">Login Details</h2>
+          <h2 className="text-base font-bold text-[#1a2a5e] mb-4">
+            Login Details
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="User ID (Mobile)" name="userId" placeholder="Auto from mobile" readOnly {...fieldProps} />
+            <Field
+              label="User ID (Mobile)"
+              name="userId"
+              placeholder="Auto from mobile"
+              readOnly
+              {...fieldProps}
+            />
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 Password<span className="text-red-500 ml-0.5">*</span>
               </label>
               <input
-                type="text" name="password" value={form.password} onChange={handleChange}
+                type="text"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
                 placeholder="e.g. EMP@1234"
                 className={`w-full border rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#000359]/30 focus:border-[#000359] bg-white transition-all ${errors.password ? "border-red-400 bg-red-50" : "border-gray-300"}`}
               />
-              {errors.password && <p className="text-xs text-red-500 mt-0.5">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-0.5">{errors.password}</p>
+              )}
             </div>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-6 border-t">
-          <button onClick={() => navigate("/fitness/members")} className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50">
+          <button
+            onClick={() => navigate("/fitness/members")}
+            className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          >
             Cancel
           </button>
           <button
@@ -1192,9 +1534,24 @@ const validatePhoto = (file) => {
             className="px-8 py-2.5 bg-[#1a2a5e] hover:bg-[#152147] text-white rounded-lg text-sm font-semibold disabled:opacity-70 flex items-center gap-2"
           >
             {loading && (
-              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              <svg
+                className="animate-spin w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                />
               </svg>
             )}
             {loading ? "Saving..." : isEdit ? "Update Member" : "Save Member"}
@@ -1204,10 +1561,3 @@ const validatePhoto = (file) => {
     </div>
   );
 }
-
-
-
-
-
-
-
