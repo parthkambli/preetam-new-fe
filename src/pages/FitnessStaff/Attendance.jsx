@@ -1861,9 +1861,23 @@ export default function AttendancePage() {
 
       setToastMsg(data.message || "Attendance processed");
 
-      if (data.autoMarked) {
-        fetchAttendance(selectedDate);
-      } else if (data.activities?.length > 0) {
+     if (data.autoMarked) {
+
+  if (data.isMembershipPass) {
+
+    setToastMsg(
+      `Membership Pass | Allowed Persons: ${data.numberOfPersons}`
+    );
+
+  } else {
+
+    setToastMsg(
+      data.message || "Attendance processed"
+    );
+  }
+
+  fetchAttendance(selectedDate);
+} else if (data.activities?.length > 0) {
         setSelectedMember({
           memberId: data.member.memberId,
           activities: data.activities

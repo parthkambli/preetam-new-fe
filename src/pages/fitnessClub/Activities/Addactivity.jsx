@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 import AsyncSelect from "react-select/async";
+import Select from "react-select";
 
 export default function AddActivity({ onCancel, onSaved, editData }) {
   const [activityName, setActivityName] = useState("");
@@ -10,6 +11,9 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   // const [staffList, setStaffList] = useState([]);
+
+  const [feeTypes, setFeeTypes] = useState([]);
+  const [selectedFeeType, setSelectedFeeType] = useState([]);
 
   const [slots, setSlots] = useState([
     { startTime: "", endTime: "", staffId: "" }
@@ -47,6 +51,16 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
     },
   ]
 );
+
+ setSelectedFeeType(
+  editData.feeTypeId
+    ? {
+        value: editData.feeTypeId._id,
+        label: editData.feeTypeId.description,
+      }
+    : null
+);
+
     }
   }, [editData]);
 
@@ -58,6 +72,19 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
   //     console.error(err);
   //   }
   // };
+
+  const fetchFeeTypes = async () => {
+  try {
+    const res = await api.fitnessFees.getTypes();
+    setFeeTypes(res.data || []);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+useEffect(() => {
+  fetchFeeTypes();
+}, []);
 
   const loadStaffOptions = async (inputValue) => {
   try {
@@ -103,6 +130,9 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
     if (!capacity || Number(capacity) <= 0)
       return setError("Valid capacity required");
 
+    if (!selectedFeeType)
+  return setError("Fee type required");
+
     for (let slot of slots) {
       if (!slot.startTime || !slot.endTime || !slot.staffId) {
         return setError("Fill all slot fields");
@@ -112,10 +142,11 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
     try {
       setSaving(true);
       const payload = {
-        name: activityName.trim(),
-        capacity: Number(capacity),
-        slots
-      };
+  name: activityName.trim(),
+  capacity: Number(capacity),
+  slots,
+  feeTypeId: selectedFeeType?.value
+};
 
       if (editData) {
         await api.fitnessActivities.update(editData._id, payload);
@@ -165,6 +196,31 @@ export default function AddActivity({ onCancel, onSaved, editData }) {
             className="input"
           />
         </div>
+
+        {/* Fee Types */}
+      <div className="col-span-">
+  <label className="block text-sm font-medium text-gray-600 mb-2">
+    Fee Types
+  </label>
+
+  <Select
+  options={feeTypes.map((fee) => ({
+    value: fee._id,
+    label: fee.description,
+  }))}
+
+  value={selectedFeeType}
+
+  onChange={(selected) =>
+    setSelectedFeeType(selected)
+  }
+
+  placeholder="Select Fee Type"
+  classNamePrefix="react-select"
+  className="text-sm"
+/>
+</div>
+
 
         {/* Slots */}
         <div className="space-y-3">
