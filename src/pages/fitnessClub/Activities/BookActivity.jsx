@@ -2346,7 +2346,12 @@ export default function BookActivity() {
     setFilteredMembers(filtered);
   }, [memberName, members]);
 
-  const uniqueActivities = [...new Set(bookings.map(b => b.activityName).filter(Boolean))];
+  // const uniqueActivities = [...new Set(bookings.map(b => b.activityName).filter(Boolean))];
+
+  const activityOptions = activities.map((a) => ({
+  label: a.name,
+  value: a.name
+}));
 
   return (
     <div className="space-y-6">
@@ -2358,16 +2363,23 @@ export default function BookActivity() {
           {/* LEFT SIDE - Selection + Slots */}
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <select
-                value={selectedActivity}
-                onChange={(e) => setSelectedActivity(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
-              >
-                <option value="">Select Activity</option>
-                {activities.map(a => (
-                  <option key={a._id} value={a._id}>{a.name}</option>
-                ))}
-              </select>
+              <div className="w-72">
+  <Select
+    options={activityOptions}
+    value={
+      activityOptions.find(
+        (a) => a.value === filterActivity
+      ) || null
+    }
+    onChange={(selected) => {
+      setFilterActivity(selected?.value || '');
+      setPage(1);
+    }}
+    placeholder="Search Activity"
+    isClearable
+    classNamePrefix="react-select"
+  />
+</div>
 
               <input
                 type="date"
@@ -2553,28 +2565,49 @@ export default function BookActivity() {
             type="text"
             placeholder="Search Member Name"
             value={filterMember}
-            onChange={(e) => setFilterMember(e.target.value)}
+            onChange={(e) => {
+  setFilterMember(e.target.value);
+  setPage(1);
+}}
             className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#000359]"
           />
-          <select
-            value={filterActivity}
-            onChange={(e) => setFilterActivity(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-[#000359]"
-          >
-            <option value="">All Activities</option>
-            {uniqueActivities.map(name => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
+          <div className="w-72">
+  <Select
+    options={activityOptions}
+    value={
+      activityOptions.find(
+        (a) => a.value === filterActivity
+      ) || null
+    }
+    onChange={(selected) => {
+      setFilterActivity(selected?.value || '');
+      setPage(1);
+    }}
+    placeholder="Search Activity"
+    isClearable
+    classNamePrefix="react-select"
+  />
+</div>
           <div className="flex items-center gap-2">
-            <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+            <input type="date" value={filterDateFrom} onChange={(e) => {
+  setFilterDateFrom(e.target.value);
+  setPage(1);
+}} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
             <span className="text-sm text-gray-500">to</span>
-            <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+            <input type="date" value={filterDateTo} onChange={(e) => {
+  setFilterDateTo(e.target.value);
+  setPage(1);
+}}className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
           </div>
           {(filterMember || filterActivity || filterDateFrom || filterDateTo) && (
-            <button onClick={() => {
-              setFilterMember(''); setFilterActivity(''); setFilterDateFrom(''); setFilterDateTo('');
-            }} className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
+            <button
+  onClick={() => {
+    setFilterMember('');
+    setFilterActivity('');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setPage(1);
+  }} className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
               Clear Filters
             </button>
           )}
@@ -2604,7 +2637,10 @@ export default function BookActivity() {
                   <td className="px-5 py-4 font-semibold text-gray-800">{b.customerName}</td>
                   <td className="px-5 py-4 text-gray-600">{b.activityName}</td>
                   <td className="px-5 py-4 text-gray-600">{b.slotTime}</td>
-                  <td className="px-5 py-4 text-gray-600">{b.date}</td>
+                  {/* <td className="px-5 py-4 text-gray-600">{b.date}</td> */}
+                  <td className="px-5 py-4 text-gray-600">
+  {new Date(b.date).toLocaleDateString()}
+</td>
                   <td className="px-5 py-4">
                     <button onClick={() => handleCancel(b._id)} className="px-4 py-1.5 text-xs font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
                       Cancel

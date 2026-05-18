@@ -294,13 +294,13 @@ export default function ViewMember() {
                 className="w-40 h-40 border p-2 rounded-lg bg-white"
               />
 
-              <a
+              {/* <a
                 href={member.qrCode}
                 download={`qr-${member.memberId}.png`}
                 className="mt-2 text-sm text-blue-600 hover:underline"
               >
                 Download QR
-              </a>
+              </a> */}
             </>
           ) : (
             <p className="text-sm text-gray-400">QR not generated</p>
@@ -398,12 +398,12 @@ export default function ViewMember() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ReadField label="User ID" value={member.userId} />
-          <div>
+          {/* <div>
             <label className="block text-xs text-gray-500 mb-1">Password</label>
             <div className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 bg-gray-50">
               ••••••••
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

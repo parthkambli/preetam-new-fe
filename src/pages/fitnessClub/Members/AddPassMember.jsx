@@ -944,13 +944,13 @@ useEffect(() => {
                   className="w-40 h-40 border p-2 rounded-lg bg-white"
                 />
 
-                <a
+                {/* <a
                   href={form.qrCode}
                   download={`qr-${form.userId}.png`}
                   className="mt-2 text-sm text-blue-600 hover:underline"
                 >
                   Download QR
-                </a>
+                </a> */}
               </>
             ) : (
               <p className="text-sm text-gray-400">
@@ -1094,7 +1094,7 @@ useEffect(() => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="User ID (Mobile)" name="userId" placeholder="Auto from mobile" readOnly {...fieldProps} />
            <div className="flex flex-col gap-1">
-  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+  {/* <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
     Password
     {!isEdit && <span className="text-red-500 ml-0.5">*</span>}
     {isEdit && (
@@ -1102,9 +1102,9 @@ useEffect(() => {
         (optional for edit)
       </span>
     )}
-  </label>
+  </label> */}
 
-  <input
+  {/* <input
     type="text"
     name="password"
     value={form.password}
@@ -1126,7 +1126,7 @@ useEffect(() => {
     <p className="text-xs text-red-500 mt-0.5">
       {errors.password}
     </p>
-  )}
+  )} */}
 </div>
           </div>
         </div>
