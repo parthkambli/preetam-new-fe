@@ -649,13 +649,25 @@ function RenewModal({ member, onClose, onRenewed }) {
 
       const availabilityData = res.data?.data || res.data || [];
 
-      const slots = availabilityData.map((slotInfo) => ({
-        value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+      const slots = availabilityData.map((slotInfo) => {
 
-        label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.remaining}/${slotInfo.capacity} remaining)`,
+        const percentage = slotInfo.availabilityPercentage || 0;
 
-        disabled: slotInfo.isFull || slotInfo.remaining <= 0,
-      }));
+        let status = "Good";
+
+        if (percentage <= 20) status = "Very Limited";
+        else if (percentage <= 50) status = "Limited";
+
+        return {
+          value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+
+          label:
+            `${slotInfo.startTime} - ${slotInfo.endTime} • ` +
+            `${slotInfo.fullyAvailableDays}/${slotInfo.totalDays} days • ${status}`,
+
+          disabled: slotInfo.fullyAvailableDays === 0,
+        };
+      });
 
       setAvailableSlots((prev) => ({
         ...prev,
