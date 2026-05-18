@@ -5,13 +5,44 @@ import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 import PassRenewModal from "./PassRenewModal";
 import Pagination from "../../../components/Pagination";
+import Select from "react-select";
 
 const PLAN_OPTIONS = [
-  { value: "Annual", label: "Annual", months: 12 },
-  { value: "Monthly", label: "Monthly", months: 1 },
-  { value: "Weekly", label: "Weekly", days: 7 },
-  { value: "Daily", label: "Daily", days: 1 },
-  { value: "Hourly", label: "Hourly", days: 1 },
+  {
+    value: "Annual",
+    label: "Annual",
+    months: 12,
+  },
+  {
+    value: "halfYearly",
+    label: "Half Yearly",
+    months: 6,
+  },
+  {
+    value: "quarterly",
+    label: "Quarterly",
+    months: 3,
+  },
+  {
+    value: "Monthly",
+    label: "Monthly",
+    months: 1,
+  },
+  {
+    value: "Weekly",
+    label: "Weekly",
+    days: 7,
+  },
+  {
+    value: "Daily",
+    label: "Daily",
+    days: 1,
+  },
+  {
+    value: "Hourly",
+    label: "Hourly",
+    days: 1,
+  },
 ];
 
 const PAYMENT_MODES = ["Cash", "Bank Transfer"];
@@ -45,6 +76,15 @@ const computeEndDate = (startDate, plan) => {
       d.setFullYear(d.getFullYear() + 1);
       d.setDate(d.getDate() - 1);
       break;
+    case "halfYearly":
+      d.setMonth(d.getMonth() + 6);
+      d.setDate(d.getDate() - 1);
+      break;
+
+    case "quarterly":
+      d.setMonth(d.getMonth() + 3);
+      d.setDate(d.getDate() - 1);
+      break;
     case "Monthly":
       d.setMonth(d.getMonth() + 1);
       d.setDate(d.getDate() - 1);
@@ -58,6 +98,36 @@ const computeEndDate = (startDate, plan) => {
   return d.toISOString().split("T")[0];
 };
 
+const getPlanFeeFromFeeType = (feeType, plan) => {
+  if (!feeType || !plan) return 0;
+
+  switch (plan) {
+    case "Annual":
+      return feeType.annual || 0;
+
+    case "halfYearly":
+      return feeType.halfYearly || 0;
+
+    case "quarterly":
+      return feeType.quarterly || 0;
+
+    case "Monthly":
+      return feeType.monthly || 0;
+
+    case "Weekly":
+      return feeType.weekly || 0;
+
+    case "Daily":
+      return feeType.daily || 0;
+
+    case "Hourly":
+      return feeType.hourly || 0;
+
+    default:
+      return 0;
+  }
+};
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("en-GB", {
@@ -68,73 +138,138 @@ const formatDate = (dateStr) => {
 };
 
 // Remaining Days Logic
-const getNearestEndDate = (member) => {
-  // Pass member
-  if (member.membershipPass?.endDate) {
-    return member.membershipPass.endDate;
-  }
+// const getNearestEndDate = (member) => {
+//   // Pass member
+//   if (member.membershipPass?.endDate) {
+//     return member.membershipPass.endDate;
+//   }
 
-  // Activity member
-  const validDates = (member.activityFees || [])
-    .map((af) => af.endDate)
-    .filter(Boolean);
+//   // Activity member
+//   const validDates = (member.activityFees || [])
+//     .map((af) => af.endDate)
+//     .filter(Boolean);
 
-  if (validDates.length === 0) return null;
-  // this block shows which activity membership going "end first"
-  // return validDates.reduce((earliest, curr) =>
-  //   new Date(curr) < new Date(earliest) ? curr : earliest
-  // );
+//   if (validDates.length === 0) return null;
+//   // this block shows which activity membership going "end first"
+//   // return validDates.reduce((earliest, curr) =>
+//   //   new Date(curr) < new Date(earliest) ? curr : earliest
+//   // );
 
-  // this block shows which activity membership is going to "end last"
-  // this is what client want...
-  return validDates.reduce((latest, curr) =>
-    new Date(curr) > new Date(latest) ? curr : latest,
-  );
-};
+//   // this block shows which activity membership is going to "end last"
+//   // this is what client want...
+//   return validDates.reduce((latest, curr) =>
+//     new Date(curr) > new Date(latest) ? curr : latest,
+//   );
+// };
 
-const getRemainingDays = (endDate) => {
-  if (!endDate) return { label: "—", type: "normal" };
+// const getRemainingDays = (endDate) => {
+//   if (!endDate) return { label: "—", type: "normal" };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
 
-  const end = new Date(endDate);
-  end.setHours(23, 59, 59, 999);
+//   const end = new Date(endDate);
+//   end.setHours(23, 59, 59, 999);
 
-  const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+//   const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 
-  if (diff < 0) return { label: "Expired", type: "expired" };
-  if (diff === 0) return { label: "Last Day", type: "warning" };
-  if (diff <= 3) return { label: `${diff} days`, type: "warning" };
+//   if (diff < 0) return { label: "Expired", type: "expired" };
+//   if (diff === 0) return { label: "Last Day", type: "warning" };
+//   if (diff <= 3) return { label: `${diff} days`, type: "warning" };
 
-  return { label: `${diff} days`, type: "normal" };
-};
+//   return { label: `${diff} days`, type: "normal" };
+// };
 
-const getActivityExpiryDetails = (activityFees = []) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+// const getRemainingDays = (startDate, endDate) => {
+//   if (!endDate) {
+//     return {
+//       label: "—",
+//       type: "normal",
+//     };
+//   }
 
-  return activityFees
-    .map((af, i) => {
-      if (!af.endDate) return null;
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
 
-      const end = new Date(af.endDate);
-      const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+//   // FUTURE MEMBERSHIP
+//   if (startDate) {
+//     const start = new Date(startDate);
+//     start.setHours(0, 0, 0, 0);
 
-      const name =
-        typeof af.activity === "object"
-          ? af.activity?.name ||
-            af.activity?.activityName ||
-            `Activity ${i + 1}`
-          : `Activity ${i + 1}`;
+//     if (today < start) {
+//       const startDiff = Math.ceil(
+//         (start - today) /
+//         (1000 * 60 * 60 * 24)
+//       );
 
-      return `${name}: ${
-        diff < 0 ? "Expired" : diff === 0 ? "Last Day" : `${diff} days`
-      }`;
-    })
-    .filter(Boolean)
-    .join(" | ");
-};
+//       return {
+//         label: `Starts in ${startDiff} day${startDiff > 1 ? "s" : ""}`,
+//         type: "upcoming",
+//       };
+//     }
+//   }
+
+//   // NORMAL ACTIVE / EXPIRED LOGIC
+//   const end = new Date(endDate);
+//   end.setHours(23, 59, 59, 999);
+
+//   const diff = Math.ceil(
+//     (end - today) /
+//     (1000 * 60 * 60 * 24)
+//   );
+
+//   if (diff < 0) {
+//     return {
+//       label: "Expired",
+//       type: "expired",
+//     };
+//   }
+
+//   if (diff === 0) {
+//     return {
+//       label: "Last Day",
+//       type: "warning",
+//     };
+//   }
+
+//   if (diff <= 3) {
+//     return {
+//       label: `${diff} days`,
+//       type: "warning",
+//     };
+//   }
+
+//   return {
+//     label: `${diff} days`,
+//     type: "normal",
+//   };
+// };
+
+// const getActivityExpiryDetails = (activityFees = []) => {
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+
+//   return activityFees
+//     .map((af, i) => {
+//       if (!af.endDate) return null;
+
+//       const end = new Date(af.endDate);
+//       const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+//       const name =
+//         typeof af.activity === "object"
+//           ? af.activity?.name ||
+//             af.activity?.activityName ||
+//             `Activity ${i + 1}`
+//           : `Activity ${i + 1}`;
+
+//       return `${name}: ${
+//         diff < 0 ? "Expired" : diff === 0 ? "Last Day" : `${diff} days`
+//       }`;
+//     })
+//     .filter(Boolean)
+//     .join(" | ");
+// };
 
 // ── Activity Summary Pill (used in table row) ─────────────────────────────────
 function ActivitySummaryPills({ activityFees }) {
@@ -181,6 +316,10 @@ function ActivityRenewRow({
   onChange,
   activityName,
   staffList,
+  availableSlots,
+  onSlotFetch,
+  feeTypeOptions,
+  onFeeTypeFetch,
 }) {
   const currentStatus = computeActivityStatus(af);
 
@@ -193,6 +332,26 @@ function ActivityRenewRow({
       }
     }
   }, [renewal.startDate, renewal.plan]);
+
+  useEffect(() => {
+    if (renewal.activityId && renewal.startDate && renewal.endDate) {
+      onSlotFetch(
+        index,
+        renewal.activityId,
+        renewal.startDate,
+        renewal.endDate,
+      );
+    }
+  }, [renewal.activityId, renewal.startDate, renewal.endDate]);
+
+  useEffect(() => {
+  if (renewal.activityId) {
+    onFeeTypeFetch(
+      renewal.activityId,
+      index
+    );
+  }
+}, [renewal.activityId]);
 
   // Auto-compute final amount
   const computedFinal =
@@ -274,6 +433,25 @@ function ActivityRenewRow({
             </div>
             <div>
               <label className="block text-xs text-gray-600 mb-1">
+                Fee Type
+              </label>
+
+              <Select
+                options={feeTypeOptions}
+                value={renewal.feeType}
+                onChange={(sel) =>
+                  onChange(index, "feeType", sel)
+                }
+                placeholder="Select Fee Type"
+                classNamePrefix="react-select"
+              />
+            </div>
+          </div>
+
+          {/* End Date */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
                 New Start Date <span className="text-red-400">*</span>
               </label>
               <input
@@ -283,23 +461,21 @@ function ActivityRenewRow({
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
               />
             </div>
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">
-              New End Date
-              <span className="ml-1 text-[10px] text-gray-400">
-                (auto-filled)
-              </span>
-            </label>
-            <input
-              type="date"
-              value={renewal.endDate}
-              onChange={(e) => onChange(index, "endDate", e.target.value)}
-              min={renewal.startDate || "1900-01-01"}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-            />
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
+                New End Date
+                <span className="ml-1 text-[10px] text-gray-400">
+                  (auto-filled)
+                </span>
+              </label>
+              <input
+                type="date"
+                value={renewal.endDate}
+                onChange={(e) => onChange(index, "endDate", e.target.value)}
+                min={renewal.startDate || "1900-01-01"}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+              />
+            </div>
           </div>
 
           {/* Fees */}
@@ -342,6 +518,22 @@ function ActivityRenewRow({
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-500 focus:outline-none"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">
+              Available Slot
+            </label>
+
+            <Select
+              options={availableSlots}
+              value={renewal.slot}
+              onChange={(sel) => onChange(index, "slot", sel)}
+              placeholder="Select slot"
+              isClearable
+              isOptionDisabled={(opt) => opt.disabled}
+              classNamePrefix="react-select"
+            />
           </div>
 
           {/* Payment */}
@@ -423,6 +615,8 @@ function ActivityRenewRow({
 // ── Renew Modal ───────────────────────────────────────────────────────────────
 function RenewModal({ member, onClose, onRenewed }) {
   const [staffList, setStaffList] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState({});
+  const [feeTypeOptions, setFeeTypeOptions] = useState({});
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -443,6 +637,64 @@ function RenewModal({ member, onClose, onRenewed }) {
     fetchStaff();
   }, []);
 
+  const fetchAvailableSlots = async (index, activityId, startDate, endDate) => {
+    if (!activityId || !startDate || !endDate) return;
+
+    try {
+      const res = await api.fitnessActivities.availability({
+        activityId,
+        startDate,
+        endDate,
+      });
+
+      const availabilityData = res.data?.data || res.data || [];
+
+      const slots = availabilityData.map((slotInfo) => ({
+        value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+
+        label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.remaining}/${slotInfo.capacity} remaining)`,
+
+        disabled: slotInfo.isFull || slotInfo.remaining <= 0,
+      }));
+
+      setAvailableSlots((prev) => ({
+        ...prev,
+        [index]: slots,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch slots", err);
+
+      toast.error("Could not load available slots");
+    }
+  };
+
+  const fetchFeeTypes = async (activityId, index) => {
+  if (!activityId) return;
+
+  try {
+    const res = await api.fitnessFees.getTypes();
+
+    const raw =
+      res.data?.data ||
+      res.data ||
+      [];
+
+    const options = raw.map((ft) => ({
+      value: ft._id,
+      label: ft.description,
+      data: ft,
+    }));
+
+    setFeeTypeOptions((prev) => ({
+      ...prev,
+      [index]: options,
+    }));
+
+  } catch (err) {
+    console.error("Failed to fetch fee types", err);
+  }
+};
+
   // Build initial renewal state for each activityFee
   const buildInitialRenewals = () =>
     (member.activityFees || []).map((af) => {
@@ -455,11 +707,26 @@ function RenewModal({ member, onClose, onRenewed }) {
       const startDate = afterEnd < todayString() ? todayString() : afterEnd;
       const plan = af.plan || "Monthly";
       return {
-        selected: computeActivityStatus(af) !== "Active", // pre-select inactive ones
+        selected: (() => {
+          if (!af.endDate) return true;
+
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const end = new Date(af.endDate);
+          end.setHours(23, 59, 59, 999);
+
+          return end < today;
+        })(), // pre-select inactive ones
         plan,
         startDate,
         endDate: computeEndDate(startDate, plan),
-        planFee: String(af.planFee || ""),
+        planFee: String(
+          getPlanFeeFromFeeType(
+            af.feeType,
+            plan
+          ) || 0
+        ),
         discount: "0",
         paymentStatus: "Paid",
         paymentMode: af.paymentMode || "",
@@ -468,8 +735,20 @@ function RenewModal({ member, onClose, onRenewed }) {
         activityFeeId: af._id,
         activityId:
           typeof af.activity === "object" ? af.activity?._id : af.activity,
+        feeTypeData:
+          typeof af.feeType === "object"? af.feeType : null,
         feeTypeId:
           typeof af.feeType === "object" ? af.feeType?._id : af.feeType,
+        feeType:
+          af.feeType
+            ? {
+                value: af.feeType._id,
+                label:
+                  af.feeType.name ||
+                  af.feeType.feeTypeName,
+                data: af.feeType,
+              }
+            : null,
         staffId: typeof af.staff === "object" ? af.staff?._id : af.staff,
         slot: af.slot
           ? {
@@ -487,7 +766,42 @@ function RenewModal({ member, onClose, onRenewed }) {
   const handleChange = (index, field, value) => {
     setRenewals((prev) => {
       const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      if (
+  field === "plan" ||
+  field === "feeType"
+    ) {
+      const feeTypeData =
+        field === "feeType"
+          ? value?.data
+          : updated[index].feeType?.data;
+
+      const plan =
+        field === "plan"
+          ? value
+          : updated[index].plan;
+
+      const autoFee =
+        getPlanFeeFromFeeType(
+          feeTypeData,
+          plan
+        );
+
+      updated[index].planFee =
+        String(autoFee || 0);
+
+      updated[index].feeTypeData =
+        feeTypeData;
+
+      updated[index].feeTypeId =
+        field === "feeType"
+          ? value?.value || null
+          : updated[index].feeTypeId;
+    }
+
       // Recompute final amount on fee/discount change
       if (field === "planFee" || field === "discount") {
         const f =
@@ -534,7 +848,10 @@ function RenewModal({ member, onClose, onRenewed }) {
       .map((r) => ({
         activityFeeId: r.activityFeeId,
         activityId: r.activityId,
-        feeTypeId: r.feeTypeId,
+        feeTypeId:
+          r.feeType?.value ||
+          r.feeTypeId ||
+          null,
         staffId: r.staffId,
         plan: r.plan,
         startDate: r.startDate,
@@ -548,7 +865,12 @@ function RenewModal({ member, onClose, onRenewed }) {
         paymentStatus: r.paymentStatus,
         paymentMode: r.paymentMode || "",
         paymentDate: r.paymentDate || null,
-        slot: r.slot || null,
+        slot: r.slot
+          ? {
+              slotId: r.slot.value,
+              label: r.slot.label,
+            }
+          : null,
       }));
 
     setLoading(true);
@@ -634,6 +956,10 @@ function RenewModal({ member, onClose, onRenewed }) {
               onChange={handleChange}
               activityName={getActivityName(af, i)}
               staffList={staffList}
+              availableSlots={availableSlots[i] || []}
+              feeTypeOptions={feeTypeOptions[i] || []}
+              onFeeTypeFetch={fetchFeeTypes}
+              onSlotFetch={fetchAvailableSlots}
             />
           ))}
         </div>
@@ -721,6 +1047,9 @@ export default function Members() {
   const [renewMember, setRenewMember] = useState(null);
   const [renewPassMember, setRenewPassMember] = useState(null);
   const [planTypeFilter, setPlanTypeFilter] = useState("");
+  const [membershipPlanFilter, setMembershipPlanFilter] = useState("");
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -736,6 +1065,9 @@ export default function Members() {
         search: searchTerm,
         status: statusFilter,
         plan: planTypeFilter,
+        membershipPlan: membershipPlanFilter,
+        startDate: startDateFilter,
+        endDate: endDateFilter,
       });
       // backend returns array directly (applyComputedStatuses is run server-side)
       const raw = response?.data?.data || [];
@@ -756,11 +1088,28 @@ export default function Members() {
 
   useEffect(() => {
     fetchMembers();
-  }, [page, limit, searchTerm, statusFilter, planTypeFilter]);
+  }, [
+    page,
+    limit,
+    searchTerm,
+    statusFilter,
+    planTypeFilter,
+    membershipPlanFilter,
+    startDateFilter,
+    endDateFilter,
+  ]);
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, statusFilter, planTypeFilter, limit]);
+  }, [
+    searchTerm,
+    statusFilter,
+    planTypeFilter,
+    membershipPlanFilter,
+    startDateFilter,
+    endDateFilter,
+    limit,
+  ]);
 
   // Overall status is driven by the computed membershipStatus from backend
   const getMemberOverallStatus = (member) =>
@@ -818,12 +1167,20 @@ export default function Members() {
           )}
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={fetchMembers}
+          {/* <button
+            onClick={() => {
+              setSearchTerm("");
+              setStatusFilter("");
+              setPlanTypeFilter("");
+              setMembershipPlanFilter("");
+              setStartDateFilter("");
+              setEndDateFilter("");
+              setPage(1);
+            }}
             className="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
           >
-            ↻ Refresh
-          </button>
+            ↻ Reset Filters
+          </button> */}
           <button
             onClick={() => navigate("/fitness/members/add-members")}
             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
@@ -840,34 +1197,71 @@ export default function Members() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
+        {/* Search */}
         <input
           type="text"
           placeholder="Search by Name or Mobile"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+          className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
         />
 
+        {/* Plan Type */}
         <select
           value={planTypeFilter}
           onChange={(e) => setPlanTypeFilter(e.target.value)}
-          className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+          className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
         >
-          <option value="">All Plans</option>
+          <option value="">All Types</option>
           <option value="Pass">Pass</option>
           <option value="Activity">Activity</option>
         </select>
+
+        {/* Membership Plan */}
+        <select
+          value={membershipPlanFilter}
+          onChange={(e) => setMembershipPlanFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+        >
+          <option value="">All Membership Plans</option>
+
+          <option value="Annual">Annual</option>
+          <option value="halfYearly">Half Yearly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Daily">Daily</option>
+          <option value="Hourly">Hourly</option>
+        </select>
+
+        {/* Status */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-52 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+          className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
         >
           <option value="">All Status</option>
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>
         </select>
-      </div>
+
+        {/* Start Date */}
+        <input
+          type="date"
+          value={startDateFilter}
+          onChange={(e) => setStartDateFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+        />
+
+        {/* End Date */}
+        <input
+          type="date"
+          value={endDateFilter}
+          onChange={(e) => setEndDateFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
+        />
+</div>
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -926,16 +1320,48 @@ export default function Members() {
                   // const isPassMember = !!member.membershipPass;
                   const isPassMember = isPassMemberFn(member);
 
-                  const endDate = getNearestEndDate(member);
-                  const remaining = getRemainingDays(endDate);
+                  // const endDate = getNearestEndDate(member);
+                  // const nearestActivity = activityFees.reduce((latest, curr) => {
+                  //   if (!latest) return curr;
 
-                  const tooltip = getActivityExpiryDetails(member.activityFees);
+                  //   return new Date(curr.endDate) >
+                  //     new Date(latest.endDate)
+                  //     ? curr
+                  //     : latest;
+                  // }, null);
 
-                  const inactiveCount = isPassMember
-                    ? 0
-                    : activityFees.filter(
-                        (af) => computeActivityStatus(af) !== "Active",
-                      ).length;
+                  // const remaining = getRemainingDays(
+                  //   nearestActivity?.startDate,
+                  //   nearestActivity?.endDate
+                  // );
+
+                  // const tooltip = getActivityExpiryDetails(member.activityFees);
+
+                  const remaining = {
+                    label: member.remainingDays || "—",
+                    type:
+                      member.remainingDays === "Expired"
+                        ? "expired"
+                        : member.remainingDays === "Last Day"
+                          ? "warning"
+                          : member.remainingDays?.startsWith("Starts in")
+                            ? "upcoming"
+                            : "normal",
+                  };
+
+                  // const inactiveCount = isPassMember
+                  //   ? 0
+                  //   : activityFees.filter((af) => {
+                  //       if (!af.endDate) return true;
+
+                  //       const today = new Date();
+                  //       today.setHours(0, 0, 0, 0);
+
+                  //       const end = new Date(af.endDate);
+                  //       end.setHours(23, 59, 59, 999);
+
+                  //       return end < today;
+                  //     }).length;
 
                   return (
                     <tr
@@ -1008,7 +1434,9 @@ export default function Members() {
                                 ? "text-red-500"
                                 : remaining.type === "warning"
                                   ? "text-orange-500"
-                                  : "text-gray-700"
+                                  : remaining.type === "upcoming"
+                                    ? "text-blue-500"
+                                    : "text-gray-700"
                             }`}
                           >
                             {remaining.label}
@@ -1101,14 +1529,29 @@ export default function Members() {
                               }
                             }}
                             className="border border-[#1a2a5e] text-[#1a2a5e] hover:bg-[#1a2a5e] hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                          >
+                          > 
                             Edit
                           </button>
 
                           {/* w — show if any activity is inactive/expired */}
-                          {(isPassMember
-                            ? overallStatus !== "Active"
-                            : inactiveCount > 0) && (
+                          {/* {(() => {
+                        if (isPassMember) {
+                          const pass = member.membershipPass;
+
+                          if (!pass?.endDate) return true;
+
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+
+                          const end = new Date(pass.endDate);
+                          end.setHours(23, 59, 59, 999);
+
+                          return end < today;
+                        }
+
+                        return inactiveCount > 0;
+                      })() && ( */}
+                      {member.remainingDays === "Expired" && (
                             <button
                               onClick={() => {
                                 if (isPassMember) {
@@ -1118,10 +1561,11 @@ export default function Members() {
                                 }
                               }}
                               className="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
-                              title={`${inactiveCount} activit${inactiveCount === 1 ? "y" : "ies"} need renewal`}
+                              // title={`${inactiveCount} activit${inactiveCount === 1 ? "y" : "ies"} need renewal`}  
+                              title="Membership expired"
                             >
                               Renew
-                              {inactiveCount > 1 ? ` (${inactiveCount})` : ""}
+                              {/* {inactiveCount > 1 ? ` (${inactiveCount})` : ""} */}
                             </button>
                           )}
 
