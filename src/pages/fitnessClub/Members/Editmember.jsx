@@ -818,11 +818,25 @@ export default function EditMember() {
       });
       const availabilityData = res.data?.data || res.data || [];
 
-      const slots = availabilityData.map((s) => ({
-        value: s.slotId,
-        label: `${s.startTime} - ${s.endTime} (${s.fullyAvailableDays}/${s.totalDays} days - ${s.availabilityPercentage}%)`,
-        disabled: s.fullyAvailableDays === 0,
-      }));
+      const slots = availabilityData.map((slotInfo) => {
+
+        const percentage = slotInfo.availabilityPercentage || 0;
+
+        let status = "Good";
+
+        if (percentage <= 20) status = "Very Limited";
+        else if (percentage <= 50) status = "Limited";
+
+        return {
+          value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+
+          label:
+            `${slotInfo.startTime} - ${slotInfo.endTime} • ` +
+            `${slotInfo.fullyAvailableDays}/${slotInfo.totalDays} days • ${status}`,
+
+          disabled: slotInfo.fullyAvailableDays === 0,
+        };
+      });
 
       setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
       setForm((prev) => {
@@ -1311,7 +1325,7 @@ export default function EditMember() {
               readOnly
               {...fieldProps}
             />
-            <div className="flex flex-col gap-1">
+            {/* <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 New Password
               </label>
@@ -1326,7 +1340,7 @@ export default function EditMember() {
               {errors.password && (
                 <p className="text-xs text-red-500 mt-0.5">{errors.password}</p>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
 
