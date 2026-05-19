@@ -634,7 +634,7 @@ export default function AddFitnessEnquiry() {
 
       // Navigate after showing toast
       setTimeout(() => {
-        navigate('/fitness/enquiry');
+        navigate('/fitness-staff/enquiry');
       }, 1200);
 
     } catch (err) {
@@ -669,7 +669,7 @@ export default function AddFitnessEnquiry() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-800">Add Enquiry</h1>
         <button
-          onClick={() => navigate('/fitness/enquiry')}
+          onClick={() => navigate('/fitness-staff/enquiry')}
           className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
         >
           Back
@@ -835,7 +835,7 @@ export default function AddFitnessEnquiry() {
         <div className="flex justify-end gap-4 mt-8">
           <button
             type="button"
-            onClick={() => navigate('/fitness/enquiry')}
+            onClick={() => navigate('/fitness-staff/enquiry')}
             className="px-8 py-3 border rounded-lg"
           >
             Cancel

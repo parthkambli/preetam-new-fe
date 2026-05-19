@@ -988,7 +988,7 @@ export default function EditMember() {
 
       await api.fitnessMember.update(id, formData);
       toast.success("Member updated successfully!");
-      setTimeout(() => navigate("/fitness/members"), 1200);
+      setTimeout(() => navigate("/fitness-staff/members"), 1200);
     } catch (err) {
       console.error("Update Error:", err?.response?.data || err);
 
@@ -1069,7 +1069,7 @@ export default function EditMember() {
         <div className="text-center">
           <p className="text-gray-500 mb-4">Member not found.</p>
           <button
-            onClick={() => navigate("/fitness/members")}
+            onClick={() => navigate("/fitness-staff/members")}
             className="bg-[#1a2a5e] text-white px-5 py-2 rounded-lg text-sm"
           >
             Back to Members
@@ -1086,7 +1086,7 @@ export default function EditMember() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Edit Member</h1>
         <button
-          onClick={() => navigate("/fitness/members")}
+          onClick={() => navigate("/fitness-staff/members")}
           className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
         >
           Back to Members
@@ -1347,7 +1347,7 @@ export default function EditMember() {
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-6 border-t">
           <button
-            onClick={() => navigate("/fitness/members")}
+            onClick={() => navigate("/fitness-staff/members")}
             className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
             Cancel
