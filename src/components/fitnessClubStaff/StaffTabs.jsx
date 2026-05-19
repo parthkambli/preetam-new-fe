@@ -5,7 +5,7 @@ const TABS = [
   { key: 'add-staff',           label: 'Add Staff'            },
   { key: 'add-role',            label: 'Add Role'             },
   { key: 'add-employment-type', label: 'Add Employment Type'  },
-  { key: 'view-attendance',     label: 'View Attendance'      },
+  // { key: 'view-attendance',     label: 'View Attendance'      },
 ];
 
 export default function StaffTabs({ activeTab = 'staff', onTabChange }) {   // ← Changed default here too

@@ -2637,10 +2637,8 @@ export default function BookActivity() {
                   <td className="px-5 py-4 font-semibold text-gray-800">{b.customerName}</td>
                   <td className="px-5 py-4 text-gray-600">{b.activityName}</td>
                   <td className="px-5 py-4 text-gray-600">{b.slotTime}</td>
-                  {/* <td className="px-5 py-4 text-gray-600">{b.date}</td> */}
-                  <td className="px-5 py-4 text-gray-600">
-  {new Date(b.date).toLocaleDateString()}
-</td>
+                  <td className="px-5 py-4 text-gray-600">{b.date}</td>
+                  
                   <td className="px-5 py-4">
                     <button onClick={() => handleCancel(b._id)} className="px-4 py-1.5 text-xs font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
                       Cancel

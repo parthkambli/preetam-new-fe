@@ -6,7 +6,7 @@ import { api } from "../../../services/apiClient";
 import PassRenewModal from "./PassRenewModal";
 import Pagination from "../../../components/Pagination";
 import Select from "react-select";
-
+import AsyncSelect from "react-select/async";
 const PLAN_OPTIONS = [
   {
     value: "Annual",
@@ -320,6 +320,7 @@ function ActivityRenewRow({
   onSlotFetch,
   feeTypeOptions,
   onFeeTypeFetch,
+  loadStaffOptions,
 }) {
   const currentStatus = computeActivityStatus(af);
 
@@ -592,19 +593,53 @@ function ActivityRenewRow({
               Responsible Staff
             </label>
 
-            <select
-              value={renewal.staffId || ""}
-              onChange={(e) => onChange(index, "staffId", e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2a5e]"
-            >
-              <option value="">Select Staff</option>
+            <AsyncSelect
+  cacheOptions
+  defaultOptions
 
-              {(staffList || []).map((staff) => (
-                <option key={staff._id} value={staff._id}>
-                  {staff.name || staff.fullName || "Unnamed"}
-                </option>
-              ))}
-            </select>
+  loadOptions={loadStaffOptions}
+
+  value={
+    renewal.staffId
+      ? {
+          value: renewal.staffId,
+          label:
+            renewal.staffName ||
+            "Selected Staff",
+        }
+      : null
+  }
+
+  onChange={(selected) => {
+
+    onChange(
+      index,
+      "staffId",
+      selected?.value || ""
+    );
+
+    onChange(
+      index,
+      "staffName",
+      selected?.label || ""
+    );
+  }}
+
+  placeholder="Search Staff..."
+
+  isClearable
+
+  classNamePrefix="react-select"
+
+  menuPortalTarget={document.body}
+
+  styles={{
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  }}
+/>
           </div>
         </div>
       )}
@@ -691,11 +726,16 @@ function RenewModal({ member, onClose, onRenewed }) {
       res.data ||
       [];
 
-    const options = raw.map((ft) => ({
-      value: ft._id,
-      label: ft.description,
-      data: ft,
-    }));
+    const options = raw
+  .filter(
+    (ft) =>
+      ft.type !== "Membership Pass"
+  )
+  .map((ft) => ({
+    value: ft._id,
+    label: ft.description,
+    data: ft,
+  }));
 
     setFeeTypeOptions((prev) => ({
       ...prev,
@@ -704,6 +744,48 @@ function RenewModal({ member, onClose, onRenewed }) {
 
   } catch (err) {
     console.error("Failed to fetch fee types", err);
+  }
+};
+
+
+
+const loadStaffOptions = async (
+  inputValue
+) => {
+  try {
+
+    const res =
+      await api.fitnessStaff.getAll({
+        page: 1,
+        limit: 20,
+        search: inputValue,
+      });
+
+    const data =
+      res.data?.data?.staff ||
+      res.data?.data ||
+      [];
+
+    return data.map((staff) => ({
+      value: staff._id,
+
+      label:
+        staff.name ||
+        staff.fullName ||
+        staff.user?.name ||
+        `${staff.firstName || ""} ${staff.lastName || ""}`.trim() ||
+        staff.mobile ||
+        "Unnamed",
+    }));
+
+  } catch (err) {
+
+    console.error(
+      "Failed loading staff",
+      err
+    );
+
+    return [];
   }
 };
 
@@ -768,6 +850,16 @@ function RenewModal({ member, onClose, onRenewed }) {
               label: af.slot.label,
             }
           : null,
+
+        staffName:
+  typeof af.staff === "object"
+    ? (
+        af.staff?.name ||
+        af.staff?.fullName ||
+        af.staff?.user?.name ||
+        `${af.staff?.firstName || ""} ${af.staff?.lastName || ""}`.trim()
+      )
+    : "",  
       };
     });
 
@@ -972,6 +1064,7 @@ function RenewModal({ member, onClose, onRenewed }) {
               feeTypeOptions={feeTypeOptions[i] || []}
               onFeeTypeFetch={fetchFeeTypes}
               onSlotFetch={fetchAvailableSlots}
+              loadStaffOptions={loadStaffOptions}
             />
           ))}
         </div>

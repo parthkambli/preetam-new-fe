@@ -287,7 +287,7 @@ const emptyForm = {
   weekly: '',
   daily: '',
   hourly: '',
-  type: 'Membership Pass',
+  type: 'Visitor',
   numberOfPersons: 1,
 };
 
