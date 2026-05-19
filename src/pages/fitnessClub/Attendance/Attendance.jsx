@@ -687,7 +687,7 @@ export default function Attendance() {
                   </td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => navigate(`/fitness/attendance/${row.activityId || row._id}`)}
+                      onClick={() => navigate(`/fitness/attendance/${row.activityId || 'pass'}`)}
                       className="bg-[#1e3a8a] hover:bg-[#1a2f72] text-white text-xs font-semibold px-4 py-1.5 rounded-md transition-colors"
                     >
                       View

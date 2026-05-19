@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
+import { useOrg } from "../../../context/OrgContext";
+
 // Plan keys must match AllotFees fieldMap exactly
 const PLAN_OPTIONS = [
   { value: "Annual",    label: "Annual",    feeKey: "annual"   },
@@ -96,21 +98,22 @@ const computeActivityStatus = (af) => {
 // ── Helper: today's date as YYYY-MM-DD ──────────────────────────────────────
 const todayString = () => new Date().toISOString().split("T")[0];
 
-const emptyActivityFee = {
-  activity:         null,
-  feeType:          null,
-  plan:             "Monthly",
-  planFee:          "",
-  discount:         "",
-  finalAmount:      "",
-  paymentStatus:    "Paid",
-  paymentMode:      "",
-  paymentDate:      todayString(),   // ← default to today
-  planNotes:        "",
-  startDate:        "",
-  endDate:          "",
-  slot:             null,
-};
+const createEmptyActivityFee = (staffId = null) => ({
+  activity: null,
+  feeType: null,
+  plan: "Monthly",
+  planFee: "",
+  discount: "",
+  finalAmount: "",
+  paymentStatus: "Paid",
+  paymentMode: "",
+  paymentDate: todayString(),
+  planNotes: "",
+  startDate: "",
+  endDate: "",
+  slot: null,
+  staff: staffId,
+});
 
 const emptyForm = {
   name:             "",
@@ -129,7 +132,7 @@ const emptyForm = {
   userId:           "",
   password:         "",
   enquiryId:        null,
-  activityFees:     [{ ...emptyActivityFee }],
+  activityFees: [],
 };
 
 const formatDateForInput = (v) => {
@@ -179,8 +182,12 @@ const Field = ({ label, name, type = "text", placeholder = "", required = false,
 
 // ── Per Activity Row ──────────────────────────────────────────────────────
 const ActivityFeeRow = ({
-  index, entry,
-  activityOptions, feeTypeOptions, staffOptions,
+  index,
+  entry,
+  currentUser,
+  activityOptions,
+  feeTypeOptions,
+  staffOptions,
   loadingActivities, loadingFeeTypes, loadingStaff,
   errors, onChange, onChangeBatch, onRemove, canRemove,
   onSlotFetch,
@@ -414,14 +421,15 @@ const ActivityFeeRow = ({
         )}
       </div>
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Responsible Person</label>
-          <Select
-            options={staffOptions}
-            value={staffOptions.find((opt) => opt.value === entry.staff) || null}
-            onChange={(sel) => onChange(index, "staff", sel?.value || null)}
-            placeholder={loadingStaff ? "Loading..." : "Select Responsible Staff"}
-            isClearable isLoading={loadingStaff}
-            classNamePrefix="react-select"
+          <label className="block text-xs text-gray-600 mb-1">
+            Responsible Person
+          </label>
+
+          <input
+            type="text"
+            value={currentUser?.fullName || ""}
+            readOnly
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-600"
           />
         </div>
       </div>
@@ -443,8 +451,12 @@ export default function AddMember() {
   const { id }   = useParams();
   const isEdit   = Boolean(id);
   const fileRef  = useRef();
+  const { user } = useOrg();
 
-  const [form, setForm]     = useState(emptyForm);
+  const [form, setForm] = useState({
+    ...emptyForm,
+    activityFees: [createEmptyActivityFee(user?.id)],
+  });
   const [errors, setErrors] = useState({});
   const [saved, setSaved]   = useState(false);
   const [loading, setLoading] = useState(false);
@@ -634,7 +646,7 @@ const validatePhoto = (file) => {
         const member = res?.data ?? res;
         if (!member) return;
 
-        let activityFees = [{ ...emptyActivityFee }];
+        let activityFees = [createEmptyActivityFee(user?.id)];
         if (Array.isArray(member.activityFees) && member.activityFees.length > 0) {
           activityFees = member.activityFees.map((af) => {
             const ftId = typeof af.feeType === "object" ? af.feeType?._id : af.feeType;
@@ -855,7 +867,7 @@ const validatePhoto = (file) => {
   };
 
   const addActivityFee = () => {
-    setForm((prev) => ({ ...prev, activityFees: [...prev.activityFees, { ...emptyActivityFee }] }));
+    setForm((prev) => ({ ...prev, activityFees: [...prev.activityFees, createEmptyActivityFee(user?.id)] }));
   };
 
   const removeActivityFee = (index) => {
@@ -1132,6 +1144,7 @@ const validatePhoto = (file) => {
             {form.activityFees.map((entry, index) => (
               <ActivityFeeRow
                 key={index}
+                currentUser={user}
                 index={index}
                 entry={{ ...entry, availableSlots: availableSlots[index] }}
                 activityOptions={activityOptions}

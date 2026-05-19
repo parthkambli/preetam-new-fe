@@ -2487,14 +2487,14 @@ export default function Members() {
           </button> */}
           {canAddMember && (
           <button
-            onClick={() => navigate("/fitness/members/add-members")}
+            onClick={() => navigate("/fitness-staff/members/add-members")}
             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
           >
             + Add Member
           </button>)}
           {canAddMember && (
           <button
-            onClick={() => navigate("/fitness/members/add-pass")}
+            onClick={() => navigate("/fitness-staff/members/add-pass")}
             className="bg-[#1a2a5e] hover:bg-[#152147] text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm shadow-md"
           >
             + Add Pass Member
@@ -2811,11 +2811,11 @@ export default function Members() {
                             onClick={() => {
                               if (isPassMemberFn(member)) {
                                 navigate(
-                                  `/fitness/members/view-pass/${member._id}`,
+                                  `/fitness-staff/members/view-pass/${member._id}`,
                                 );
                               } else {
                                 navigate(
-                                  `/fitness/members/view-member/${member._id}`,
+                                  `/fitness-staff/members/view-member/${member._id}`,
                                 );
                               }
                             }}
@@ -2828,11 +2828,11 @@ export default function Members() {
                             onClick={() => {
                               if (isPassMemberFn(member)) {
                                 navigate(
-                                  `/fitness/members/edit-pass/${member._id}`,
+                                  `/fitness-staff/members/edit-pass/${member._id}`,
                                 );
                               } else {
                                 navigate(
-                                  `/fitness/members/edit-member/${member._id}`,
+                                  `/fitness-staff/members/edit-member/${member._id}`,
                                 );
                               }
                             }}

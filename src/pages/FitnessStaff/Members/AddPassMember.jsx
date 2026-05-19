@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
+import { useOrg } from "../../../context/OrgContext";
 
 const PLAN_OPTIONS = [
   { value: "Annual",  label: "Annual",  feeKey: "annual"  },
@@ -160,20 +161,20 @@ const resolveApiError = (err) => {
 };
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
-const emptyPassFee = {
-  feeType:       null,
-  plan:          "Monthly",
-  planFee:       "",
-  discount:      "",
-  finalAmount:   "",
+const createEmptyPassFee = (staffId = null) => ({
+  feeType: null,
+  plan: "Monthly",
+  planFee: "",
+  discount: "",
+  finalAmount: "",
   paymentStatus: "Paid",
-  paymentMode:   "",
-  paymentDate:   todayString(),
-  planNotes:     "",
-  startDate:     "",
-  endDate:       "",
-  staff:         null,
-};
+  paymentMode: "",
+  paymentDate: todayString(),
+  planNotes: "",
+  startDate: "",
+  endDate: "",
+  staff: staffId,
+});
 
 const emptyForm = {
   name:            "",
@@ -193,7 +194,7 @@ const emptyForm = {
   userId:          "",
   password:        "",
   enquiryId:       null,
-  activityFees:    [{ ...emptyPassFee }],
+  activityFees: [],
 };
 
 // ─── Field component ──────────────────────────────────────────────────────────
@@ -224,7 +225,7 @@ const Field = ({ label, name, type = "text", placeholder = "", required = false,
 
 // ─── Membership Pass Fee Row ──────────────────────────────────────────────────
 const PassFeeRow = ({
-  entry, passFeeTypeOptions, staffOptions,
+  entry, currentUser, passFeeTypeOptions, staffOptions,
   loadingFeeTypes, loadingStaff, errors,
   onChange, onChangeBatch, isView,
 }) => {
@@ -403,13 +404,15 @@ const PassFeeRow = ({
           )}
         </div>
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Responsible Person</label>
-          <Select isDisabled={isView}
-            options={staffOptions}
-            value={staffOptions.find((opt) => opt.value === entry.staff) || null}
-            onChange={(sel) => onChange(0, "staff", sel?.value || null)}
-            placeholder={loadingStaff ? "Loading..." : "Select Responsible Staff"}
-            isClearable isLoading={loadingStaff} classNamePrefix="react-select"
+          <label className="block text-xs text-gray-600 mb-1">
+            Responsible Person
+          </label>
+
+          <input
+            type="text"
+            value={currentUser?.fullName || ""}
+            readOnly
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-600"
           />
         </div>
       </div>
@@ -433,9 +436,13 @@ export default function AddPassMember({ viewMode = false }) {
   const { id }   = useParams();
   const isEdit   = Boolean(id) && !viewMode;
   const isView   = viewMode === true;
-  const fileRef  = useRef();
+  const fileRef = useRef();
+  const { user } = useOrg();
 
-  const [form, setForm]       = useState(emptyForm);
+  const [form, setForm] = useState({
+    ...emptyForm,
+    activityFees: [createEmptyPassFee(user?.id)],
+  });
   const [errors, setErrors]   = useState({});
   const [saved, setSaved]     = useState(false);
   const [loading, setLoading] = useState(false);
@@ -580,7 +587,7 @@ export default function AddPassMember({ viewMode = false }) {
         const member = res?.data ?? res;
         if (!member) return;
 
-        let activityFees = [{ ...emptyPassFee }];
+        let activityFees = [createEmptyPassFee(user?.id)];
         if (Array.isArray(member.activityFees) && member.activityFees.length > 0) {
           const af     = member.activityFees[0];
           const ftId   = typeof af.feeType === "object" ? af.feeType?._id : af.feeType;
@@ -1068,6 +1075,7 @@ useEffect(() => {
 
           <PassFeeRow
             entry={passFee}
+            currentUser={user}
             passFeeTypeOptions={passFeeTypeOptions}
             staffOptions={staffOptions}
             loadingFeeTypes={loadingFeeTypes}
