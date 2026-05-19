@@ -286,6 +286,7 @@ setTotalCount(
                   <th className="p-4 text-left">Status</th>
                   <th className="p-4 text-left">Enquiry Date</th>
                   <th className="p-4 text-left">Follow-up Remark</th>
+                  <th className="p-4 text-left">Responsible Staff</th>
                   <th className="p-4 text-left">Action</th>
                 </tr>
               </thead>
@@ -306,6 +307,11 @@ setTotalCount(
                       {enq.enquiryDate ? new Date(enq.enquiryDate).toLocaleDateString() : '-'}
                     </td>
                     <td className="p-4 text-gray-600">{enq.remark || '-'}</td>
+                    <td className="p-4">
+  <span className="px-3 py-1 rounded-full text-sm bg-blue-50 text-blue-700 font-medium">
+    {enq.responsibleStaff || '-'}
+  </span>
+</td>
                     <td className="p-4">
                       {enq.status !== 'Admitted' && (
                         <button

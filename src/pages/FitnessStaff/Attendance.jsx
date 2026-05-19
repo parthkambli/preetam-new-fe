@@ -1928,12 +1928,30 @@ export default function AttendancePage() {
   return (
     <div className="space-y-8 px-4 pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#000033]">Attendance</h1>
-          <p className="text-gray-500 mt-1">{monthNames[currentMonth]} {currentYear}</p>
-        </div>
-      </div>
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  
+  {/* Left Side */}
+  <div>
+    <h1 className="text-3xl font-bold text-[#000033]">
+      Attendance
+    </h1>
+
+    <p className="text-gray-500 mt-1">
+      {monthNames[currentMonth]} {currentYear}
+    </p>
+  </div>
+
+  {/* Right Side */}
+  {hasPermission("MARK_ATTENDANCE") && (
+    <button
+      onClick={() => setScanning(!scanning)}
+      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all text-sm sm:text-base"
+    >
+      📱 {scanning ? "Stop Scanning" : "Scan Member QR"}
+    </button>
+  )}
+
+</div>
 
       {/* Date Scroller */}
       <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100">
@@ -1955,16 +1973,6 @@ export default function AttendancePage() {
           ))}
         </div>
       </div>
-
-      {/* Scan Button */}
-      {hasPermission("MARK_ATTENDANCE") && (
-        <button
-          onClick={() => setScanning(!scanning)}
-          className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-3 hover:shadow-lg transition-all"
-        >
-          📱 {scanning ? "Stop Scanning" : "Scan Member QR"}
-        </button>
-      )}
 
       {/* Scanner */}
       {scanning && hasPermission("MARK_ATTENDANCE") && (
