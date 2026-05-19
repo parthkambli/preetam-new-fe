@@ -473,10 +473,12 @@ import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { api } from '../../../services/apiClient';
 import { toast } from 'sonner';// added by aadi
+import { useOrg } from "../../../context/OrgContext";
 
 export default function AddFitnessEnquiry() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { user } = useOrg();
   const [error, setError] = useState('');
 
   const [staffList, setStaffList] = useState([]);
@@ -494,7 +496,7 @@ export default function AddFitnessEnquiry() {
     source: 'Walk-in',
     enquiryDate: new Date().toISOString().split('T')[0],
     notes: '',
-    responsibleStaff: '',
+    responsibleStaff: user?.id || '',
   });
 
   useEffect(() => {
@@ -627,7 +629,7 @@ export default function AddFitnessEnquiry() {
         source: 'Walk-in',
         enquiryDate: new Date().toISOString().split('T')[0],
         notes: '',
-        responsibleStaff: '',
+        responsibleStaff: user?.id || '',
       });
 
       // Navigate after showing toast
@@ -766,23 +768,14 @@ export default function AddFitnessEnquiry() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5">
-                Responsible Staff *
+                Responsible Staff
               </label>
-              <Select
-                isLoading={staffLoading}
-                options={staffOptions}
-                value={
-                  form.responsibleStaff
-                    ? staffOptions.find((opt) => opt.value === form.responsibleStaff) || null
-                    : null
-                }
-                onChange={(selected) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    responsibleStaff: selected?.value || '',
-                  }))
-                }
-                placeholder="Select Staff"
+
+              <input
+                type="text"
+                value={user?.fullName || ""}
+                readOnly
+                className="w-full px-4 py-3 border rounded-lg bg-gray-100 text-gray-600"
               />
             </div>
           </div>
