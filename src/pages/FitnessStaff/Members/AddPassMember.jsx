@@ -538,7 +538,7 @@ export default function AddPassMember({ viewMode = false }) {
         age:       enq.age      || "",
         gender:    enq.gender   || "Male",
         address:   enq.address  || "",
-        staff:     typeof enq.responsibleStaff === "object" ? enq.responsibleStaff?._id || "" : enq.responsibleStaff || prev.staff,
+        // staff:     typeof enq.responsibleStaff === "object" ? enq.responsibleStaff?._id || "" : enq.responsibleStaff || prev.staff,
       }));
       setSelectedEnquiry({
         value: enq._id,
@@ -701,7 +701,7 @@ useEffect(() => {
       age:       enq.age      || "",
       gender:    enq.gender   || "Male",
       address:   enq.address  || "",
-      staff:     typeof enq.responsibleStaff === "object" ? enq.responsibleStaff?._id || "" : enq.responsibleStaff || prev.staff,
+      // staff:     typeof enq.responsibleStaff === "object" ? enq.responsibleStaff?._id || "" : enq.responsibleStaff || prev.staff,
     }));
   };
 
@@ -871,7 +871,7 @@ useEffect(() => {
         planNotes:        af.planNotes           || "",
         startDate:        af.startDate,
         endDate:          af.endDate,
-        staff:            (af.staff && af.staff !== "" && af.staff !== "-") ? af.staff : null,
+        staff: user?.id || null,
         slot:             null,
         activityFeeIndex: index,
       }));
@@ -887,7 +887,7 @@ useEffect(() => {
       }
 
       setSaved(true);
-      setTimeout(() => navigate("/fitness/members"), 1500);
+      setTimeout(() => navigate("/fitness-staff/members"), 1500);
 
     } catch (err) {
       console.error("Save Error:", err?.response?.data || err);
@@ -932,7 +932,7 @@ useEffect(() => {
         <h1 className="text-2xl font-bold text-gray-800">
           {isView ? "View Pass Member" : isEdit ? "Edit Pass Member" : "Add Pass Member"}
         </h1>
-        <button onClick={() => navigate("/fitness/members")}
+        <button onClick={() => navigate("/fitness-staff/members")}
           className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
           Back to Members
         </button>
@@ -1141,7 +1141,7 @@ useEffect(() => {
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-6 border-t">
-          <button onClick={() => navigate("/fitness/members")}
+          <button onClick={() => navigate("/fitness-staff/members")}
             className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50">
             Cancel
           </button>

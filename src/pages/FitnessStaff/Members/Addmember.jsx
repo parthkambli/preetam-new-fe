@@ -1,3 +1,4 @@
+// fitnessStaff/member/addmember
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -785,52 +786,67 @@ const validatePhoto = (file) => {
   // };
 
   const fetchAvailableSlots = async (index, activityId, startDate, endDate) => {
-  if (!activityId || !startDate || !endDate) return;
+    if (!activityId || !startDate || !endDate) return;
 
-  try {
-    const res = await api.fitnessActivities.availability({
-      activityId,
-      startDate,
-      endDate,
-    });
+    try {
+      const res = await api.fitnessActivities.availability({
+        activityId,
+        startDate,
+        endDate,
+      });
 
-    const availabilityData = res.data?.data || res.data || [];
+      const availabilityData = res.data?.data || res.data || [];
 
-    const slots = availabilityData.map((slotInfo) => ({
-      value: slotInfo.slotId || slotInfo._id || slotInfo.id,
-      label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.remaining}/${slotInfo.capacity} remaining)`,
-      disabled: slotInfo.isFull || slotInfo.remaining <= 0,
-    }));
+      const slots = availabilityData.map((slotInfo) => {
 
-    // const slots = availabilityData
-    //   .map((slotInfo) => ({
-    //     value: slotInfo.slotId || slotInfo._id || slotInfo.id,
-    //     label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays || 0}/${slotInfo.totalDays || 0} days - ${slotInfo.availabilityPercentage || 0}%)`,
-    //     disabled: (slotInfo.fullyAvailableDays || 0) === 0,
-    //   }))
+        const percentage = slotInfo.availabilityPercentage || 0;
+
+        let status = "Good";
+
+        if (percentage <= 20) status = "Very Limited";
+        else if (percentage <= 50) status = "Limited";
+
+        return {
+          value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+
+          label:
+            `${slotInfo.startTime} - ${slotInfo.endTime} • ` +
+            `${slotInfo.fullyAvailableDays}/${slotInfo.totalDays} days • ${status}`,
+
+          disabled: slotInfo.fullyAvailableDays === 0,
+        };
+      });
+
+      // const slots = availabilityData
+      //   .map((slotInfo) => ({
+      //     value: slotInfo.slotId || slotInfo._id || slotInfo.id,
+      //     label: `${slotInfo.startTime} - ${slotInfo.endTime} (${slotInfo.fullyAvailableDays || 0}/${slotInfo.totalDays || 0} days - ${slotInfo.availabilityPercentage || 0}%)`,
+      //     disabled: (slotInfo.fullyAvailableDays || 0) === 0,
+      //   }))
       // Removed strict membersOnly filter - show all returned slots
       // (Backend should already return relevant ones)
 
-    setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
+      setAvailableSlots((prev) => ({ ...prev, [index]: slots }));
 
-    // Auto-select first available slot
-    setForm((prev) => {
-      const current = prev.activityFees[index];
-      if (!current.slot && slots.length > 0) {
-        const firstAvailable = slots.find((s) => !s.disabled);
-        if (firstAvailable) {
-          const updated = [...prev.activityFees];
-          updated[index] = { ...updated[index], slot: firstAvailable };
-          return { ...prev, activityFees: updated };
+      // Auto-select first available slot
+      setForm((prev) => {
+        const current = prev.activityFees[index];
+        if (!current.slot && slots.length > 0) {
+          const firstAvailable = slots.find((s) => !s.disabled);
+          if (firstAvailable) {
+            const updated = [...prev.activityFees];
+            updated[index] = { ...updated[index], slot: firstAvailable };
+            return { ...prev, activityFees: updated };
+          }
         }
-      }
-      return prev;
-    });
-  } catch (err) {
-    console.error("Failed to fetch slot availability", err);
-    toast.error("Could not load available slots for the selected date range");
-  }
-};
+        return prev;
+      });
+    } catch (err) {
+      console.error("Failed to fetch slot availability", err);
+      toast.error("Could not load available slots for the selected date range");
+    }
+  };
+
 
   const handleActivityFeeChange = (index, field, value) => {
     setForm((prev) => {
@@ -963,7 +979,7 @@ const validatePhoto = (file) => {
       }
 
       setSaved(true);
-      setTimeout(() => navigate("/fitness/members"), 1500);
+      setTimeout(() => navigate("/fitness-staff/members"), 1500);
     } catch (err) {
   console.error("Save Error:", err?.response?.data || err);
 
@@ -1020,7 +1036,7 @@ const validatePhoto = (file) => {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">{isEdit ? "Edit Member" : "Add Member"}</h1>
-        <button onClick={() => navigate("/fitness/members")} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+        <button onClick={() => navigate("/fitness-staff/members")} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
           Back to Members
         </button>
       </div>
@@ -1196,7 +1212,7 @@ const validatePhoto = (file) => {
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-6 border-t">
-          <button onClick={() => navigate("/fitness/members")} className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50">
+          <button onClick={() => navigate("/fitness-staff/members")} className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50">
             Cancel
           </button>
           <button
