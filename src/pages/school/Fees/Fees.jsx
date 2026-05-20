@@ -72,7 +72,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
-import FeesTabs    from './FeesTabs';
+import FeesTabs    from './Feestabs';
 import AddPayments from './AddPayments';
 import AllotFees   from './AllotFees';
 import FeeTypes    from './FeeTypes';
