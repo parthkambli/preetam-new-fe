@@ -2364,22 +2364,28 @@ export default function BookActivity() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="w-72">
-  <Select
-    options={activityOptions}
-    value={
-      activityOptions.find(
-        (a) => a.value === filterActivity
-      ) || null
-    }
-    onChange={(selected) => {
-      setFilterActivity(selected?.value || '');
-      setPage(1);
-    }}
-    placeholder="Search Activity"
-    isClearable
-    classNamePrefix="react-select"
-  />
-</div>
+                <Select
+                  options={activities.map((a) => ({
+                    label: a.name,
+                    value: a._id
+                  }))}
+                  value={
+                    activities
+                      .map((a) => ({
+                        label: a.name,
+                        value: a._id
+                      }))
+                      .find((a) => a.value === selectedActivity) || null
+                  }
+                  onChange={(selected) => {
+                    setSelectedActivity(selected?.value || '');
+                    setSelectedSlot(null);
+                  }}
+                  placeholder="Select Activity"
+                  isClearable
+                  classNamePrefix="react-select"
+                />
+              </div>
 
               <input
                 type="date"
