@@ -1475,7 +1475,7 @@ function ActivitySummaryPills({ activityFees }) {
           typeof af.activity === "object"
             ? af.activity?.name ||
               af.activity?.activityName ||
-              `Activity ${i + 1}`
+              `Membership Pass`
             : `Activity ${i + 1}`;
         return (
           <span
@@ -2187,7 +2187,7 @@ const loadStaffOptions = async (
   // Get activity display name for each row
   const getActivityName = (af, i) =>
     typeof af.activity === "object"
-      ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+      ? af.activity?.name || af.activity?.activityName || `Membership Pass`
       : `Activity ${i + 1}`;
 
   return (
@@ -2705,13 +2705,13 @@ export default function Members() {
 
                       {/* Activity pills */}
                       <td className="px-5 py-4 max-w-xs">
-                        {isPassMember ? (
+                        {/* {isPassMember ? (
                           <span className="inline-flex px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
                             Membership Pass
                           </span>
-                        ) : (
+                        ) : ( */}
                           <ActivitySummaryPills activityFees={activityFees} />
-                        )}
+                        {/* )} */}
                       </td>
 
                       {/* Overall status badge */}
@@ -2770,7 +2770,7 @@ export default function Members() {
                                     typeof af.activity === "object"
                                       ? af.activity?.name ||
                                         af.activity?.activityName ||
-                                        `Activity ${i + 1}`
+                                        `Membership Pass`
                                       : `Activity ${i + 1}`;
 
                                   return (
@@ -2859,8 +2859,7 @@ export default function Members() {
 
                         return inactiveCount > 0;
                       })() && ( */}
-                        {canRenewMember &&
-                        member.remainingDays === "Expired" && (
+                        {member.canRenew &&  (
                             <button
                               onClick={() => {
                                 if (isPassMember) {

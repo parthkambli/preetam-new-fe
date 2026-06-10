@@ -615,6 +615,22 @@ useEffect(() => {
       return;
     }
 
+    if (
+      !form.feeType?.value &&
+      !form.feeTypeId
+    ) {
+      toast.error("Fee type is required");
+      return;
+    }
+    
+    if (
+      !form.staffId &&
+      !af.staff?._id
+    ) {
+      toast.error("Responsible staff is required");
+      return;
+    }
+
     setLoading(true);
 
     try {

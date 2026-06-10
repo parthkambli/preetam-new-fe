@@ -285,7 +285,7 @@ function ActivitySummaryPills({ activityFees }) {
           typeof af.activity === "object"
             ? af.activity?.name ||
               af.activity?.activityName ||
-              `Activity ${i + 1}`
+              `Membership Pass`
             : `Activity ${i + 1}`;
         return (
           <span
@@ -353,6 +353,45 @@ function ActivityRenewRow({
     );
   }
 }, [renewal.activityId]);
+
+useEffect(() => {
+
+  if (
+    !renewal.feeTypeId ||
+    !feeTypeOptions.length
+  ) return;
+
+  const selectedFeeType =
+    feeTypeOptions.find(
+      (f) =>
+        f.value === renewal.feeTypeId
+    );
+
+  if (!selectedFeeType) return;
+
+  const fee =
+    getPlanFeeFromFeeType(
+      selectedFeeType.data,
+      renewal.plan
+    );
+
+  onChange(
+    index,
+    "feeType",
+    selectedFeeType
+  );
+
+  onChange(
+    index,
+    "planFee",
+    String(fee || 0)
+  );
+
+}, [
+  renewal.plan,
+  renewal.feeTypeId,
+  feeTypeOptions,
+]);
 
   // Auto-compute final amount
   const computedFinal =
@@ -438,14 +477,23 @@ function ActivityRenewRow({
               </label>
 
               <Select
-                options={feeTypeOptions}
-                value={renewal.feeType}
-                onChange={(sel) =>
-                  onChange(index, "feeType", sel)
-                }
-                placeholder="Select Fee Type"
-                classNamePrefix="react-select"
-              />
+  options={feeTypeOptions}
+
+  value={
+  feeTypeOptions.find(
+    (f) =>
+      f.value === renewal.feeTypeId
+  ) || null
+}
+
+  onChange={(sel) =>
+    onChange(index, "feeType", sel)
+  }
+
+  placeholder="Select Fee Type"
+
+  classNamePrefix="react-select"
+/>
             </div>
           </div>
 
@@ -801,17 +849,7 @@ const loadStaffOptions = async (
       const startDate = afterEnd < todayString() ? todayString() : afterEnd;
       const plan = af.plan || "Monthly";
       return {
-        selected: (() => {
-          if (!af.endDate) return true;
-
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-
-          const end = new Date(af.endDate);
-          end.setHours(23, 59, 59, 999);
-
-          return end < today;
-        })(), // pre-select inactive ones
+        selected: af.canRenew === true, // pre-select inactive ones
         plan,
         startDate,
         endDate: computeEndDate(startDate, plan),
@@ -834,15 +872,21 @@ const loadStaffOptions = async (
         feeTypeId:
           typeof af.feeType === "object" ? af.feeType?._id : af.feeType,
         feeType:
-          af.feeType
-            ? {
-                value: af.feeType._id,
-                label:
-                  af.feeType.name ||
-                  af.feeType.feeTypeName,
-                data: af.feeType,
-              }
-            : null,
+  af.feeType
+    ? {
+        value: af.feeType._id,
+
+        label:
+          af.feeType.description ||
+          af.feeType.name ||
+          af.feeType.feeTypeName ||
+          "Fee Type",
+
+        data: {
+          ...af.feeType
+        },
+      }
+    : null,
         staffId: typeof af.staff === "object" ? af.staff?._id : af.staff,
         slot: af.slot
           ? {
@@ -874,37 +918,14 @@ const loadStaffOptions = async (
         ...updated[index],
         [field]: value,
       };
-      if (
-  field === "plan" ||
-  field === "feeType"
-    ) {
-      const feeTypeData =
-        field === "feeType"
-          ? value?.data
-          : updated[index].feeType?.data;
+if (field === "feeType") {
 
-      const plan =
-        field === "plan"
-          ? value
-          : updated[index].plan;
+  updated[index].feeType =
+    value || null;
 
-      const autoFee =
-        getPlanFeeFromFeeType(
-          feeTypeData,
-          plan
-        );
-
-      updated[index].planFee =
-        String(autoFee || 0);
-
-      updated[index].feeTypeData =
-        feeTypeData;
-
-      updated[index].feeTypeId =
-        field === "feeType"
-          ? value?.value || null
-          : updated[index].feeTypeId;
-    }
+  updated[index].feeTypeId =
+    value?.value || "";
+}
 
       // Recompute final amount on fee/discount change
       if (field === "planFee" || field === "discount") {
@@ -1000,7 +1021,7 @@ const loadStaffOptions = async (
   // Get activity display name for each row
   const getActivityName = (af, i) =>
     typeof af.activity === "object"
-      ? af.activity?.name || af.activity?.activityName || `Activity ${i + 1}`
+      ? af.activity?.name || af.activity?.activityName || `Membership Pass`
       : `Activity ${i + 1}`;
 
   return (
@@ -1065,6 +1086,7 @@ const loadStaffOptions = async (
               onFeeTypeFetch={fetchFeeTypes}
               onSlotFetch={fetchAvailableSlots}
               loadStaffOptions={loadStaffOptions}
+              errors={errors}
             />
           ))}
         </div>
@@ -1504,13 +1526,13 @@ export default function Members() {
 
                       {/* Activity pills */}
                       <td className="px-5 py-4 max-w-xs">
-                        {isPassMember ? (
+                        {/* {isPassMember ? (
                           <span className="inline-flex px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
                             Membership Pass
                           </span>
-                        ) : (
+                        ) : ( */}
                           <ActivitySummaryPills activityFees={activityFees} />
-                        )}
+                        {/* )} */}
                       </td>
 
                       {/* Overall status badge */}
@@ -1569,7 +1591,7 @@ export default function Members() {
                                     typeof af.activity === "object"
                                       ? af.activity?.name ||
                                         af.activity?.activityName ||
-                                        `Activity ${i + 1}`
+                                        `Mebership Pass`
                                       : `Activity ${i + 1}`;
 
                                   return (
@@ -1656,7 +1678,7 @@ export default function Members() {
 
                         return inactiveCount > 0;
                       })() && ( */}
-                      {member.remainingDays === "Expired" && (
+                      {member.canRenew && (
                             <button
                               onClick={() => {
                                 if (isPassMember) {
