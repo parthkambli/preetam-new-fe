@@ -1711,8 +1711,78 @@ await api.schoolAdmission.create(formDataToSend);
     }
   };
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 4));
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, 5));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+
+  const dummyPeriods = [
+  {
+    value: "p1",
+    label: "P1 (09:00 - 10:00)"
+  },
+  {
+    value: "p2",
+    label: "P2 (10:00 - 11:00)"
+  },
+  {
+    value: "p3",
+    label: "P3 (11:00 - 12:00)"
+  },
+  {
+    value: "tea-break",
+    label: "Tea Break (12:00 - 12:15)"
+  }
+];
+
+const dummyActivities = [
+  { value: "yoga", label: "Yoga" },
+  { value: "music", label: "Music" },
+  { value: "reading", label: "Reading" },
+  { value: "walking", label: "Walking" },
+  { value: "meditation", label: "Meditation" }
+];
+
+const [timetableRows, setTimetableRows] = useState([
+  {
+    period: null,
+    monday: null,
+    tuesday: null,
+    wednesday: null,
+    thursday: null,
+    friday: null,
+    saturday: null,
+  }
+]);
+
+const addRow = () => {
+  setTimetableRows(prev => [
+    ...prev,
+    {
+      period: null,
+      monday: null,
+      tuesday: null,
+      wednesday: null,
+      thursday: null,
+      friday: null,
+      saturday: null,
+    }
+  ]);
+};
+
+const removeRow = (index) => {
+  setTimetableRows(prev =>
+    prev.filter((_, i) => i !== index)
+  );
+};
+
+const updateRow = (index, field, value) => {
+  const updated = [...timetableRows];
+  updated[index][field] = value;
+  setTimetableRows(updated);
+};
+
+const selectedPeriods = timetableRows
+  .map(row => row.period?.value)
+  .filter(Boolean);
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
@@ -1725,7 +1795,7 @@ await api.schoolAdmission.create(formDataToSend);
 
       {/* Progress */}
       <div className="flex justify-between mb-6">
-        {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Admission Details'].map((label, i) => (
+        {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Admission Details', 'Set Timetable'].map((label, i) => (
           <div
   key={i}
   onClick={() => setStep(i + 1)}
@@ -2221,7 +2291,7 @@ await api.schoolAdmission.create(formDataToSend);
                 <button type="button" onClick={prevStep} className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" disabled={loading}>
                   Back
                 </button>
-                <button type="submit" disabled={loading} className="px-10 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center">
+                {/* <button type="submit" disabled={loading} className="px-10 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center">
                   {loading ? (
                     <>
                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -2233,11 +2303,135 @@ await api.schoolAdmission.create(formDataToSend);
                   ) : (
                     'Submit'
                   )}
-                </button>
+                </button> */}
+                <button
+  type="button"
+  onClick={nextStep}
+  className="px-10 py-3 bg-[#000359] text-white rounded-lg"
+>
+  Next
+</button>
               </div>
             </div>
           </>
         )}
+
+        
+
+       {step === 5 && (
+  <>
+    <h2 className="text-xl font-semibold border-b pb-2">
+      Member Timetable
+    </h2>
+
+    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+      <h3 className="font-semibold text-[#000359]">
+        Assign Activities
+      </h3>
+
+      <p className="text-sm text-gray-600 mt-1">
+        Configure timetable for this member.
+      </p>
+    </div>
+
+    <div className="mt-6 flex flex-wrap gap-4">
+      <button
+        type="button"
+        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+      >
+        Copy Monday To All Days
+      </button>
+
+      <button
+        type="button"
+        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+      >
+        Clear Timetable
+      </button>
+    </div>
+
+    <div className="mt-6 overflow-x-auto">
+      <table className="w-full min-w-[1200px] border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="border p-3 text-left">
+              Period
+            </th>
+
+            <th className="border p-3">Monday</th>
+            <th className="border p-3">Tuesday</th>
+            <th className="border p-3">Wednesday</th>
+            <th className="border p-3">Thursday</th>
+            <th className="border p-3">Friday</th>
+            <th className="border p-3">Saturday</th>
+          </tr>
+        </thead>
+
+        <tbody>
+  {timetableRows.map((row, index) => {
+
+    const availablePeriods = dummyPeriods.filter(
+      period =>
+        !selectedPeriods.includes(period.value) ||
+        period.value === row.period?.value
+    );
+
+    return (
+      <tr key={index}>
+              <td className="border p-2 min-w-[250px]">
+  <Select
+    value={row.period}
+    options={availablePeriods}
+    placeholder="Select Period"
+    onChange={(selected) =>
+      updateRow(index, "period", selected)
+    }
+  />
+</td>
+
+              {[1,2,3,4,5,6].map((day) => (
+                <td key={day} className="border p-2">
+                  <Select
+  options={dummyActivities}
+  placeholder="Select Activity"
+/>
+                </td>
+              ))}
+            </tr>
+    );
+  })}
+        </tbody>
+      </table>
+      
+    </div>
+    <button
+  type="button"
+  onClick={addRow}
+  disabled={timetableRows.length >= dummyPeriods.length}
+  className="px-4 py-2 bg-[#000359] text-white rounded-lg disabled:opacity-50"
+>
+  + Add Period Row
+</button>
+
+    <div className="flex justify-between mt-10 pt-6 border-t">
+      <button
+        type="button"
+        onClick={prevStep}
+        className="px-8 py-3 border border-gray-300 rounded-lg"
+      >
+        Back
+      </button>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="px-10 py-3 bg-[#000359] text-white rounded-lg"
+      >
+        Submit Admission
+      </button>
+    </div>
+  </>
+)} 
 
         {/* Navigation buttons */}
         {step < 4 && (
