@@ -42,7 +42,8 @@ import SchoolReports from './pages/school/Reports/Reports';
 import SchoolUserManagement from './pages/school/UserManagement/UserManagement';
 import SchoolAdduser from './pages/school/UserManagement/Adduser';
 import Profile from './pages/school/Profile/Profile';
-// aadi
+import TimeTable from './pages/school/TimeTable/TimeTable'
+import Services from './pages/school/AddonServices/Services'
 import SchoolStaffDashboard from "./pages/SchoolStaff/Dashboard";
 import SchoolStaffAttendance from './pages/SchoolStaff/Attendance';
 import SchoolStaffMySchedule from './pages/SchoolStaff/Myschedule';
@@ -135,17 +136,18 @@ function App() {
             <Route path="/school/health-records/view/:id" element={<Viewhealthrecords />} />
             <Route path="/school/health-records/add-update" element={<Addupdatehealthrecord />} />
             <Route path="/school/events" element={<SchoolEvents />} />
+            <Route path="/school/timetable" element={<TimeTable />} />
+            <Route path="/school/services" element={<Services />} />
             <Route path="/school/Addevent" element={<SchoolAddevent />} />
+            
             <Route path="/school/emergency-contacts" element={<EmergencyContacts />} />
             <Route path="/school/reports" element={<SchoolReports />} />
             <Route path="/school/user-management" element={<SchoolUserManagement />} />
             <Route path="/school/user-management/Add-user" element={<SchoolAdduser />} />
             <Route path="/profile" element={<Profile />} />
-            //Aadi
             <Route path="/school-staff" element={<SchoolStaffDashboard/>} />
              <Route path="/school-staff/attendance" element={<SchoolStaffAttendance />} /> 
              <Route path="/school-staff/my-schedule" element={<SchoolStaffMySchedule />} /> 
-             //aadi
 
             {/* ====================== FITNESS CLUB ROUTES ====================== */}
             <Route path="/fitness/dashboard" element={<FitnessDashboard />} />
