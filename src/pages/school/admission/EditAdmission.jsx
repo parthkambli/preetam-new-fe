@@ -494,6 +494,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../../services/apiClient';
+import Select from 'react-select';
 
 export default function EditAdmission() {
   const { id } = useParams();
@@ -503,7 +504,50 @@ export default function EditAdmission() {
   const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
-const [healthFiles, setHealthFiles] = useState([]);
+  const [healthFiles, setHealthFiles] = useState([]);
+
+const dummyPeriods = [
+  { value: "p1", label: "P1 (09:00 - 10:00)" },
+  { value: "p2", label: "P2 (10:00 - 11:00)" },
+  { value: "p3", label: "P3 (11:00 - 12:00)" }
+];
+
+const dummyActivities = [
+  { value: "yoga", label: "Yoga" },
+  { value: "music", label: "Music" },
+  { value: "reading", label: "Reading" }
+];
+
+const [timetableRows, setTimetableRows] = useState([
+  {}
+]);
+
+
+const dummyServices = [
+  {
+    value: "bus",
+    label: "Bus Service",
+    perDayFee: 50,
+  },
+  {
+    value: "mess",
+    label: "Mess Service",
+    perDayFee: 150,
+  },
+  {
+    value: "laundry",
+    label: "Laundry Service",
+    perDayFee: 30,
+  },
+];
+
+const [serviceRows, setServiceRows] = useState([
+  {
+    service: null,
+    startDate: "",
+    days: "",
+  },
+]);
 
   useEffect(() => {
     fetchAdmission();
@@ -618,6 +662,29 @@ await api.schoolAdmission.update(id, formDataToSend);
       </div>
     );
   }
+
+  const addServiceRow = () => {
+  setServiceRows((prev) => [
+    ...prev,
+    {
+      service: null,
+      startDate: "",
+      days: "",
+    },
+  ]);
+};
+
+const removeServiceRow = (index) => {
+  setServiceRows((prev) =>
+    prev.filter((_, i) => i !== index)
+  );
+};
+
+const updateServiceRow = (index, field, value) => {
+  const updated = [...serviceRows];
+  updated[index][field] = value;
+  setServiceRows(updated);
+};
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-12">
@@ -1025,6 +1092,234 @@ await api.schoolAdmission.update(id, formDataToSend);
             </div>
           </div>
         </section>
+
+        <h2 className="text-xl font-semibold border-b pb-2 mt-10">
+  Additional Services
+</h2>
+
+<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-6">
+  <p className="text-sm text-gray-600">
+    Assign optional services such as Bus, Mess, Laundry, etc.
+  </p>
+</div>
+
+<div className="overflow-x-auto">
+  <table className="w-full min-w-[900px] border-collapse">
+    <thead>
+      <tr className="bg-gray-50">
+        <th className="border p-3 text-left">
+          Service
+        </th>
+
+        <th className="border p-3 text-left">
+          Start Date
+        </th>
+
+        <th className="border p-3 text-left">
+          Days
+        </th>
+
+        <th className="border p-3 text-left">
+          Total Amount
+        </th>
+
+        <th className="border p-3 text-center">
+          Action
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {serviceRows.map((row, index) => {
+        const amount =
+          (row.service?.perDayFee || 0) *
+          (Number(row.days) || 0);
+
+        return (
+          <tr key={index}>
+            <td className="border p-2 min-w-[250px]">
+              <Select
+                value={row.service}
+                options={dummyServices}
+                placeholder="Select Service"
+                onChange={(selected) =>
+                  updateServiceRow(
+                    index,
+                    "service",
+                    selected
+                  )
+                }
+              />
+            </td>
+
+            <td className="border p-2">
+              <input
+                type="date"
+                value={row.startDate}
+                onChange={(e) =>
+                  updateServiceRow(
+                    index,
+                    "startDate",
+                    e.target.value
+                  )
+                }
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </td>
+
+            <td className="border p-2">
+              <input
+                type="number"
+                min="1"
+                value={row.days}
+                onChange={(e) =>
+                  updateServiceRow(
+                    index,
+                    "days",
+                    e.target.value
+                  )
+                }
+                className="w-full px-3 py-2 border rounded-lg"
+                placeholder="Days"
+              />
+            </td>
+
+            <td className="border p-2 font-semibold">
+              ₹{amount}
+            </td>
+
+            <td className="border p-2 text-center">
+              <button
+                type="button"
+                onClick={() =>
+                  removeServiceRow(index)
+                }
+                disabled={serviceRows.length === 1}
+                className="px-3 py-1 bg-red-100 text-red-600 rounded"
+              >
+                Remove
+              </button>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
+
+<div className="mt-4">
+  <button
+    type="button"
+    onClick={addServiceRow}
+    className="px-4 py-2 bg-[#000359] text-white rounded-lg"
+  >
+    + Add Service
+  </button>
+</div>
+
+{/* Section 5: Member Timetable */}
+<section className="p-8">
+  <h2 className="text-xl font-semibold mb-6 text-gray-800">
+    Member Timetable
+  </h2>
+
+  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+    <p className="text-sm text-gray-600">
+      Manage member timetable assignments.
+    </p>
+  </div>
+
+  <div className="overflow-x-auto">
+    <table className="w-full min-w-[1200px] border-collapse">
+      <thead>
+        <tr className="bg-gray-50">
+          <th className="border p-3">Period</th>
+          <th className="border p-3">Monday</th>
+          <th className="border p-3">Tuesday</th>
+          <th className="border p-3">Wednesday</th>
+          <th className="border p-3">Thursday</th>
+          <th className="border p-3">Friday</th>
+          <th className="border p-3">Saturday</th>
+          <th className="border p-3">Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {timetableRows.map((row, index) => (
+          <tr key={index}>
+            <td className="border p-2">
+              <Select
+                options={dummyPeriods}
+                placeholder="Select Period"
+              />
+            </td>
+
+            <td className="border p-2">
+              <Select
+                options={dummyActivities}
+                placeholder="Activity"
+              />
+            </td>
+
+            <td className="border p-2">
+              <Select
+                options={dummyActivities}
+                placeholder="Activity"
+              />
+            </td>
+
+            <td className="border p-2">
+              <Select
+                options={dummyActivities}
+                placeholder="Activity"
+              />
+            </td>
+
+            <td className="border p-2">
+              <Select
+                options={dummyActivities}
+                placeholder="Activity"
+              />
+            </td>
+
+            <td className="border p-2">
+              <Select
+                options={dummyActivities}
+                placeholder="Activity"
+              />
+            </td>
+
+            <td className="border p-2">
+              <Select
+                options={dummyActivities}
+                placeholder="Activity"
+              />
+            </td>
+
+            <td className="border p-2 text-center">
+              <button
+                type="button"
+                className="px-3 py-1 text-red-600 border border-red-200 rounded"
+              >
+                Remove
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div className="mt-4">
+    <button
+      type="button"
+      className="px-4 py-2 bg-[#000359] text-white rounded-lg"
+    >
+      + Add Row
+    </button>
+  </div>
+</section>
+
 
         <div className="p-8 flex justify-end gap-4 border-t">
           <button

@@ -137,6 +137,51 @@ export default function ViewAdmission() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const dummyTimetable = [
+  {
+    period: "P1",
+    monday: "Yoga",
+    tuesday: "Yoga",
+    wednesday: "Music",
+    thursday: "Yoga",
+    friday: "Reading",
+    saturday: "Meditation",
+  },
+  {
+    period: "P2",
+    monday: "Walking",
+    tuesday: "Walking",
+    wednesday: "Walking",
+    thursday: "Games",
+    friday: "Walking",
+    saturday: "Games",
+  },
+  {
+    period: "P3",
+    monday: "Prayer",
+    tuesday: "Reading",
+    wednesday: "Prayer",
+    thursday: "Reading",
+    friday: "Prayer",
+    saturday: "Music",
+  }
+];
+
+const dummyServices = [
+  {
+    service: "Bus Service",
+    startDate: "15-Jun-2026",
+    days: 30,
+    amount: 1500,
+  },
+  {
+    service: "Mess Service",
+    startDate: "20-Jun-2026",
+    days: 15,
+    amount: 2250,
+  },
+];
+
   useEffect(() => {
     fetchAdmission();
   }, [id]);
@@ -263,6 +308,109 @@ export default function ViewAdmission() {
             <div className="col-span-3"><strong>Remarks:</strong> {data.feeRemarks || '-'}</div>
           </div>
         </section>
+
+        {/* Timetable */}
+<section className="p-8">
+  <h2 className="text-xl font-semibold mb-6">
+    Member Timetable
+  </h2>
+
+  <div className="overflow-x-auto">
+    <table className="w-full min-w-[1100px] border-collapse">
+      <thead>
+        <tr className="bg-gray-50">
+          <th className="border p-3">Period</th>
+          <th className="border p-3">Monday</th>
+          <th className="border p-3">Tuesday</th>
+          <th className="border p-3">Wednesday</th>
+          <th className="border p-3">Thursday</th>
+          <th className="border p-3">Friday</th>
+          <th className="border p-3">Saturday</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {dummyTimetable.map((row, index) => (
+          <tr key={index}>
+            <td className="border p-3 font-medium bg-gray-50">
+              {row.period}
+            </td>
+
+            {[
+              row.monday,
+              row.tuesday,
+              row.wednesday,
+              row.thursday,
+              row.friday,
+              row.saturday,
+            ].map((activity, idx) => (
+              <td key={idx} className="border p-3">
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  {activity}
+                </span>
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{/* Additional Services */}
+<section className="p-8">
+  <h2 className="text-xl font-semibold mb-6">
+    Additional Services
+  </h2>
+
+  <div className="overflow-x-auto">
+    <table className="w-full border-collapse">
+      <thead>
+        <tr className="bg-gray-50">
+          <th className="border p-3 text-left">
+            Service
+          </th>
+
+          <th className="border p-3 text-left">
+            Start Date
+          </th>
+
+          <th className="border p-3 text-left">
+            Days
+          </th>
+
+          <th className="border p-3 text-left">
+            Amount
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {dummyServices.map((service, index) => (
+          <tr key={index}>
+            <td className="border p-3">
+              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                {service.service}
+              </span>
+            </td>
+
+            <td className="border p-3">
+              {service.startDate}
+            </td>
+
+            <td className="border p-3">
+              {service.days}
+            </td>
+
+            <td className="border p-3 font-semibold">
+              ₹{service.amount}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>
 
       </div>
     </div>

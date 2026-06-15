@@ -1784,6 +1784,83 @@ const selectedPeriods = timetableRows
   .map(row => row.period?.value)
   .filter(Boolean);
 
+  const clearTimetable = () => {
+  setTimetableRows(prev =>
+    prev.map(row => ({
+      ...row,
+      monday: null,
+      tuesday: null,
+      wednesday: null,
+      thursday: null,
+      friday: null,
+      saturday: null,
+    }))
+  );
+};
+
+const copyMondayToAllDays = () => {
+  setTimetableRows(prev =>
+    prev.map(row => ({
+      ...row,
+      tuesday: row.monday,
+      wednesday: row.monday,
+      thursday: row.monday,
+      friday: row.monday,
+      saturday: row.monday,
+    }))
+  );
+};
+
+const addServiceRow = () => {
+  setServiceRows((prev) => [
+    ...prev,
+    {
+      service: null,
+      startDate: "",
+      days: "",
+    },
+  ]);
+};
+
+const removeServiceRow = (index) => {
+  setServiceRows((prev) =>
+    prev.filter((_, i) => i !== index)
+  );
+};
+
+const updateServiceRow = (index, field, value) => {
+  const updated = [...serviceRows];
+  updated[index][field] = value;
+  setServiceRows(updated);
+};
+
+const dummyServices = [
+  {
+    value: "bus",
+    label: "Bus Service",
+    perDayFee: 50
+  },
+  {
+    value: "mess",
+    label: "Mess Service",
+    perDayFee: 150
+  },
+  {
+    value: "laundry",
+    label: "Laundry Service",
+    perDayFee: 30
+  }
+];
+
+const [serviceRows, setServiceRows] = useState([
+  {
+    service: null,
+    startDate: "",
+    days: "",
+    amount: 0
+  }
+]);
+
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
       <div className="flex items-center justify-between">
@@ -1795,7 +1872,7 @@ const selectedPeriods = timetableRows
 
       {/* Progress */}
       <div className="flex justify-between mb-6">
-        {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Admission Details', 'Set Timetable'].map((label, i) => (
+        {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Set Timetable', 'Admission Details'].map((label, i) => (
           <div
   key={i}
   onClick={() => setStep(i + 1)}
@@ -2123,7 +2200,139 @@ const selectedPeriods = timetableRows
           </>
         )}
 
+
         {step === 4 && (
+  <>
+    <h2 className="text-xl font-semibold border-b pb-2">
+      Member Timetable
+    </h2>
+
+    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+      <h3 className="font-semibold text-[#000359]">
+        Assign Activities
+      </h3>
+
+      <p className="text-sm text-gray-600 mt-1">
+        Configure timetable for this member.
+      </p>
+    </div>
+
+    <div className="mt-6 flex flex-wrap gap-4">
+      <button
+  type="button"
+  onClick={copyMondayToAllDays}
+  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+>
+  Copy Monday To All Days
+</button>
+
+      <button
+  type="button"
+  onClick={clearTimetable}
+  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+>
+  Clear Timetable
+</button>
+    </div>
+
+    <div className="mt-6 overflow-x-auto">
+      <table className="w-full min-w-[1200px] border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="border p-3 text-left">
+              Period
+            </th>
+
+            <th className="border p-3">Monday</th>
+            <th className="border p-3">Tuesday</th>
+            <th className="border p-3">Wednesday</th>
+            <th className="border p-3">Thursday</th>
+            <th className="border p-3">Friday</th>
+            <th className="border p-3">Saturday</th>
+            <th className="border p-3">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+  {timetableRows.map((row, index) => {
+
+    const availablePeriods = dummyPeriods.filter(
+      period =>
+        !selectedPeriods.includes(period.value) ||
+        period.value === row.period?.value
+    );
+
+    return (
+      <tr key={index}>
+              <td className="border p-2 min-w-[250px]">
+  <Select
+    value={row.period}
+    options={availablePeriods}
+    placeholder="Select Period"
+    menuPosition="fixed"
+    onChange={(selected) =>
+      updateRow(index, "period", selected)
+    }
+  />
+</td>
+
+              {[1,2,3,4,5,6].map((day) => (
+                <td key={day} className="border p-2">
+                  <Select
+  options={dummyActivities}
+  placeholder="Select Activity"
+  menuPosition="fixed"
+/>
+                </td>
+                
+              ))}
+              <td className="border p-2 text-center">
+  <button
+    type="button"
+    onClick={() => removeRow(index)}
+    className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
+    disabled={timetableRows.length === 1}
+  >
+    Remove
+  </button>
+</td>
+            </tr>
+    );
+  })}
+        </tbody>
+      </table>
+      
+    </div>
+    <button
+  type="button"
+  onClick={addRow}
+  disabled={timetableRows.length >= dummyPeriods.length}
+  className="px-4 py-2 bg-[#000359] text-white rounded-lg disabled:opacity-50"
+>
+  + Add Period Row
+</button>
+
+    <div className="flex justify-between mt-10 pt-6 border-t">
+      <button
+        type="button"
+        onClick={prevStep}
+        className="px-8 py-3 border border-gray-300 rounded-lg"
+      >
+        Back
+      </button>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="px-10 py-3 bg-[#000359] text-white rounded-lg"
+      >
+        Submit Admission
+      </button>
+    </div>
+  </>
+)} 
+
+        {step === 5 && (
           <>
             <h2 className="text-xl font-semibold border-b pb-2">Login Credentials</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2278,6 +2487,131 @@ const selectedPeriods = timetableRows
               <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={3} className="w-full px-4 py-2.5 border rounded-lg" />
             </div>
 
+            <h2 className="text-xl font-semibold border-b pb-2 mt-10">
+  Additional Services
+</h2>
+
+<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-6">
+  <p className="text-sm text-gray-600">
+    Assign optional services such as Bus, Mess, Laundry, etc.
+  </p>
+</div>
+
+<div className="overflow-x-auto">
+  <table className="w-full min-w-[900px] border-collapse">
+    <thead>
+      <tr className="bg-gray-50">
+        <th className="border p-3 text-left">
+          Service
+        </th>
+
+        <th className="border p-3 text-left">
+          Start Date
+        </th>
+
+        <th className="border p-3 text-left">
+          Days
+        </th>
+
+        <th className="border p-3 text-left">
+          Total Amount
+        </th>
+
+        <th className="border p-3 text-center">
+          Action
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {serviceRows.map((row, index) => {
+        const amount =
+          (row.service?.perDayFee || 0) *
+          (Number(row.days) || 0);
+
+        return (
+          <tr key={index}>
+            <td className="border p-2 min-w-[250px]">
+              <Select
+                value={row.service}
+                options={dummyServices}
+                placeholder="Select Service"
+                menuPosition="fixed"
+                onChange={(selected) =>
+                  updateServiceRow(
+                    index,
+                    "service",
+                    selected
+                  )
+                }
+              />
+            </td>
+
+            <td className="border p-2">
+              <input
+                type="date"
+                value={row.startDate}
+                onChange={(e) =>
+                  updateServiceRow(
+                    index,
+                    "startDate",
+                    e.target.value
+                  )
+                }
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </td>
+
+            <td className="border p-2">
+              <input
+                type="number"
+                min="1"
+                value={row.days}
+                onChange={(e) =>
+                  updateServiceRow(
+                    index,
+                    "days",
+                    e.target.value
+                  )
+                }
+                className="w-full px-3 py-2 border rounded-lg"
+                placeholder="Days"
+              />
+            </td>
+
+            <td className="border p-2 font-semibold">
+              ₹{amount}
+            </td>
+
+            <td className="border p-2 text-center">
+              <button
+                type="button"
+                onClick={() =>
+                  removeServiceRow(index)
+                }
+                disabled={serviceRows.length === 1}
+                className="px-3 py-1 bg-red-100 text-red-600 rounded"
+              >
+                Remove
+              </button>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
+
+<div className="mt-4">
+  <button
+    type="button"
+    onClick={addServiceRow}
+    className="px-4 py-2 bg-[#000359] text-white rounded-lg"
+  >
+    + Add Service
+  </button>
+</div>
+
             <div className="flex justify-between items-center mt-10 pt-6 border-t">
               <div className="flex gap-4">
                 <button type="button" className="px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
@@ -2318,120 +2652,7 @@ const selectedPeriods = timetableRows
 
         
 
-       {step === 5 && (
-  <>
-    <h2 className="text-xl font-semibold border-b pb-2">
-      Member Timetable
-    </h2>
-
-    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-      <h3 className="font-semibold text-[#000359]">
-        Assign Activities
-      </h3>
-
-      <p className="text-sm text-gray-600 mt-1">
-        Configure timetable for this member.
-      </p>
-    </div>
-
-    <div className="mt-6 flex flex-wrap gap-4">
-      <button
-        type="button"
-        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-      >
-        Copy Monday To All Days
-      </button>
-
-      <button
-        type="button"
-        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-      >
-        Clear Timetable
-      </button>
-    </div>
-
-    <div className="mt-6 overflow-x-auto">
-      <table className="w-full min-w-[1200px] border-collapse">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="border p-3 text-left">
-              Period
-            </th>
-
-            <th className="border p-3">Monday</th>
-            <th className="border p-3">Tuesday</th>
-            <th className="border p-3">Wednesday</th>
-            <th className="border p-3">Thursday</th>
-            <th className="border p-3">Friday</th>
-            <th className="border p-3">Saturday</th>
-          </tr>
-        </thead>
-
-        <tbody>
-  {timetableRows.map((row, index) => {
-
-    const availablePeriods = dummyPeriods.filter(
-      period =>
-        !selectedPeriods.includes(period.value) ||
-        period.value === row.period?.value
-    );
-
-    return (
-      <tr key={index}>
-              <td className="border p-2 min-w-[250px]">
-  <Select
-    value={row.period}
-    options={availablePeriods}
-    placeholder="Select Period"
-    onChange={(selected) =>
-      updateRow(index, "period", selected)
-    }
-  />
-</td>
-
-              {[1,2,3,4,5,6].map((day) => (
-                <td key={day} className="border p-2">
-                  <Select
-  options={dummyActivities}
-  placeholder="Select Activity"
-/>
-                </td>
-              ))}
-            </tr>
-    );
-  })}
-        </tbody>
-      </table>
-      
-    </div>
-    <button
-  type="button"
-  onClick={addRow}
-  disabled={timetableRows.length >= dummyPeriods.length}
-  className="px-4 py-2 bg-[#000359] text-white rounded-lg disabled:opacity-50"
->
-  + Add Period Row
-</button>
-
-    <div className="flex justify-between mt-10 pt-6 border-t">
-      <button
-        type="button"
-        onClick={prevStep}
-        className="px-8 py-3 border border-gray-300 rounded-lg"
-      >
-        Back
-      </button>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="px-10 py-3 bg-[#000359] text-white rounded-lg"
-      >
-        Submit Admission
-      </button>
-    </div>
-  </>
-)} 
+       
 
         {/* Navigation buttons */}
         {step < 4 && (

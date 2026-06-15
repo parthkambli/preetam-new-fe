@@ -352,7 +352,8 @@ window.dispatchEvent(
                       </button>
                     </td>
 
-                    <td className="p-4 flex gap-3">
+                    <td className="p-4">
+                      <div className="flex gap-3 flex-wrap">
                       <Link 
                         to={`/school/admission/view/${adm._id}`} 
                         className="text-blue-600 hover:underline"
@@ -365,6 +366,7 @@ window.dispatchEvent(
                       >
                         Edit
                       </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
