@@ -1,727 +1,671 @@
-// import { useState, useEffect } from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import { api } from '../../../services/apiClient';
-// import Select from 'react-select';
+// pages/school/admission/AddAdmissionForm.jsx
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { api } from '../../../services/apiClient';
+import Select from 'react-select';
 
-// // Helper functions for auto-generation
-// const generateAdmissionId = () => {
-//   const date = new Date();
-//   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-//   const randomNum = Math.floor(100 + Math.random() * 900);
-//   return `PSC${dateStr}-${randomNum}`;
-// };
+const generateAdmissionId = () => {
+  const date = new Date();
+  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+  const randomNum = Math.floor(100 + Math.random() * 900);
+  return `PSC${dateStr}-${randomNum}`;
+};
 
-// const generatePassword = (mobile) => {
-//   // Generate password: last 4 digits of mobile + random 4 digits
-//   const last4 = mobile.slice(-4) || '0000';
-//   const random4 = Math.floor(1000 + Math.random() * 9000).toString();
-//   return `${last4}${random4}`;
-// };
+const generatePassword = (mobile) => {
+  const last4 = mobile.slice(-4) || '0000';
+  const random4 = Math.floor(1000 + Math.random() * 9000).toString();
+  return `${last4}${random4}`;
+};
 
-// export default function AddAdmission() {
-//   const navigate = useNavigate();
-//   const [step, setStep] = useState(1);
-  
-//   // Enquiry dropdown state
-//   const [enquiryOptions, setEnquiryOptions] = useState([]);
-//   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
-//   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
+const numericPhone = (val) => val.replace(/\D/g, '').slice(0, 10);
 
-//   // All form data in one object
-//   const [formData, setFormData] = useState({
-//     // Step 1
-//     fullName: '',
-//     age: '',
-//     gender: 'Male',
-//     dob: '',
-//     aadhaar: '',
-//     mobile: '',
-//     fullAddress: '',
-//     photo: null,
-//     physicalDisability: 'No',
-//     mainIllness: '',
-//     bloodGroup: '',
-//     doctorName: '',
-//     doctorVillage: '',
-//     doctorMobile: '',
-//     seriousDisease: 'No',
-//     regularMedication: 'No',
-//     healthDetails: '',
-//     medicalReports: null,
-//     enquiryId: null,
+const dummyPeriods = [
+  { value: 'p1', label: 'P1 (09:00 - 10:00)' },
+  { value: 'p2', label: 'P2 (10:00 - 11:00)' },
+  { value: 'p3', label: 'P3 (11:00 - 12:00)' },
+  { value: 'tea-break', label: 'Tea Break (12:00 - 12:15)' },
+];
 
-//     // Step 2
-//     education: '',
-//     educationPlace: '',
-//     yearsOfService: '',
-//     servicePlace: '',
-//     occupationType: 'Government',
-//     wakeUpTime: '',
-//     breakfastTime: '',
-//     lunchTime: '',
-//     dinnerTime: '',
-//     behaviour: 'Calm',
-//     hobbies: ['', '', ''],
-//     games: ['', '', ''],
+const dummyActivities = [
+  { value: 'yoga', label: 'Yoga' },
+  { value: 'music', label: 'Music' },
+  { value: 'reading', label: 'Reading' },
+  { value: 'walking', label: 'Walking' },
+  { value: 'meditation', label: 'Meditation' },
+];
 
-//     // Step 3
-//     emergencyContactName: '',
-//     relationship: '',
-//     emergencyMobile: '',
-//     villageCity: '',
-//     alternateContact: '',
-//     declarationDate: '',
-//     declarationPlace: '',
-//     signature: '', // could be file or text
+const dummyServices = [
+  { value: 'bus', label: 'Bus Service', perDayFee: 50 },
+  { value: 'mess', label: 'Mess Service', perDayFee: 150 },
+  { value: 'laundry', label: 'Laundry Service', perDayFee: 30 },
+];
 
-//     // Step 4 - Auto-generated fields
-//     loginMobile: '',
-//     password: '',
-//     role: 'Participant',
-//     registrationDate: '',
-//     admissionId: '',
-//     assignedCaregiver: '',
-//     feePlan: 'Monthly',
-//     instituteType: 'School',
-//     amount: '',
-//     messFacility: 'No',
-//     residency: 'No',
-//     paymentDate: '',
-//     feeDescription: '',
-//     paymentStatus: 'Pending',
-//     paymentMode: 'Cash',
-//     nextDueDate: '',
-//     feeRemarks: '',
-//   });
-  
-//   // Load enquiries for dropdown on mount
-//   useEffect(() => {
-//     const loadEnquiries = async () => {
-//       try {
-//         setLoadingEnquiries(true);
-//         const response = await api.schoolEnquiry.getForAdmission();
-//         const options = response.data.map(enquiry => ({
-//           value: enquiry._id,
-//           label: `${enquiry.enquiryId || 'N/A'} - ${enquiry.name} (${enquiry.status})`,
-//           data: enquiry
-//         }));
-//         setEnquiryOptions(options);
-//       } catch (err) {
-//         console.error('Error loading enquiries:', err);
-//       } finally {
-//         setLoadingEnquiries(false);
-//       }
-//     };
-    
-//     loadEnquiries();
-//   }, []);
+export default function AddAdmission() {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-//   // Set default dates and auto-generate values on mount
-//   useEffect(() => {
-//     const today = new Date().toISOString().slice(0, 10);
-//     setFormData(prev => ({
-//       ...prev,
-//       registrationDate: today,
-//       paymentDate: today,
-//       admissionId: generateAdmissionId(),
-//     }));
-//   }, []);
+  const [enquiryOptions, setEnquiryOptions] = useState([]);
+  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [loadingEnquiries, setLoadingEnquiries] = useState(false);
 
-//   // Auto-generate password and login mobile when mobile changes
-//   useEffect(() => {
-//     if (formData.mobile && formData.mobile.length === 10) {
-//       setFormData(prev => ({
-//         ...prev,
-//         loginMobile: prev.mobile,
-//         password: generatePassword(prev.mobile),
-//       }));
-//     }
-//   }, [formData.mobile]);
-  
-//   // Handle enquiry selection and auto-fill
-//   const handleEnquirySelect = (option) => {
-//     setSelectedEnquiry(option);
-//     if (option) {
-//       const enquiry = option.data;
-//       setFormData(prev => ({
-//         ...prev,
-//         enquiryId: enquiry._id,
-//         fullName: enquiry.name || '',
-//         mobile: enquiry.contact || '',
-//         age: enquiry.age || '',
-//         gender: enquiry.gender || 'Male',
-//         // Map activity to education or keep as notes
-//       }));
-//     } else {
-//       // Clear enquiry-related fields when selection is cleared
-//       setFormData(prev => ({
-//         ...prev,
-//         enquiryId: null,
-//         fullName: '',
-//         mobile: '',
-//         age: '',
-//         gender: 'Male',
-//       }));
-//     }
-//   };
+  const [caregivers, setCaregivers] = useState([]);
+  const [loadingCaregivers, setLoadingCaregivers] = useState(false);
+  const [caregiverError, setCaregiverError] = useState(null);
 
-//   const handleChange = (e) => {
-//     const { name, value, files, type } = e.target;
-//     if (type === 'file') {
-//       setFormData((prev) => ({ ...prev, [name]: files[0] || null }));
-//     } else if (name.startsWith('hobby') || name.startsWith('game')) {
-//       const index = parseInt(name.slice(-1)) - 1;
-//       const key = name.startsWith('hobby') ? 'hobbies' : 'games';
-//       const newArr = [...formData[key]];
-//       newArr[index] = value;
-//       setFormData((prev) => ({ ...prev, [key]: newArr }));
-//     } else {
-//       setFormData((prev) => ({ ...prev, [name]: value }));
-//     }
-//   };
+  const [formData, setFormData] = useState({
+    fullName: '', age: '', gender: 'Male', dob: '', aadhaar: '',
+    mobile: '', fullAddress: '', photo: null,
+    physicalDisability: 'No', mainIllness: '', bloodGroup: '',
+    doctorName: '', doctorVillage: '', doctorMobile: '',
+    seriousDisease: 'No', regularMedication: 'No', healthDetails: '',
+    medicalReports: null, enquiryId: null,
+    education: '', educationPlace: '', yearsOfService: '', servicePlace: '',
+    occupationType: 'Government', wakeUpTime: '', breakfastTime: '',
+    lunchTime: '', dinnerTime: '', behaviour: 'Calm',
+    hobbies: ['', '', ''], games: ['', '', ''],
+    primaryContactName: '', primaryRelation: '', primaryPhone: '',
+    secondaryContactName: '', secondaryRelation: '', secondaryPhone: '',
+    villageCity: '',
+    // Admission
+    loginMobile: '', password: '', role: 'Participant',
+    registrationDate: '', admissionId: '', assignedCaregiver: '',
+    feePlan: 'Monthly', instituteType: 'School',
+    messFacility: 'No', residency: 'No',
+    // Admission Fee
+    admissionAmount: '',
+    feeDescription: 'Senior Citizen Happiness School (Age 55+)',
+    paymentStatus: 'Pending', paymentMode: 'Cash',
+    paymentDate: '', nextDueDate: '', feeRemarks: '',
+  });
 
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState('');
+  // ── Timetable ──────────────────────────────────────────────
+  const [timetableRows, setTimetableRows] = useState([
+    { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null },
+  ]);
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     setError('');
+  const selectedPeriods = timetableRows.map((r) => r.period?.value).filter(Boolean);
 
-//     try {
-//       // Prepare data for API (convert date strings to proper format)
-//       const submissionData = { ...formData };
-      
-//       // Remove enquiryId from submission if it's null
-//       if (!submissionData.enquiryId) {
-//         delete submissionData.enquiryId;
-//       }
+  const addRow = () =>
+    setTimetableRows((prev) => [...prev, { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null }]);
 
-//       // Handle empty object for file fields (convert to empty string)
-//       if (submissionData.photo && typeof submissionData.photo === 'object' && !(submissionData.photo instanceof File)) {
-//         submissionData.photo = '';
-//       }
-//       if (submissionData.medicalReports && typeof submissionData.medicalReports === 'object' && !(submissionData.medicalReports instanceof File)) {
-//         submissionData.medicalReports = '';
-//       }
+  const removeRow = (i) => setTimetableRows((prev) => prev.filter((_, idx) => idx !== i));
 
-//       if (submissionData.dob) submissionData.dob = new Date(submissionData.dob).toISOString();
-//       if (submissionData.declarationDate) submissionData.declarationDate = new Date(submissionData.declarationDate).toISOString();
-//       if (submissionData.registrationDate) submissionData.registrationDate = new Date(submissionData.registrationDate).toISOString();
-//       if (submissionData.paymentDate) submissionData.paymentDate = new Date(submissionData.paymentDate).toISOString();
-//       if (submissionData.nextDueDate) submissionData.nextDueDate = new Date(submissionData.nextDueDate).toISOString();
+  const updateRow = (i, field, value) => {
+    const updated = [...timetableRows];
+    updated[i][field] = value;
+    setTimetableRows(updated);
+  };
 
-//       await api.schoolAdmission.create(submissionData);
-//       alert('Admission Submitted Successfully!');
-//       navigate('/school/admission');
-//     } catch (err) {
-//       setError(err.response?.data?.message || 'Failed to submit admission');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+  const clearTimetable = () =>
+    setTimetableRows((prev) =>
+      prev.map((r) => ({ ...r, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null }))
+    );
 
-//   const nextStep = () => setStep((prev) => Math.min(prev + 1, 4));
-//   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  const copyMondayToAll = () =>
+    setTimetableRows((prev) =>
+      prev.map((r) => ({ ...r, tuesday: r.monday, wednesday: r.monday, thursday: r.monday, friday: r.monday, saturday: r.monday }))
+    );
 
-//   return (
-//     <div className="max-w-5xl mx-auto space-y-8 pb-12">
-//       <div className="flex items-center justify-between">
-//         <h1 className="text-2xl font-bold text-gray-800">Add Admission</h1>
-//         <button
-//           onClick={() => navigate('/school/admission')}
-//           className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-//           disabled={loading}
-//         >
-//           Back to Admissions
-//         </button>
-//       </div>
+  // ── Services ───────────────────────────────────────────────
+  const [serviceRows, setServiceRows] = useState([{ service: null, startDate: '', days: '' }]);
 
-//       {error && (
-//         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-//           {error}
-//         </div>
-//       )}
+  const addServiceRow = () => setServiceRows((prev) => [...prev, { service: null, startDate: '', days: '' }]);
+  const removeServiceRow = (i) => setServiceRows((prev) => prev.filter((_, idx) => idx !== i));
+  const updateServiceRow = (i, field, value) => {
+    const updated = [...serviceRows];
+    updated[i][field] = value;
+    setServiceRows(updated);
+  };
 
-//       {/* Progress indicator */}
-//       <div className="flex justify-between mb-6">
-//         {['Personal & Health', 'Education & Routine', 'Emergency & Declaration', 'Login & Admission Details'].map((label, i) => (
-//           <div key={i} className={`flex-1 text-center py-2 ${step > i+1 ? 'text-green-600' : step === i+1 ? 'font-bold text-[#000359]' : 'text-gray-400'}`}>
-//             {label}
-//           </div>
-//         ))}
-//       </div>
+  // ── Fee summary ────────────────────────────────────────────
+  const admissionFee = Number(formData.admissionAmount) || 0;
+  const servicesTotal = serviceRows.reduce((sum, row) => {
+    return sum + (row.service?.perDayFee || 0) * (Number(row.days) || 0);
+  }, 0);
+  const grandTotal = admissionFee + servicesTotal;
 
-//       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-10">
+  // ── Load enquiries ─────────────────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoadingEnquiries(true);
+        const res = await api.schoolEnquiry.getForAdmission();
+        setEnquiryOptions(
+          res.data.map((e) => ({
+            value: e._id,
+            label: `${e.enquiryId || 'N/A'} - ${e.name} (${e.status})`,
+            data: e,
+          }))
+        );
+      } catch (err) { console.error(err); }
+      finally { setLoadingEnquiries(false); }
+    };
+    load();
+  }, []);
 
-//         {/* STEP 1 */}
-//         {step === 1 && (
-//           <>
-//             {/* Enquiry Selection Section */}
-//             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-//               <h2 className="text-lg font-semibold text-gray-800 mb-3">Select Enquiry (Optional)</h2>
-//               <div className="max-w-md">
-//                 <label className="block text-sm font-medium text-gray-700 mb-2">
-//                   Choose an existing enquiry to auto-fill details
-//                 </label>
-//                 <Select
-//                   options={enquiryOptions}
-//                   onChange={handleEnquirySelect}
-//                   value={selectedEnquiry}
-//                   placeholder="Search and select enquiry..."
-//                   isClearable
-//                   isLoading={loadingEnquiries}
-//                   className="react-select-container"
-//                   classNamePrefix="react-select"
-//                   styles={{
-//                     control: (base) => ({
-//                       ...base,
-//                       borderColor: '#d1d5db',
-//                       '&:hover': {
-//                         borderColor: '#9ca3af'
-//                       }
-//                     })
-//                   }}
-//                 />
-//               </div>
-//               <p className="text-sm text-gray-500 mt-2">
-//                 OR fill the admission form manually below
-//               </p>
-//             </div>
+  // ── Auto-generate ──────────────────────────────────────────
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    setFormData((prev) => ({ ...prev, registrationDate: today, paymentDate: today, admissionId: generateAdmissionId() }));
+  }, []);
 
-//             <h2 className="text-xl font-semibold border-b pb-2">Personal Information</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-//                 <input name="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" required />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-//                 <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-//                 <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>Male</option>
-//                   <option>Female</option>
-//                   <option>Other</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-//                 <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
-//                 <input name="aadhaar" value={formData.aadhaar} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-//                 <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
-//               </div>
-//             </div>
+  useEffect(() => {
+    if (formData.mobile?.length === 10) {
+      setFormData((prev) => ({ ...prev, loginMobile: prev.mobile, password: generatePassword(prev.mobile) }));
+    }
+  }, [formData.mobile]);
 
-//             <div className="mt-6">
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
-//               <textarea name="fullAddress" value={formData.fullAddress} onChange={handleChange} rows={3} className="w-full px-4 py-2.5 border rounded-lg" />
-//             </div>
+  // ── Load caregivers on step 5 ──────────────────────────────
+  useEffect(() => {
+    if (step !== 5) return;
+    const fetch = async () => {
+      try {
+        setLoadingCaregivers(true);
+        setCaregiverError(null);
+        const res = await api.staff.getAll();
+        const raw = res.data?.data || res.data || [];
+        const norm = (s) => s?.toLowerCase().replace(/[\s_-]/g, '');
+        setCaregivers(
+          raw.filter((s) => {
+            const role = typeof s.role === 'string' ? s.role : s.role?.roleName;
+            return norm(role) === 'caregiver' && (s.status?.toLowerCase() === 'active' || s.isActive === true);
+          })
+        );
+      } catch { setCaregiverError('Failed to load caregivers'); }
+      finally { setLoadingCaregivers(false); }
+    };
+    fetch();
+  }, [step]);
 
-//             <div className="mt-6">
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Upload Photo</label>
-//               <input type="file" name="photo" onChange={handleChange} accept="image/*" className="w-full px-3 py-2 border rounded-lg" />
-//             </div>
+  // ── Handlers ───────────────────────────────────────────────
+  const handleChange = (e) => {
+    const { name, value, files, type } = e.target;
+    if (type === 'file') {
+      setFormData((prev) => ({ ...prev, [name]: files[0] || null }));
+    } else if (name.startsWith('hobby') || name.startsWith('game')) {
+      const index = parseInt(name.slice(-1)) - 1;
+      const key = name.startsWith('hobby') ? 'hobbies' : 'games';
+      const arr = [...formData[key]];
+      arr[index] = value;
+      setFormData((prev) => ({ ...prev, [key]: arr }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
 
-//             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Health Information</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Physical Disability</label>
-//                 <select name="physicalDisability" value={formData.physicalDisability} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>No</option>
-//                   <option>Yes</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Main Illness</label>
-//                 <input name="mainIllness" value={formData.mainIllness} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-//                 <input name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" placeholder="O+" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Name</label>
-//                 <input name="doctorName" value={formData.doctorName} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Village Name</label>
-//                 <input name="doctorVillage" value={formData.doctorVillage} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Mobile</label>
-//                 <input name="doctorMobile" value={formData.doctorMobile} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
+  const handlePhoneChange = (field) => (e) =>
+    setFormData((prev) => ({ ...prev, [field]: numericPhone(e.target.value) }));
 
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Serious Disease</label>
-//                 <select name="seriousDisease" value={formData.seriousDisease} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>No</option>
-//                   <option>Yes</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Regular Medication</label>
-//                 <select name="regularMedication" value={formData.regularMedication} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>No</option>
-//                   <option>Yes</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Health Details</label>
-//                 <input name="healthDetails" value={formData.healthDetails} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
+  const handleEnquirySelect = (option) => {
+    setSelectedEnquiry(option);
+    if (option) {
+      const e = option.data;
+      setFormData((prev) => ({ ...prev, enquiryId: e._id, fullName: e.name || '', mobile: e.contact || '', age: e.age || '', gender: e.gender || 'Male' }));
+    }
+  };
 
-//             <div className="mt-6">
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Upload Medical Reports</label>
-//               <input type="file" name="medicalReports" onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
-//             </div>
-//           </>
-//         )}
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append('fullName', formData.fullName || '');
+      fd.append('mobile', formData.mobile || '');
+      fd.append('gender', formData.gender || '');
+      fd.append('age', formData.age || '');
+      Object.keys(formData).forEach((key) => {
+        if (['fullName', 'mobile', 'gender', 'age'].includes(key)) return;
+        if (key === 'enquiryId' && !formData[key]) return;
+        if (key === 'photo' || key === 'medicalReports') return;
+        const val = formData[key];
+        if (Array.isArray(val)) {
+          fd.append(key, JSON.stringify(val.filter((v) => v?.trim())));
+        } else if (val !== null && val !== '') {
+          fd.append(key, val);
+        }
+      });
+      if (formData.photo) fd.append('photo', formData.photo);
+      if (formData.medicalReports) fd.append('healthRecord', formData.medicalReports);
+      if (formData.dob) fd.set('dob', new Date(formData.dob).toISOString());
+      if (formData.registrationDate) fd.set('registrationDate', new Date(formData.registrationDate).toISOString());
+      if (formData.paymentDate) fd.set('paymentDate', new Date(formData.paymentDate).toISOString());
+      if (formData.nextDueDate) fd.set('nextDueDate', new Date(formData.nextDueDate).toISOString());
+      await api.schoolAdmission.create(fd);
+      toast.success('Admission submitted successfully!');
+      navigate('/school/admission');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit admission.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-//         {/* STEP 2 */}
-//         {step === 2 && (
-//           <>
-//             <h2 className="text-xl font-semibold border-b pb-2">Education & Service</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
-//                 <input name="education" value={formData.education} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Education Place</label>
-//                 <input name="educationPlace" value={formData.educationPlace} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Years of Service</label>
-//                 <input name="yearsOfService" value={formData.yearsOfService} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Service Place</label>
-//                 <input name="servicePlace" value={formData.servicePlace} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Occupation Type</label>
-//                 <select name="occupationType" value={formData.occupationType} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>Government</option>
-//                   <option>Private</option>
-//                   <option>Retired</option>
-//                   <option>Self Employed</option>
-//                 </select>
-//               </div>
-//             </div>
+  const nextStep = () => setStep((p) => Math.min(p + 1, 5));
+  const prevStep = () => setStep((p) => Math.max(p - 1, 1));
 
-//             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Daily Routine</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Wake-up Time</label>
-//                 <input type="time" name="wakeUpTime" value={formData.wakeUpTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Breakfast Time</label>
-//                 <input type="time" name="breakfastTime" value={formData.breakfastTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Lunch Time</label>
-//                 <input type="time" name="lunchTime" value={formData.lunchTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Dinner Time</label>
-//                 <input type="time" name="dinnerTime" value={formData.dinnerTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
+  const inputCls = 'w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#000359] focus:ring-1 focus:ring-[#000359]/20';
+  const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
 
-//             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Behaviour / Nature</h2>
-//             <div className="flex gap-8">
-//               {['Calm', 'Angry', 'Moderate', 'Strict'].map((opt) => (
-//                 <label key={opt} className="flex items-center gap-2">
-//                   <input
-//                     type="radio"
-//                     name="behaviour"
-//                     value={opt}
-//                     checked={formData.behaviour === opt}
-//                     onChange={handleChange}
-//                   />
-//                   {opt}
-//                 </label>
-//               ))}
-//             </div>
+  return (
+    <div className="max-w-5xl mx-auto space-y-8 pb-12">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800">Add Admission</h1>
+        <button onClick={() => navigate('/school/admission')} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+          Back to Admissions
+        </button>
+      </div>
 
-//             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Hobbies & Games</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Hobby 1</label>
-//                 <input name="hobby1" value={formData.hobbies[0]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Hobby 2</label>
-//                 <input name="hobby2" value={formData.hobbies[1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Hobby 3</label>
-//                 <input name="hobby3" value={formData.hobbies[2]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Game 1</label>
-//                 <input name="game1" value={formData.games[0]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Game 2</label>
-//                 <input name="game2" value={formData.games[1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Game 3</label>
-//                 <input name="game3" value={formData.games[2]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
-//           </>
-//         )}
+      {/* Progress */}
+      <div className="flex border-b">
+        {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Set Timetable', 'Admission Details'].map((label, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setStep(i + 1)}
+            className={`flex-1 text-center py-3 text-sm font-medium border-b-2 transition-colors ${
+              step === i + 1
+                ? 'border-[#000359] text-[#000359]'
+                : step > i + 1
+                ? 'border-green-500 text-green-600'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs mr-1.5 ${
+              step > i + 1 ? 'bg-green-100 text-green-700' : step === i + 1 ? 'bg-[#000359] text-white' : 'bg-gray-100 text-gray-500'
+            }`}>{i + 1}</span>
+            {label}
+          </button>
+        ))}
+      </div>
 
-//         {/* STEP 3 */}
-//         {step === 3 && (
-//           <>
-//             <h2 className="text-xl font-semibold border-b pb-2">Emergency Contact Details</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person Name</label>
-//                 <input name="emergencyContactName" value={formData.emergencyContactName} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
-//                 <input name="relationship" value={formData.relationship} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-//                 <input name="emergencyMobile" value={formData.emergencyMobile} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Village / City</label>
-//                 <input name="villageCity" value={formData.villageCity} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Contact</label>
-//                 <input name="alternateContact" value={formData.alternateContact} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-10">
 
-//             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Participant Declaration</h2>
-//             <div className="bg-gray-50 p-5 rounded-lg">
-//               <p className="text-gray-700 italic">
-//                 I hereby declare that the information provided above is true and I agree to follow all rules and regulations of the institute.
-//               </p>
-//               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-//                   <input type="date" name="declarationDate" value={formData.declarationDate} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">Place</label>
-//                   <input name="declarationPlace" value={formData.declarationPlace} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">Signature</label>
-//                   <input name="signature" value={formData.signature} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" placeholder="Type name or upload later" />
-//                 </div>
-//               </div>
-//             </div>
-//           </>
-//         )}
+        {/* ── STEP 1: Personal & Health ── */}
+        {step === 1 && (
+          <>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h2 className="text-base font-semibold text-gray-800 mb-3">Select Enquiry (Optional)</h2>
+              <div className="max-w-md">
+                <label className={labelCls}>Choose an existing enquiry to auto-fill details</label>
+                <Select options={enquiryOptions} onChange={handleEnquirySelect} value={selectedEnquiry} placeholder="Search and select enquiry..." isClearable isLoading={loadingEnquiries} classNamePrefix="react-select" />
+              </div>
+              <p className="text-sm text-gray-500 mt-2">OR fill the admission form manually below</p>
+            </div>
 
-//         {/* STEP 4 */}
-//         {step === 4 && (
-//           <>
-//             <h2 className="text-xl font-semibold border-b pb-2">Login Credentials</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number (Login ID)</label>
-//                 <input type="tel" name="loginMobile" value={formData.loginMobile} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Password (Auto)</label>
-//                 <input name="password" value={formData.password} onChange={handleChange}  className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-//                 <input name="role" value={formData.role} readOnly className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
-//               </div>
-//             </div>
+            <h2 className="text-xl font-semibold border-b pb-2">Personal Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div><label className={labelCls}>Full Name</label><input name="fullName" value={formData.fullName} onChange={handleChange} className={inputCls} required /></div>
+              <div><label className={labelCls}>Age</label><input type="number" name="age" min={1} max={120} value={formData.age} onChange={handleChange} className={inputCls} required /></div>
+              <div><label className={labelCls}>Gender</label><select name="gender" value={formData.gender} onChange={handleChange} className={inputCls}><option>Male</option><option>Female</option><option>Other</option></select></div>
+              <div><label className={labelCls}>Date of Birth</label><input type="date" name="dob" value={formData.dob} max={new Date().toISOString().split('T')[0]} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Aadhaar Number</label><input name="aadhaar" value={formData.aadhaar} onChange={(e) => setFormData((p) => ({ ...p, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12) }))} inputMode="numeric" maxLength={12} placeholder="12-digit number" className={inputCls} /></div>
+              <div><label className={labelCls}>Mobile Number</label><input type="tel" inputMode="numeric" name="mobile" value={formData.mobile} onChange={(e) => setFormData((p) => ({ ...p, mobile: numericPhone(e.target.value) }))} maxLength={10} placeholder="10-digit number" className={inputCls} required /></div>
+            </div>
+            <div><label className={labelCls}>Full Address</label><textarea name="fullAddress" value={formData.fullAddress} onChange={handleChange} rows={3} className={inputCls} /></div>
+            <div><label className={labelCls}>Upload Photo</label><input type="file" name="photo" onChange={handleChange} accept="image/*" className={inputCls} /></div>
 
-//             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Admission & System Details</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Registration Date</label>
-//                 <input type="date" name="registrationDate" value={formData.registrationDate} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Admission ID (Auto)</label>
-//                 <input name="admissionId" value={formData.admissionId} onChange={handleChange} className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Caregiver / Staff</label>
-//                 <input name="assignedCaregiver" value={formData.assignedCaregiver} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Fee Plan</label>
-//                 <select name="feePlan" value={formData.feePlan} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>Daily</option>
-//                   <option>Weekly</option>
-//                   <option>Monthly</option>
-//                   <option>Annual</option>
-          
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Institute Type</label>
-//                 <select name="instituteType" value={formData.instituteType} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>School</option>
-//                   <option>Residency</option>
-//                   <option>DayCare</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-//                 <input name="amount" value={formData.amount} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" placeholder="₹" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Mess Facility</label>
-//                 <select name="messFacility" value={formData.messFacility} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>No</option>
-//                   <option>Yes</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Residency</label>
-//                 <select name="residency" value={formData.residency} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>No</option>
-//                   <option>Yes</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-//                 <input type="date" name="paymentDate" value={formData.paymentDate} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
+            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Health Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div><label className={labelCls}>Physical Disability</label><select name="physicalDisability" value={formData.physicalDisability} onChange={handleChange} className={inputCls}><option>No</option><option>Yes</option></select></div>
+              <div><label className={labelCls}>Main Illness</label><input name="mainIllness" value={formData.mainIllness} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Blood Group</label><select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className={inputCls}><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+              <div><label className={labelCls}>Doctor Name</label><input name="doctorName" value={formData.doctorName} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Doctor Village</label><input name="doctorVillage" value={formData.doctorVillage} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Doctor Mobile</label><input type="tel" inputMode="numeric" name="doctorMobile" value={formData.doctorMobile} onChange={handlePhoneChange('doctorMobile')} maxLength={10} placeholder="10-digit number" className={inputCls} /></div>
+              <div><label className={labelCls}>Serious Disease</label><select name="seriousDisease" value={formData.seriousDisease} onChange={handleChange} className={inputCls}><option>No</option><option>Yes</option></select></div>
+              <div><label className={labelCls}>Regular Medication</label><select name="regularMedication" value={formData.regularMedication} onChange={handleChange} className={inputCls}><option>No</option><option>Yes</option></select></div>
+              <div><label className={labelCls}>Health Details</label><input name="healthDetails" value={formData.healthDetails} onChange={handleChange} className={inputCls} /></div>
+            </div>
+            <div><label className={labelCls}>Upload Medical Reports</label><input type="file" name="medicalReports" onChange={(e) => setFormData((p) => ({ ...p, medicalReports: e.target.files[0] }))} className={inputCls} /></div>
+          </>
+        )}
 
-//             <div className="mt-6">
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Fee Description</label>
-//               <input 
-//                 name="feeDescription" 
-//                 value={formData.feeDescription} 
-//                 onChange={handleChange} 
-//                 className="w-full px-4 py-2.5 border rounded-lg" 
-//                 placeholder="Enter fee description"
-//               />
-//             </div>
+        {/* ── STEP 2: Education & Routine ── */}
+        {step === 2 && (
+          <>
+            <h2 className="text-xl font-semibold border-b pb-2">Education & Service</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div><label className={labelCls}>Education</label><input name="education" value={formData.education} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Education Place</label><input name="educationPlace" value={formData.educationPlace} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Years of Service</label><input name="yearsOfService" value={formData.yearsOfService} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Service Place</label><input name="servicePlace" value={formData.servicePlace} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Occupation Type</label><select name="occupationType" value={formData.occupationType} onChange={handleChange} className={inputCls}><option>Government</option><option>Private</option><option>Retired</option><option>Self Employed</option></select></div>
+            </div>
 
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
-//                 <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>Paid</option>
-//                   <option>Pending</option>
-//                   <option>Partial</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
-//                 <select name="paymentMode" value={formData.paymentMode} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-//                   <option>Cash</option>
-//                   <option>UPI</option>
-//                   <option>Bank Transfer</option>
-//                 </select>
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Next Due Date</label>
-//                 <input type="date" name="nextDueDate" value={formData.nextDueDate} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//             </div>
+            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Daily Routine</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div><label className={labelCls}>Wake-up Time</label><input type="time" name="wakeUpTime" value={formData.wakeUpTime} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Breakfast Time</label><input type="time" name="breakfastTime" value={formData.breakfastTime} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Lunch Time</label><input type="time" name="lunchTime" value={formData.lunchTime} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Dinner Time</label><input type="time" name="dinnerTime" value={formData.dinnerTime} onChange={handleChange} className={inputCls} /></div>
+            </div>
 
-//             <div className="mt-6">
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Fee Remarks</label>
-//               <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={3} className="w-full px-4 py-2.5 border rounded-lg" />
-//             </div>
+            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Behaviour / Nature</h2>
+            <div className="flex gap-8">
+              {['Calm', 'Angry', 'Moderate', 'Strict'].map((opt) => (
+                <label key={opt} className="flex items-center gap-2 text-sm"><input type="radio" name="behaviour" value={opt} checked={formData.behaviour === opt} onChange={handleChange} /> {opt}</label>
+              ))}
+            </div>
 
-//             <div className="flex justify-between items-center mt-10 pt-6 border-t">
-//               <div className="flex gap-4">
-//                 <button type="button" className="px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-//                   Print
-//                 </button>
-//                 <button type="button" className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-//                   Share
-//                 </button>
-//               </div>
-//               <div className="flex gap-4">
-//                 <button
-//                   type="button"
-//                   onClick={prevStep}
-//                   className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-//                   disabled={loading}
-//                 >
-//                   Back
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   disabled={loading}
-//                   className="px-10 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center"
-//                 >
-//                   {loading ? (
-//                     <>
-//                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-//                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-//                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-//                       </svg>
-//                       Submitting...
-//                     </>
-//                   ) : (
-//                     'Submit'
-//                   )}
-//                 </button>
-//               </div>
-//             </div>
-//           </>
-//         )}
+            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Hobbies & Games</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (<div key={i}><label className={labelCls}>Hobby {i}</label><input name={`hobby${i}`} value={formData.hobbies[i - 1]} onChange={handleChange} className={inputCls} /></div>))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+              {[1, 2, 3].map((i) => (<div key={i}><label className={labelCls}>Game {i}</label><input name={`game${i}`} value={formData.games[i - 1]} onChange={handleChange} className={inputCls} /></div>))}
+            </div>
+          </>
+        )}
 
-//         {/* Navigation for steps 1-3 */}
-//         {step < 4 && (
-//           <div className="flex justify-between pt-8 border-t">
-//             {step > 1 && (
-//               <button
-//                 type="button"
-//                 onClick={prevStep}
-//                 className="px-10 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-//                 disabled={loading}
-//               >
-//                 Back
-//               </button>
-//             )}
-//             <div className="flex-1" />
-//             <button
-//               type="button"
-//               onClick={nextStep}
-//               disabled={loading}
-//               className="px-12 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50"
-//             >
-//               Next
-//             </button>
-//           </div>
-//         )}
-//       </form>
-//     </div>
-//   );
-// }
+        {/* ── STEP 3: Emergency Contact ── */}
+        {step === 3 && (
+          <>
+            <h2 className="text-xl font-semibold border-b pb-2">Emergency Contact Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div><label className={labelCls}>Primary Contact Name</label><input name="primaryContactName" value={formData.primaryContactName} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Primary Relation</label><input name="primaryRelation" value={formData.primaryRelation} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Primary Phone</label><input type="tel" inputMode="numeric" name="primaryPhone" value={formData.primaryPhone} onChange={handlePhoneChange('primaryPhone')} maxLength={10} placeholder="10-digit number" className={inputCls} /></div>
+              <div><label className={labelCls}>Secondary Contact Name</label><input name="secondaryContactName" value={formData.secondaryContactName} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Secondary Relation</label><input name="secondaryRelation" value={formData.secondaryRelation} onChange={handleChange} className={inputCls} /></div>
+              <div><label className={labelCls}>Secondary Phone</label><input type="tel" inputMode="numeric" name="secondaryPhone" value={formData.secondaryPhone} onChange={handlePhoneChange('secondaryPhone')} maxLength={10} placeholder="10-digit number" className={inputCls} /></div>
+              <div><label className={labelCls}>Village / City</label><input name="villageCity" value={formData.villageCity} onChange={handleChange} className={inputCls} /></div>
+            </div>
+          </>
+        )}
+
+        {/* ── STEP 4: Timetable ── */}
+        {step === 4 && (
+          <>
+            <h2 className="text-xl font-semibold border-b pb-2">Member Timetable</h2>
+
+            <div className="flex flex-wrap gap-3 mt-4">
+              <button type="button" onClick={copyMondayToAll} className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Copy Monday to All Days</button>
+              <button type="button" onClick={clearTimetable} className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Clear Timetable</button>
+            </div>
+
+            <div className="mt-6 overflow-x-auto rounded-xl border">
+              <table className="w-full min-w-[1100px] border-collapse text-sm">
+                <thead>
+                  <tr className="bg-[#000359] text-white">
+                    <th className="p-3 text-left font-medium">Period</th>
+                    {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map((d) => (
+                      <th key={d} className="p-3 font-medium">{d}</th>
+                    ))}
+                    <th className="p-3 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {timetableRows.map((row, index) => {
+                    const availablePeriods = dummyPeriods.filter(
+                      (p) => !selectedPeriods.includes(p.value) || p.value === row.period?.value
+                    );
+                    return (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="p-2 min-w-[220px]">
+                          <Select value={row.period} options={availablePeriods} placeholder="Select Period" menuPosition="fixed" onChange={(v) => updateRow(index, 'period', v)} classNamePrefix="react-select" />
+                        </td>
+                        {['monday','tuesday','wednesday','thursday','friday','saturday'].map((day) => (
+                          <td key={day} className="p-2 min-w-[160px]">
+                            <Select options={dummyActivities} value={row[day]} placeholder="Activity" menuPosition="fixed" onChange={(v) => updateRow(index, day, v)} isClearable classNamePrefix="react-select" />
+                          </td>
+                        ))}
+                        <td className="p-2 text-center">
+                          <button type="button" onClick={() => removeRow(index)} disabled={timetableRows.length === 1} className="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 disabled:opacity-40 text-xs">Remove</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <button type="button" onClick={addRow} disabled={timetableRows.length >= dummyPeriods.length} className="mt-4 px-4 py-2 bg-[#000359] text-white rounded-lg text-sm disabled:opacity-50">
+              + Add Period Row
+            </button>
+
+            <div className="flex justify-between mt-10 pt-6 border-t">
+              <button type="button" onClick={prevStep} className="px-8 py-3 border border-gray-300 rounded-lg text-sm">Back</button>
+              <button type="button" onClick={nextStep} className="px-10 py-3 bg-[#000359] text-white rounded-lg text-sm">Next</button>
+            </div>
+          </>
+        )}
+
+        {/* ── STEP 5: Admission Details ── */}
+        {step === 5 && (
+          <>
+
+            {/* ── LOGIN CREDENTIALS ── */}
+            <div>
+              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Login Credentials</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelCls}>Mobile Number (Login ID)</label>
+                  <input type="tel" inputMode="numeric" name="loginMobile" value={formData.loginMobile} onChange={(e) => setFormData((p) => ({ ...p, loginMobile: numericPhone(e.target.value) }))} maxLength={10} placeholder="10-digit number" className={inputCls} required />
+                </div>
+                <div>
+                  <label className={labelCls}>Password (Auto-generated)</label>
+                  <input name="password" value={formData.password} onChange={handleChange} className={`${inputCls} bg-gray-50`} />
+                </div>
+                <div>
+                  <label className={labelCls}>Role</label>
+                  <input name="role" value={formData.role} readOnly className={`${inputCls} bg-gray-50`} />
+                </div>
+              </div>
+            </div>
+
+            {/* ── ADMISSION & SYSTEM DETAILS ── */}
+            <div>
+              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Admission Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelCls}>Registration Date</label>
+                  <input type="date" name="registrationDate" value={formData.registrationDate} onChange={handleChange} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Admission ID (Auto)</label>
+                  <input name="admissionId" value={formData.admissionId} onChange={handleChange} className={`${inputCls} bg-gray-50`} />
+                </div>
+                <div>
+                  <label className={labelCls}>Assigned Caregiver / Staff</label>
+                  <select name="assignedCaregiver" value={formData.assignedCaregiver} onChange={handleChange} disabled={loadingCaregivers} className={`${inputCls} ${loadingCaregivers ? 'bg-gray-50' : ''}`}>
+                    <option value="">{loadingCaregivers ? 'Loading...' : 'Select Caregiver'}</option>
+                    {caregivers.map((s) => (<option key={s._id} value={s._id}>{s.fullName || s.name || 'Unnamed'}</option>))}
+                  </select>
+                  {caregiverError && <p className="text-xs text-red-500 mt-1">{caregiverError}</p>}
+                </div>
+                <div>
+                  <label className={labelCls}>Fee Plan</label>
+                  <select name="feePlan" value={formData.feePlan} onChange={handleChange} className={inputCls}>
+                    <option>Daily</option><option>Weekly</option><option>Monthly</option><option>Annual</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Institute Type</label>
+                  <select name="instituteType" value={formData.instituteType} onChange={handleChange} className={inputCls}>
+                    <option>School</option><option>Residency</option><option>DayCare</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Residency</label>
+                  <select name="residency" value={formData.residency} onChange={handleChange} className={inputCls}>
+                    <option>No</option><option>Yes</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* ── ADMISSION FEE ── */}
+            <div>
+              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Admission Fee</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelCls}>Fee Amount (₹)</label>
+                  <input
+                    type="number"
+                    name="admissionAmount"
+                    value={formData.admissionAmount}
+                    onChange={handleChange}
+                    placeholder="e.g. 5000"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Status</label>
+                  <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className={inputCls}>
+                    <option>Paid</option><option>Pending</option><option>Partial</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Mode</label>
+                  <select name="paymentMode" value={formData.paymentMode} onChange={handleChange} className={inputCls}>
+                    <option>Cash</option><option>UPI</option><option>Bank Transfer</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Date</label>
+                  <input type="date" name="paymentDate" value={formData.paymentDate} onChange={handleChange} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Next Due Date</label>
+                  <input type="date" name="nextDueDate" value={formData.nextDueDate} min={new Date().toISOString().split('T')[0]} onChange={handleChange} className={inputCls} />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className={labelCls}>Fee Description</label>
+                <input name="feeDescription" value={formData.feeDescription} onChange={handleChange} className={inputCls} />
+              </div>
+              <div className="mt-4">
+                <label className={labelCls}>Fee Remarks</label>
+                <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={2} className={inputCls} />
+              </div>
+            </div>
+
+            {/* ── ADDITIONAL SERVICES ── */}
+            <div>
+              <h2 className="text-xl font-semibold border-b pb-2 mb-4">Additional Services</h2>
+              <p className="text-sm text-gray-500 mb-4">Assign optional services such as Bus, Mess, Laundry, etc. Total is auto-calculated from per-day fee × days.</p>
+
+              <div className="overflow-x-auto rounded-xl border">
+                <table className="w-full min-w-[800px] text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-[#000359] text-white">
+                      <th className="px-4 py-3 text-left font-medium">Service</th>
+                      <th className="px-4 py-3 text-left font-medium">Start Date</th>
+                      <th className="px-4 py-3 text-left font-medium">No. of Days</th>
+                      <th className="px-4 py-3 text-left font-medium">Per Day (₹)</th>
+                      <th className="px-4 py-3 text-left font-medium">Total (₹)</th>
+                      <th className="px-4 py-3 text-center font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {serviceRows.map((row, index) => {
+                      const perDay = row.service?.perDayFee || 0;
+                      const total = perDay * (Number(row.days) || 0);
+                      return (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 min-w-[220px]">
+                            <Select
+                              value={row.service}
+                              options={dummyServices}
+                              placeholder="Select Service"
+                              menuPosition="fixed"
+                              onChange={(v) => updateServiceRow(index, 'service', v)}
+                              classNamePrefix="react-select"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input type="date" value={row.startDate} onChange={(e) => updateServiceRow(index, 'startDate', e.target.value)} className={inputCls} />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input type="number" min="1" value={row.days} onChange={(e) => updateServiceRow(index, 'days', e.target.value)} placeholder="Days" className={inputCls} />
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {perDay > 0 ? `₹${perDay}` : <span className="text-gray-300">—</span>}
+                          </td>
+                          <td className="px-3 py-2 font-semibold text-gray-800">
+                            {total > 0 ? `₹${total.toLocaleString()}` : <span className="text-gray-300">—</span>}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <button type="button" onClick={() => removeServiceRow(index)} disabled={serviceRows.length === 1} className="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 disabled:opacity-40 text-xs">
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <button type="button" onClick={addServiceRow} className="mt-4 px-4 py-2 bg-[#000359] text-white rounded-lg text-sm hover:opacity-90">
+                + Add Service
+              </button>
+            </div>
+
+            {/* ── FEE SUMMARY ── */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+              <h3 className="text-base font-semibold text-gray-800 mb-4">Fee Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Admission Fee</span>
+                  <span className="font-medium text-gray-800">
+                    {admissionFee > 0 ? `₹${admissionFee.toLocaleString()}` : '—'}
+                  </span>
+                </div>
+
+                {serviceRows.map((row, i) => {
+                  const total = (row.service?.perDayFee || 0) * (Number(row.days) || 0);
+                  if (!row.service || total === 0) return null;
+                  return (
+                    <div key={i} className="flex justify-between text-sm text-gray-600">
+                      <span>{row.service.label} ({row.days} days × ₹{row.service.perDayFee})</span>
+                      <span className="font-medium text-gray-800">₹{total.toLocaleString()}</span>
+                    </div>
+                  );
+                })}
+
+                <div className="border-t pt-3 flex justify-between text-base font-bold text-gray-900">
+                  <span>Grand Total</span>
+                  <span className="text-[#000359]">₹{grandTotal.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── ACTIONS ── */}
+            <div className="flex justify-between items-center pt-6 border-t">
+              <div className="flex gap-3">
+                <button type="button" className="px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm">Print</button>
+                <button type="button" className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">Share</button>
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={prevStep} disabled={loading} className="px-8 py-3 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Back</button>
+                <button type="submit" disabled={loading} className="px-10 py-3 bg-[#000359] text-white rounded-lg text-sm hover:opacity-90 disabled:opacity-50">
+                  {loading ? 'Submitting...' : 'Submit Admission'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── NAVIGATION (steps 1–3) ── */}
+        {step < 4 && (
+          <div className="flex justify-between pt-8 border-t">
+            {step > 1 && (
+              <button type="button" onClick={prevStep} className="px-10 py-3 border border-gray-300 rounded-lg text-sm">Back</button>
+            )}
+            <button type="button" onClick={nextStep} className="px-12 py-3 bg-[#000359] text-white rounded-lg text-sm ml-auto">Next</button>
+          </div>
+        )}
+      </form>
+    </div>
+  );
+}
+
+
+
 
 
 
@@ -734,6 +678,8 @@
 // import { api } from '../../../services/apiClient';
 // import Select from 'react-select';
 
+
+
 // const generateAdmissionId = () => {
 //   const date = new Date();
 //   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
@@ -747,6 +693,9 @@
 //   return `${last4}${random4}`;
 // };
 
+// // Only allow digits, max 10 characters
+// const numericPhone = (val) => val.replace(/\D/g, '').slice(0, 10);
+
 // export default function AddAdmission() {
 //   const navigate = useNavigate();
 //   const [step, setStep] = useState(1);
@@ -754,6 +703,11 @@
 //   const [enquiryOptions, setEnquiryOptions] = useState([]);
 //   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
 //   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
+
+//   // Caregiver state
+//   const [caregivers, setCaregivers] = useState([]);
+//   const [loadingCaregivers, setLoadingCaregivers] = useState(false);
+//   const [caregiverError, setCaregiverError] = useState(null);
 
 //   const [formData, setFormData] = useState({
 //     fullName: '',
@@ -790,7 +744,7 @@
 //     hobbies: ['', '', ''],
 //     games: ['', '', ''],
 
-//     // Emergency Contact - NEW FIELD NAMES
+//     // Emergency Contact
 //     primaryContactName: '',
 //     primaryRelation: '',
 //     primaryPhone: '',
@@ -877,6 +831,51 @@
 //     }
 //   };
 
+  
+// useEffect(() => {
+//   if (step !== 4) return;
+
+//   const fetchCaregivers = async () => {
+//     try {
+//       setLoadingCaregivers(true);
+//       setCaregiverError(null);
+
+//       const res = await api.staff.getAll();
+
+//       const rawList = res.data?.data || res.data || [];
+//       // console.log('RAW STAFF LIST:', rawList);
+//       const normalize = (str) =>
+//         str?.toLowerCase().replace(/[\s_-]/g, '');
+
+//       const list = rawList.filter((s) => {
+//         const roleValue =
+//           typeof s.role === 'string'
+//             ? s.role
+//             : s.role?.roleName;
+
+//         const roleMatch = normalize(roleValue) === 'caregiver';
+
+//         const statusMatch =
+//           s.status?.toLowerCase() === 'active' ||
+//           s.isActive === true;
+
+//         return roleMatch && statusMatch;
+//       });
+
+//       setCaregivers(list);
+//     } catch (err) {
+//       console.error(err);
+//       setCaregiverError('Failed to load caregivers');
+//     } finally {
+//       setLoadingCaregivers(false);
+//     }
+//   };
+
+//   fetchCaregivers();
+// }, [step]);
+
+
+
 //   const handleChange = (e) => {
 //     const { name, value, files, type } = e.target;
 //     if (type === 'file') {
@@ -892,6 +891,11 @@
 //     }
 //   };
 
+//   // Numeric-only handler for phone fields
+//   const handlePhoneChange = (fieldName) => (e) => {
+//     setFormData(prev => ({ ...prev, [fieldName]: numericPhone(e.target.value) }));
+//   };
+
 //   const [loading, setLoading] = useState(false);
 
 //   const handleSubmit = async (e) => {
@@ -899,33 +903,227 @@
 //     setLoading(true);
 
 //     try {
-//       const submissionData = { ...formData };
+//       // const submissionData = { ...formData };
 
-//       if (!submissionData.enquiryId) delete submissionData.enquiryId;
+//       // if (!submissionData.enquiryId) delete submissionData.enquiryId;
 
-//       // Handle files
-//       if (submissionData.photo && typeof submissionData.photo === 'object' && !(submissionData.photo instanceof File)) submissionData.photo = '';
-//       if (submissionData.medicalReports && typeof submissionData.medicalReports === 'object' && !(submissionData.medicalReports instanceof File)) submissionData.medicalReports = '';
+//       // // Handle files
+//       // if (submissionData.photo && typeof submissionData.photo === 'object' && !(submissionData.photo instanceof File)) submissionData.photo = '';
+//       // if (submissionData.medicalReports && typeof submissionData.medicalReports === 'object' && !(submissionData.medicalReports instanceof File)) submissionData.medicalReports = '';
 
-//       // Convert dates
-//       if (submissionData.dob) submissionData.dob = new Date(submissionData.dob).toISOString();
-//       if (submissionData.declarationDate) submissionData.declarationDate = new Date(submissionData.declarationDate).toISOString();
-//       if (submissionData.registrationDate) submissionData.registrationDate = new Date(submissionData.registrationDate).toISOString();
-//       if (submissionData.paymentDate) submissionData.paymentDate = new Date(submissionData.paymentDate).toISOString();
-//       if (submissionData.nextDueDate) submissionData.nextDueDate = new Date(submissionData.nextDueDate).toISOString();
+//       // // Convert dates
+//       // if (submissionData.dob)              submissionData.dob              = new Date(submissionData.dob).toISOString();
+//       // if (submissionData.declarationDate)  submissionData.declarationDate  = new Date(submissionData.declarationDate).toISOString();
+//       // if (submissionData.registrationDate) submissionData.registrationDate = new Date(submissionData.registrationDate).toISOString();
+//       // if (submissionData.paymentDate)      submissionData.paymentDate      = new Date(submissionData.paymentDate).toISOString();
+//       // if (submissionData.nextDueDate)      submissionData.nextDueDate      = new Date(submissionData.nextDueDate).toISOString();
 
-//       await api.schoolAdmission.create(submissionData);
+//       // await api.schoolAdmission.create(submissionData);
+
+//       const formDataToSend = new FormData();
+
+//       formDataToSend.append('fullName', formData.fullName || '');
+// formDataToSend.append('mobile', formData.mobile || '');
+// formDataToSend.append('gender', formData.gender || '');
+// formDataToSend.append('age', formData.age || '');
+
+// // Append normal fields
+// Object.keys(formData).forEach(key => {
+//   if (['fullName', 'mobile', 'gender', 'age'].includes(key)) return;
+//   if (key === 'enquiryId' && !formData[key]) {
+//   return; // skip empty enquiryId
+// }
+//   if (key === 'photo' || key === 'medicalReports') return;
+
+//   const value = formData[key];
+
+// if (Array.isArray(value)) {
+//   const cleaned = value.filter(v => v && v.trim() !== '');
+//   formDataToSend.append(key, JSON.stringify(cleaned));
+// }else {
+//   if (value !== null && value !== '') {
+//     formDataToSend.append(key, value);
+//   }
+// }
+// });
+
+// // Append photo
+// if (formData.photo) {
+//   formDataToSend.append('photo', formData.photo);
+// }
+
+// // Append medical reports
+// if (formData.medicalReports) {
+//   formDataToSend.append('healthRecord', formData.medicalReports);
+// }
+
+// // Convert dates
+// if (formData.dob) formDataToSend.set('dob', new Date(formData.dob).toISOString());
+// if (formData.registrationDate) formDataToSend.set('registrationDate', new Date(formData.registrationDate).toISOString());
+// if (formData.paymentDate) formDataToSend.set('paymentDate', new Date(formData.paymentDate).toISOString());
+// if (formData.nextDueDate) formDataToSend.set('nextDueDate', new Date(formData.nextDueDate).toISOString());
+
+// await api.schoolAdmission.create(formDataToSend);
+
+
 //       toast.success('Admission submitted successfully!');
 //       navigate('/school/admission');
 //     } catch (err) {
-//       toast.error(err.response?.data?.message || 'Failed to submit admission');
+//       toast.error(err.response?.data?.message || 'Failed to submit admission. Please try again.');
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
 
-//   const nextStep = () => setStep((prev) => Math.min(prev + 1, 4));
+//   const nextStep = () => setStep((prev) => Math.min(prev + 1, 5));
 //   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+
+//   const dummyPeriods = [
+//   {
+//     value: "p1",
+//     label: "P1 (09:00 - 10:00)"
+//   },
+//   {
+//     value: "p2",
+//     label: "P2 (10:00 - 11:00)"
+//   },
+//   {
+//     value: "p3",
+//     label: "P3 (11:00 - 12:00)"
+//   },
+//   {
+//     value: "tea-break",
+//     label: "Tea Break (12:00 - 12:15)"
+//   }
+// ];
+
+// const dummyActivities = [
+//   { value: "yoga", label: "Yoga" },
+//   { value: "music", label: "Music" },
+//   { value: "reading", label: "Reading" },
+//   { value: "walking", label: "Walking" },
+//   { value: "meditation", label: "Meditation" }
+// ];
+
+// const [timetableRows, setTimetableRows] = useState([
+//   {
+//     period: null,
+//     monday: null,
+//     tuesday: null,
+//     wednesday: null,
+//     thursday: null,
+//     friday: null,
+//     saturday: null,
+//   }
+// ]);
+
+// const addRow = () => {
+//   setTimetableRows(prev => [
+//     ...prev,
+//     {
+//       period: null,
+//       monday: null,
+//       tuesday: null,
+//       wednesday: null,
+//       thursday: null,
+//       friday: null,
+//       saturday: null,
+//     }
+//   ]);
+// };
+
+// const removeRow = (index) => {
+//   setTimetableRows(prev =>
+//     prev.filter((_, i) => i !== index)
+//   );
+// };
+
+// const updateRow = (index, field, value) => {
+//   const updated = [...timetableRows];
+//   updated[index][field] = value;
+//   setTimetableRows(updated);
+// };
+
+// const selectedPeriods = timetableRows
+//   .map(row => row.period?.value)
+//   .filter(Boolean);
+
+//   const clearTimetable = () => {
+//   setTimetableRows(prev =>
+//     prev.map(row => ({
+//       ...row,
+//       monday: null,
+//       tuesday: null,
+//       wednesday: null,
+//       thursday: null,
+//       friday: null,
+//       saturday: null,
+//     }))
+//   );
+// };
+
+// const copyMondayToAllDays = () => {
+//   setTimetableRows(prev =>
+//     prev.map(row => ({
+//       ...row,
+//       tuesday: row.monday,
+//       wednesday: row.monday,
+//       thursday: row.monday,
+//       friday: row.monday,
+//       saturday: row.monday,
+//     }))
+//   );
+// };
+
+// const addServiceRow = () => {
+//   setServiceRows((prev) => [
+//     ...prev,
+//     {
+//       service: null,
+//       startDate: "",
+//       days: "",
+//     },
+//   ]);
+// };
+
+// const removeServiceRow = (index) => {
+//   setServiceRows((prev) =>
+//     prev.filter((_, i) => i !== index)
+//   );
+// };
+
+// const updateServiceRow = (index, field, value) => {
+//   const updated = [...serviceRows];
+//   updated[index][field] = value;
+//   setServiceRows(updated);
+// };
+
+// const dummyServices = [
+//   {
+//     value: "bus",
+//     label: "Bus Service",
+//     perDayFee: 50
+//   },
+//   {
+//     value: "mess",
+//     label: "Mess Service",
+//     perDayFee: 150
+//   },
+//   {
+//     value: "laundry",
+//     label: "Laundry Service",
+//     perDayFee: 30
+//   }
+// ];
+
+// const [serviceRows, setServiceRows] = useState([
+//   {
+//     service: null,
+//     startDate: "",
+//     days: "",
+//     amount: 0
+//   }
+// ]);
 
 //   return (
 //     <div className="max-w-5xl mx-auto space-y-8 pb-12">
@@ -938,10 +1136,20 @@
 
 //       {/* Progress */}
 //       <div className="flex justify-between mb-6">
-//         {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Admission Details'].map((label, i) => (
-//           <div key={i} className={`flex-1 text-center py-2 ${step > i + 1 ? 'text-green-600' : step === i + 1 ? 'font-bold text-[#000359]' : 'text-gray-400'}`}>
-//             {label}
-//           </div>
+//         {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Set Timetable', 'Admission Details'].map((label, i) => (
+//           <div
+//   key={i}
+//   onClick={() => setStep(i + 1)}
+//   className={`flex-1 text-center py-2 cursor-pointer ${
+//     step > i + 1
+//       ? 'text-green-600'
+//       : step === i + 1
+//       ? 'font-bold text-[#000359]'
+//       : 'text-gray-400'
+//   }`}
+// >
+//   {label}
+// </div>
 //         ))}
 //       </div>
 
@@ -969,9 +1177,7 @@
 //                     control: (base) => ({
 //                       ...base,
 //                       borderColor: '#d1d5db',
-//                       '&:hover': {
-//                         borderColor: '#9ca3af'
-//                       }
+//                       '&:hover': { borderColor: '#9ca3af' }
 //                     })
 //                   }}
 //                 />
@@ -989,7 +1195,7 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-//                 <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
+//                 <input type="number" name="age" min={1} max={120} value={formData.age} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
@@ -1001,15 +1207,33 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-//                 <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+//                 <input type="date" name="dob" value={formData.dob} max={new Date().toISOString().split('T')[0]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
-//                 <input name="aadhaar" value={formData.aadhaar} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+//                 <input
+//                   name="aadhaar"
+//                   value={formData.aadhaar}
+//                   onChange={e => setFormData(prev => ({ ...prev, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12) }))}
+//                   inputMode="numeric"
+//                   maxLength={12}
+//                   placeholder="12-digit number"
+//                   className="w-full px-4 py-2.5 border rounded-lg"
+//                 />
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-//                 <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
+//                 <input
+//                   type="tel"
+//                   inputMode="numeric"
+//                   name="mobile"
+//                   value={formData.mobile}
+//                   onChange={e => setFormData(prev => ({ ...prev, mobile: numericPhone(e.target.value) }))}
+//                   maxLength={10}
+//                   placeholder="10-digit number"
+//                   className="w-full px-4 py-2.5 border rounded-lg"
+//                   required
+//                 />
 //               </div>
 //             </div>
 
@@ -1038,7 +1262,13 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-//                 <input name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" placeholder="O+" />
+//                 <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
+//                   <option value="">Select</option>
+//                   <option>A+</option><option>A-</option>
+//                   <option>B+</option><option>B-</option>
+//                   <option>AB+</option><option>AB-</option>
+//                   <option>O+</option><option>O-</option>
+//                 </select>
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Name</label>
@@ -1050,7 +1280,16 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Mobile</label>
-//                 <input name="doctorMobile" value={formData.doctorMobile} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+//                 <input
+//                   type="tel"
+//                   inputMode="numeric"
+//                   name="doctorMobile"
+//                   value={formData.doctorMobile}
+//                   onChange={handlePhoneChange('doctorMobile')}
+//                   maxLength={10}
+//                   placeholder="10-digit number"
+//                   className="w-full px-4 py-2.5 border rounded-lg"
+//                 />
 //               </div>
 //             </div>
 
@@ -1077,7 +1316,13 @@
 
 //             <div className="mt-6">
 //               <label className="block text-sm font-medium text-gray-700 mb-1">Upload Medical Reports</label>
-//               <input type="file" name="medicalReports" onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+//               <input type="file" name="medicalReports" multiple
+//   onChange={(e) =>
+//     setFormData(prev => ({
+//       ...prev,
+//       medicalReports: e.target.files[0]   // keep single for now (safe)
+//     }))
+//   } className="w-full px-3 py-2 border rounded-lg" />
 //             </div>
 //           </>
 //         )}
@@ -1137,13 +1382,7 @@
 //             <div className="flex gap-8">
 //               {['Calm', 'Angry', 'Moderate', 'Strict'].map((opt) => (
 //                 <label key={opt} className="flex items-center gap-2">
-//                   <input
-//                     type="radio"
-//                     name="behaviour"
-//                     value={opt}
-//                     checked={formData.behaviour === opt}
-//                     onChange={handleChange}
-//                   />
+//                   <input type="radio" name="behaviour" value={opt} checked={formData.behaviour === opt} onChange={handleChange} />
 //                   {opt}
 //                 </label>
 //               ))}
@@ -1151,37 +1390,24 @@
 
 //             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Hobbies & Games</h2>
 //             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Hobby 1</label>
-//                 <input name="hobby1" value={formData.hobbies[0]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Hobby 2</label>
-//                 <input name="hobby2" value={formData.hobbies[1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Hobby 3</label>
-//                 <input name="hobby3" value={formData.hobbies[2]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
+//               {[1, 2, 3].map(i => (
+//                 <div key={i}>
+//                   <label className="block text-sm font-medium text-gray-700 mb-1">Hobby {i}</label>
+//                   <input name={`hobby${i}`} value={formData.hobbies[i - 1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+//                 </div>
+//               ))}
 //             </div>
 //             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Game 1</label>
-//                 <input name="game1" value={formData.games[0]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Game 2</label>
-//                 <input name="game2" value={formData.games[1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Game 3</label>
-//                 <input name="game3" value={formData.games[2]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-//               </div>
+//               {[1, 2, 3].map(i => (
+//                 <div key={i}>
+//                   <label className="block text-sm font-medium text-gray-700 mb-1">Game {i}</label>
+//                   <input name={`game${i}`} value={formData.games[i - 1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+//                 </div>
+//               ))}
 //             </div>
 //           </>
 //         )}
 
-//         {/* UPDATED STEP 3 - Emergency Contact */}
 //         {step === 3 && (
 //           <>
 //             <h2 className="text-xl font-semibold border-b pb-2">Emergency Contact Details</h2>
@@ -1196,7 +1422,16 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Primary Phone</label>
-//                 <input name="primaryPhone" value={formData.primaryPhone} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
+//                 <input
+//                   type="tel"
+//                   inputMode="numeric"
+//                   name="primaryPhone"
+//                   value={formData.primaryPhone}
+//                   onChange={handlePhoneChange('primaryPhone')}
+//                   maxLength={10}
+//                   placeholder="10-digit number"
+//                   className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]"
+//                 />
 //               </div>
 
 //               <div>
@@ -1209,32 +1444,179 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Secondary Phone</label>
-//                 <input name="secondaryPhone" value={formData.secondaryPhone} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
+//                 <input
+//                   type="tel"
+//                   inputMode="numeric"
+//                   name="secondaryPhone"
+//                   value={formData.secondaryPhone}
+//                   onChange={handlePhoneChange('secondaryPhone')}
+//                   maxLength={10}
+//                   placeholder="10-digit number"
+//                   className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]"
+//                 />
 //               </div>
 
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Village / City</label>
 //                 <input name="villageCity" value={formData.villageCity} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
 //               </div>
-//               {/* <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Contact</label>
-//                 <input name="alternateContact" value={formData.alternateContact} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
-//               </div> */}
 //             </div>
 //           </>
 //         )}
 
+
 //         {step === 4 && (
+//   <>
+//     <h2 className="text-xl font-semibold border-b pb-2">
+//       Member Timetable
+//     </h2>
+
+//     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+//       <h3 className="font-semibold text-[#000359]">
+//         Assign Activities
+//       </h3>
+
+//       <p className="text-sm text-gray-600 mt-1">
+//         Configure timetable for this member.
+//       </p>
+//     </div>
+
+//     <div className="mt-6 flex flex-wrap gap-4">
+//       <button
+//   type="button"
+//   onClick={copyMondayToAllDays}
+//   className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+// >
+//   Copy Monday To All Days
+// </button>
+
+//       <button
+//   type="button"
+//   onClick={clearTimetable}
+//   className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+// >
+//   Clear Timetable
+// </button>
+//     </div>
+
+//     <div className="mt-6 overflow-x-auto">
+//       <table className="w-full min-w-[1200px] border-collapse">
+//         <thead>
+//           <tr className="bg-gray-50">
+//             <th className="border p-3 text-left">
+//               Period
+//             </th>
+
+//             <th className="border p-3">Monday</th>
+//             <th className="border p-3">Tuesday</th>
+//             <th className="border p-3">Wednesday</th>
+//             <th className="border p-3">Thursday</th>
+//             <th className="border p-3">Friday</th>
+//             <th className="border p-3">Saturday</th>
+//             <th className="border p-3">Action</th>
+//           </tr>
+//         </thead>
+
+//         <tbody>
+//   {timetableRows.map((row, index) => {
+
+//     const availablePeriods = dummyPeriods.filter(
+//       period =>
+//         !selectedPeriods.includes(period.value) ||
+//         period.value === row.period?.value
+//     );
+
+//     return (
+//       <tr key={index}>
+//               <td className="border p-2 min-w-[250px]">
+//   <Select
+//     value={row.period}
+//     options={availablePeriods}
+//     placeholder="Select Period"
+//     menuPosition="fixed"
+//     onChange={(selected) =>
+//       updateRow(index, "period", selected)
+//     }
+//   />
+// </td>
+
+//               {[1,2,3,4,5,6].map((day) => (
+//                 <td key={day} className="border p-2">
+//                   <Select
+//   options={dummyActivities}
+//   placeholder="Select Activity"
+//   menuPosition="fixed"
+// />
+//                 </td>
+                
+//               ))}
+//               <td className="border p-2 text-center">
+//   <button
+//     type="button"
+//     onClick={() => removeRow(index)}
+//     className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
+//     disabled={timetableRows.length === 1}
+//   >
+//     Remove
+//   </button>
+// </td>
+//             </tr>
+//     );
+//   })}
+//         </tbody>
+//       </table>
+      
+//     </div>
+//     <button
+//   type="button"
+//   onClick={addRow}
+//   disabled={timetableRows.length >= dummyPeriods.length}
+//   className="px-4 py-2 bg-[#000359] text-white rounded-lg disabled:opacity-50"
+// >
+//   + Add Period Row
+// </button>
+
+//     <div className="flex justify-between mt-10 pt-6 border-t">
+//       <button
+//         type="button"
+//         onClick={prevStep}
+//         className="px-8 py-3 border border-gray-300 rounded-lg"
+//       >
+//         Back
+//       </button>
+
+//       <button
+//         type="submit"
+//         disabled={loading}
+//         className="px-10 py-3 bg-[#000359] text-white rounded-lg"
+//       >
+//         Submit Admission
+//       </button>
+//     </div>
+//   </>
+// )} 
+
+//         {step === 5 && (
 //           <>
 //             <h2 className="text-xl font-semibold border-b pb-2">Login Credentials</h2>
 //             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number (Login ID)</label>
-//                 <input type="tel" name="loginMobile" value={formData.loginMobile} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
+//                 <input
+//                   type="tel"
+//                   inputMode="numeric"
+//                   name="loginMobile"
+//                   value={formData.loginMobile}
+//                   onChange={e => setFormData(prev => ({ ...prev, loginMobile: numericPhone(e.target.value) }))}
+//                   maxLength={10}
+//                   placeholder="10-digit number"
+//                   className="w-full px-4 py-2.5 border rounded-lg"
+//                   required
+//                 />
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Password (Auto)</label>
-//                 <input name="password" value={formData.password} onChange={handleChange}  className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
+//                 <input name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -1254,7 +1636,39 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Caregiver / Staff</label>
-//                 <input name="assignedCaregiver" value={formData.assignedCaregiver} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+//                 <div>
+//   <select
+//     name="assignedCaregiver"
+//     value={formData.assignedCaregiver}
+//     onChange={handleChange}
+//     disabled={loadingCaregivers}
+//     className="w-full px-4 py-2.5 border rounded-lg bg-white disabled:bg-gray-100"
+//   >
+//     <option value="">
+//       {loadingCaregivers
+//         ? 'Loading caregivers...'
+//         : 'Select Caregiver / Staff'}
+//     </option>
+
+//     {caregivers.map((staff) => (
+//       <option key={staff._id} value={staff._id}>
+//         {staff.fullName || staff.name || 'Unnamed'}
+//       </option>
+//     ))}
+//   </select>
+
+//   {/* Error */}
+//   {caregiverError && (
+//     <p className="text-sm text-red-500 mt-1">{caregiverError}</p>
+//   )}
+
+//   {/* Empty state */}
+//   {!loadingCaregivers && caregivers.length === 0 && !caregiverError && (
+//     <p className="text-sm text-gray-500 mt-1">
+//       No caregivers available
+//     </p>
+//   )}
+// </div>
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Fee Plan</label>
@@ -1263,7 +1677,6 @@
 //                   <option>Weekly</option>
 //                   <option>Monthly</option>
 //                   <option>Annual</option>
-          
 //                 </select>
 //               </div>
 //               <div>
@@ -1300,13 +1713,7 @@
 
 //             <div className="mt-6">
 //               <label className="block text-sm font-medium text-gray-700 mb-1">Fee Description</label>
-//               <input 
-//                 name="feeDescription" 
-//                 value={formData.feeDescription} 
-//                 onChange={handleChange} 
-//                 className="w-full px-4 py-2.5 border rounded-lg" 
-//                 placeholder="Enter fee description"
-//               />
+//               <input name="feeDescription" value={formData.feeDescription} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" placeholder="Enter fee description" />
 //             </div>
 
 //             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
@@ -1328,7 +1735,14 @@
 //               </div>
 //               <div>
 //                 <label className="block text-sm font-medium text-gray-700 mb-1">Next Due Date</label>
-//                 <input type="date" name="nextDueDate" value={formData.nextDueDate} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
+//                 <input
+//                   type="date"
+//                   name="nextDueDate"
+//                   value={formData.nextDueDate}
+//                   min={new Date().toISOString().split('T')[0]}
+//                   onChange={handleChange}
+//                   className="w-full px-4 py-2.5 border rounded-lg"
+//                 />
 //               </div>
 //             </div>
 
@@ -1336,6 +1750,131 @@
 //               <label className="block text-sm font-medium text-gray-700 mb-1">Fee Remarks</label>
 //               <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={3} className="w-full px-4 py-2.5 border rounded-lg" />
 //             </div>
+
+//             <h2 className="text-xl font-semibold border-b pb-2 mt-10">
+//   Additional Services
+// </h2>
+
+// <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-6">
+//   <p className="text-sm text-gray-600">
+//     Assign optional services such as Bus, Mess, Laundry, etc.
+//   </p>
+// </div>
+
+// <div className="overflow-x-auto">
+//   <table className="w-full min-w-[900px] border-collapse">
+//     <thead>
+//       <tr className="bg-gray-50">
+//         <th className="border p-3 text-left">
+//           Service
+//         </th>
+
+//         <th className="border p-3 text-left">
+//           Start Date
+//         </th>
+
+//         <th className="border p-3 text-left">
+//           Days
+//         </th>
+
+//         <th className="border p-3 text-left">
+//           Total Amount
+//         </th>
+
+//         <th className="border p-3 text-center">
+//           Action
+//         </th>
+//       </tr>
+//     </thead>
+
+//     <tbody>
+//       {serviceRows.map((row, index) => {
+//         const amount =
+//           (row.service?.perDayFee || 0) *
+//           (Number(row.days) || 0);
+
+//         return (
+//           <tr key={index}>
+//             <td className="border p-2 min-w-[250px]">
+//               <Select
+//                 value={row.service}
+//                 options={dummyServices}
+//                 placeholder="Select Service"
+//                 menuPosition="fixed"
+//                 onChange={(selected) =>
+//                   updateServiceRow(
+//                     index,
+//                     "service",
+//                     selected
+//                   )
+//                 }
+//               />
+//             </td>
+
+//             <td className="border p-2">
+//               <input
+//                 type="date"
+//                 value={row.startDate}
+//                 onChange={(e) =>
+//                   updateServiceRow(
+//                     index,
+//                     "startDate",
+//                     e.target.value
+//                   )
+//                 }
+//                 className="w-full px-3 py-2 border rounded-lg"
+//               />
+//             </td>
+
+//             <td className="border p-2">
+//               <input
+//                 type="number"
+//                 min="1"
+//                 value={row.days}
+//                 onChange={(e) =>
+//                   updateServiceRow(
+//                     index,
+//                     "days",
+//                     e.target.value
+//                   )
+//                 }
+//                 className="w-full px-3 py-2 border rounded-lg"
+//                 placeholder="Days"
+//               />
+//             </td>
+
+//             <td className="border p-2 font-semibold">
+//               ₹{amount}
+//             </td>
+
+//             <td className="border p-2 text-center">
+//               <button
+//                 type="button"
+//                 onClick={() =>
+//                   removeServiceRow(index)
+//                 }
+//                 disabled={serviceRows.length === 1}
+//                 className="px-3 py-1 bg-red-100 text-red-600 rounded"
+//               >
+//                 Remove
+//               </button>
+//             </td>
+//           </tr>
+//         );
+//       })}
+//     </tbody>
+//   </table>
+// </div>
+
+// <div className="mt-4">
+//   <button
+//     type="button"
+//     onClick={addServiceRow}
+//     className="px-4 py-2 bg-[#000359] text-white rounded-lg"
+//   >
+//     + Add Service
+//   </button>
+// </div>
 
 //             <div className="flex justify-between items-center mt-10 pt-6 border-t">
 //               <div className="flex gap-4">
@@ -1347,19 +1886,10 @@
 //                 </button>
 //               </div>
 //               <div className="flex gap-4">
-//                 <button
-//                   type="button"
-//                   onClick={prevStep}
-//                   className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-//                   disabled={loading}
-//                 >
+//                 <button type="button" onClick={prevStep} className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" disabled={loading}>
 //                   Back
 //                 </button>
-//                 <button
-//                   type="submit"
-//                   disabled={loading}
-//                   className="px-10 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center"
-//                 >
+//                 {/* <button type="submit" disabled={loading} className="px-10 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center">
 //                   {loading ? (
 //                     <>
 //                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1371,11 +1901,22 @@
 //                   ) : (
 //                     'Submit'
 //                   )}
-//                 </button>
+//                 </button> */}
+//                 <button
+//   type="button"
+//   onClick={nextStep}
+//   className="px-10 py-3 bg-[#000359] text-white rounded-lg"
+// >
+//   Next
+// </button>
 //               </div>
 //             </div>
 //           </>
 //         )}
+
+        
+
+       
 
 //         {/* Navigation buttons */}
 //         {step < 4 && (
@@ -1384,1284 +1925,7 @@
 //             <button type="button" onClick={nextStep} className="px-12 py-3 bg-[#000359] text-white rounded-lg ml-auto">Next</button>
 //           </div>
 //         )}
-
-//         {step === 4 && (
-//           <div className="flex justify-end gap-4 pt-8 border-t">
-//             <button type="button" onClick={prevStep} className="px-10 py-3 border border-gray-300 rounded-lg">Back</button>
-//             <button type="submit" disabled={loading} className="px-10 py-3 bg-[#000359] text-white rounded-lg">
-//               {loading ? 'Submitting...' : 'Submit Admission'}
-//             </button>
-//           </div>
-//         )}
 //       </form>
 //     </div>
 //   );
 // }
-
-
-
-
-
-
-
-
-
-
-// pages/school/admission/AddAdmissionForm.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { api } from '../../../services/apiClient';
-import Select from 'react-select';
-
-
-
-const generateAdmissionId = () => {
-  const date = new Date();
-  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const randomNum = Math.floor(100 + Math.random() * 900);
-  return `PSC${dateStr}-${randomNum}`;
-};
-
-const generatePassword = (mobile) => {
-  const last4 = mobile.slice(-4) || '0000';
-  const random4 = Math.floor(1000 + Math.random() * 9000).toString();
-  return `${last4}${random4}`;
-};
-
-// Only allow digits, max 10 characters
-const numericPhone = (val) => val.replace(/\D/g, '').slice(0, 10);
-
-export default function AddAdmission() {
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-
-  const [enquiryOptions, setEnquiryOptions] = useState([]);
-  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
-  const [loadingEnquiries, setLoadingEnquiries] = useState(false);
-
-  // Caregiver state
-  const [caregivers, setCaregivers] = useState([]);
-  const [loadingCaregivers, setLoadingCaregivers] = useState(false);
-  const [caregiverError, setCaregiverError] = useState(null);
-
-  const [formData, setFormData] = useState({
-    fullName: '',
-    age: '',
-    gender: 'Male',
-    dob: '',
-    aadhaar: '',
-    mobile: '',
-    fullAddress: '',
-    photo: null,
-    physicalDisability: 'No',
-    mainIllness: '',
-    bloodGroup: '',
-    doctorName: '',
-    doctorVillage: '',
-    doctorMobile: '',
-    seriousDisease: 'No',
-    regularMedication: 'No',
-    healthDetails: '',
-    medicalReports: null,
-    enquiryId: null,
-
-    // Education & Routine
-    education: '',
-    educationPlace: '',
-    yearsOfService: '',
-    servicePlace: '',
-    occupationType: 'Government',
-    wakeUpTime: '',
-    breakfastTime: '',
-    lunchTime: '',
-    dinnerTime: '',
-    behaviour: 'Calm',
-    hobbies: ['', '', ''],
-    games: ['', '', ''],
-
-    // Emergency Contact
-    primaryContactName: '',
-    primaryRelation: '',
-    primaryPhone: '',
-    secondaryContactName: '',
-    secondaryRelation: '',
-    secondaryPhone: '',
-    villageCity: '',
-    alternateContact: '',
-
-    // Admission Details
-    loginMobile: '',
-    password: '',
-    role: 'Participant',
-    registrationDate: '',
-    admissionId: '',
-    assignedCaregiver: '',
-    feePlan: 'Monthly',
-    instituteType: 'School',
-    amount: '',
-    messFacility: 'No',
-    residency: 'No',
-    paymentDate: '',
-    feeDescription: 'Senior Citizen Happiness School (Age 55+)',
-    paymentStatus: 'Pending',
-    paymentMode: 'Cash',
-    nextDueDate: '',
-    feeRemarks: '',
-  });
-
-  // Load enquiries
-  useEffect(() => {
-    const loadEnquiries = async () => {
-      try {
-        setLoadingEnquiries(true);
-        const response = await api.schoolEnquiry.getForAdmission();
-        const options = response.data.map(enquiry => ({
-          value: enquiry._id,
-          label: `${enquiry.enquiryId || 'N/A'} - ${enquiry.name} (${enquiry.status})`,
-          data: enquiry
-        }));
-        setEnquiryOptions(options);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingEnquiries(false);
-      }
-    };
-    loadEnquiries();
-  }, []);
-
-  // Auto-generate values
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    setFormData(prev => ({
-      ...prev,
-      registrationDate: today,
-      paymentDate: today,
-      admissionId: generateAdmissionId(),
-    }));
-  }, []);
-
-  useEffect(() => {
-    if (formData.mobile && formData.mobile.length === 10) {
-      setFormData(prev => ({
-        ...prev,
-        loginMobile: prev.mobile,
-        password: generatePassword(prev.mobile),
-      }));
-    }
-  }, [formData.mobile]);
-
-  const handleEnquirySelect = (option) => {
-    setSelectedEnquiry(option);
-    if (option) {
-      const enquiry = option.data;
-      setFormData(prev => ({
-        ...prev,
-        enquiryId: enquiry._id,
-        fullName: enquiry.name || '',
-        mobile: enquiry.contact || '',
-        age: enquiry.age || '',
-        gender: enquiry.gender || 'Male',
-      }));
-    }
-  };
-
-  
-useEffect(() => {
-  if (step !== 4) return;
-
-  const fetchCaregivers = async () => {
-    try {
-      setLoadingCaregivers(true);
-      setCaregiverError(null);
-
-      const res = await api.staff.getAll();
-
-      const rawList = res.data?.data || res.data || [];
-      // console.log('RAW STAFF LIST:', rawList);
-      const normalize = (str) =>
-        str?.toLowerCase().replace(/[\s_-]/g, '');
-
-      const list = rawList.filter((s) => {
-        const roleValue =
-          typeof s.role === 'string'
-            ? s.role
-            : s.role?.roleName;
-
-        const roleMatch = normalize(roleValue) === 'caregiver';
-
-        const statusMatch =
-          s.status?.toLowerCase() === 'active' ||
-          s.isActive === true;
-
-        return roleMatch && statusMatch;
-      });
-
-      setCaregivers(list);
-    } catch (err) {
-      console.error(err);
-      setCaregiverError('Failed to load caregivers');
-    } finally {
-      setLoadingCaregivers(false);
-    }
-  };
-
-  fetchCaregivers();
-}, [step]);
-
-
-
-  const handleChange = (e) => {
-    const { name, value, files, type } = e.target;
-    if (type === 'file') {
-      setFormData(prev => ({ ...prev, [name]: files[0] || null }));
-    } else if (name.startsWith('hobby') || name.startsWith('game')) {
-      const index = parseInt(name.slice(-1)) - 1;
-      const key = name.startsWith('hobby') ? 'hobbies' : 'games';
-      const newArr = [...formData[key]];
-      newArr[index] = value;
-      setFormData(prev => ({ ...prev, [key]: newArr }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  // Numeric-only handler for phone fields
-  const handlePhoneChange = (fieldName) => (e) => {
-    setFormData(prev => ({ ...prev, [fieldName]: numericPhone(e.target.value) }));
-  };
-
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // const submissionData = { ...formData };
-
-      // if (!submissionData.enquiryId) delete submissionData.enquiryId;
-
-      // // Handle files
-      // if (submissionData.photo && typeof submissionData.photo === 'object' && !(submissionData.photo instanceof File)) submissionData.photo = '';
-      // if (submissionData.medicalReports && typeof submissionData.medicalReports === 'object' && !(submissionData.medicalReports instanceof File)) submissionData.medicalReports = '';
-
-      // // Convert dates
-      // if (submissionData.dob)              submissionData.dob              = new Date(submissionData.dob).toISOString();
-      // if (submissionData.declarationDate)  submissionData.declarationDate  = new Date(submissionData.declarationDate).toISOString();
-      // if (submissionData.registrationDate) submissionData.registrationDate = new Date(submissionData.registrationDate).toISOString();
-      // if (submissionData.paymentDate)      submissionData.paymentDate      = new Date(submissionData.paymentDate).toISOString();
-      // if (submissionData.nextDueDate)      submissionData.nextDueDate      = new Date(submissionData.nextDueDate).toISOString();
-
-      // await api.schoolAdmission.create(submissionData);
-
-      const formDataToSend = new FormData();
-
-      formDataToSend.append('fullName', formData.fullName || '');
-formDataToSend.append('mobile', formData.mobile || '');
-formDataToSend.append('gender', formData.gender || '');
-formDataToSend.append('age', formData.age || '');
-
-// Append normal fields
-Object.keys(formData).forEach(key => {
-  if (['fullName', 'mobile', 'gender', 'age'].includes(key)) return;
-  if (key === 'enquiryId' && !formData[key]) {
-  return; // skip empty enquiryId
-}
-  if (key === 'photo' || key === 'medicalReports') return;
-
-  const value = formData[key];
-
-if (Array.isArray(value)) {
-  const cleaned = value.filter(v => v && v.trim() !== '');
-  formDataToSend.append(key, JSON.stringify(cleaned));
-}else {
-  if (value !== null && value !== '') {
-    formDataToSend.append(key, value);
-  }
-}
-});
-
-// Append photo
-if (formData.photo) {
-  formDataToSend.append('photo', formData.photo);
-}
-
-// Append medical reports
-if (formData.medicalReports) {
-  formDataToSend.append('healthRecord', formData.medicalReports);
-}
-
-// Convert dates
-if (formData.dob) formDataToSend.set('dob', new Date(formData.dob).toISOString());
-if (formData.registrationDate) formDataToSend.set('registrationDate', new Date(formData.registrationDate).toISOString());
-if (formData.paymentDate) formDataToSend.set('paymentDate', new Date(formData.paymentDate).toISOString());
-if (formData.nextDueDate) formDataToSend.set('nextDueDate', new Date(formData.nextDueDate).toISOString());
-
-await api.schoolAdmission.create(formDataToSend);
-
-
-      toast.success('Admission submitted successfully!');
-      navigate('/school/admission');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit admission. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 5));
-  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
-
-  const dummyPeriods = [
-  {
-    value: "p1",
-    label: "P1 (09:00 - 10:00)"
-  },
-  {
-    value: "p2",
-    label: "P2 (10:00 - 11:00)"
-  },
-  {
-    value: "p3",
-    label: "P3 (11:00 - 12:00)"
-  },
-  {
-    value: "tea-break",
-    label: "Tea Break (12:00 - 12:15)"
-  }
-];
-
-const dummyActivities = [
-  { value: "yoga", label: "Yoga" },
-  { value: "music", label: "Music" },
-  { value: "reading", label: "Reading" },
-  { value: "walking", label: "Walking" },
-  { value: "meditation", label: "Meditation" }
-];
-
-const [timetableRows, setTimetableRows] = useState([
-  {
-    period: null,
-    monday: null,
-    tuesday: null,
-    wednesday: null,
-    thursday: null,
-    friday: null,
-    saturday: null,
-  }
-]);
-
-const addRow = () => {
-  setTimetableRows(prev => [
-    ...prev,
-    {
-      period: null,
-      monday: null,
-      tuesday: null,
-      wednesday: null,
-      thursday: null,
-      friday: null,
-      saturday: null,
-    }
-  ]);
-};
-
-const removeRow = (index) => {
-  setTimetableRows(prev =>
-    prev.filter((_, i) => i !== index)
-  );
-};
-
-const updateRow = (index, field, value) => {
-  const updated = [...timetableRows];
-  updated[index][field] = value;
-  setTimetableRows(updated);
-};
-
-const selectedPeriods = timetableRows
-  .map(row => row.period?.value)
-  .filter(Boolean);
-
-  const clearTimetable = () => {
-  setTimetableRows(prev =>
-    prev.map(row => ({
-      ...row,
-      monday: null,
-      tuesday: null,
-      wednesday: null,
-      thursday: null,
-      friday: null,
-      saturday: null,
-    }))
-  );
-};
-
-const copyMondayToAllDays = () => {
-  setTimetableRows(prev =>
-    prev.map(row => ({
-      ...row,
-      tuesday: row.monday,
-      wednesday: row.monday,
-      thursday: row.monday,
-      friday: row.monday,
-      saturday: row.monday,
-    }))
-  );
-};
-
-const addServiceRow = () => {
-  setServiceRows((prev) => [
-    ...prev,
-    {
-      service: null,
-      startDate: "",
-      days: "",
-    },
-  ]);
-};
-
-const removeServiceRow = (index) => {
-  setServiceRows((prev) =>
-    prev.filter((_, i) => i !== index)
-  );
-};
-
-const updateServiceRow = (index, field, value) => {
-  const updated = [...serviceRows];
-  updated[index][field] = value;
-  setServiceRows(updated);
-};
-
-const dummyServices = [
-  {
-    value: "bus",
-    label: "Bus Service",
-    perDayFee: 50
-  },
-  {
-    value: "mess",
-    label: "Mess Service",
-    perDayFee: 150
-  },
-  {
-    value: "laundry",
-    label: "Laundry Service",
-    perDayFee: 30
-  }
-];
-
-const [serviceRows, setServiceRows] = useState([
-  {
-    service: null,
-    startDate: "",
-    days: "",
-    amount: 0
-  }
-]);
-
-  return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-12">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Add Admission</h1>
-        <button onClick={() => navigate('/school/admission')} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-          Back to Admissions
-        </button>
-      </div>
-
-      {/* Progress */}
-      <div className="flex justify-between mb-6">
-        {['Personal & Health', 'Education & Routine', 'Emergency Contact', 'Set Timetable', 'Admission Details'].map((label, i) => (
-          <div
-  key={i}
-  onClick={() => setStep(i + 1)}
-  className={`flex-1 text-center py-2 cursor-pointer ${
-    step > i + 1
-      ? 'text-green-600'
-      : step === i + 1
-      ? 'font-bold text-[#000359]'
-      : 'text-gray-400'
-  }`}
->
-  {label}
-</div>
-        ))}
-      </div>
-
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-10">
-
-        {step === 1 && (
-          <>
-            {/* Enquiry Selection Section */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">Select Enquiry (Optional)</h2>
-              <div className="max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choose an existing enquiry to auto-fill details
-                </label>
-                <Select
-                  options={enquiryOptions}
-                  onChange={handleEnquirySelect}
-                  value={selectedEnquiry}
-                  placeholder="Search and select enquiry..."
-                  isClearable
-                  isLoading={loadingEnquiries}
-                  className="react-select-container"
-                  classNamePrefix="react-select"
-                  styles={{
-                    control: (base) => ({
-                      ...base,
-                      borderColor: '#d1d5db',
-                      '&:hover': { borderColor: '#9ca3af' }
-                    })
-                  }}
-                />
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                OR fill the admission form manually below
-              </p>
-            </div>
-
-            <h2 className="text-xl font-semibold border-b pb-2">Personal Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <input name="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                <input type="number" name="age" min={1} max={120} value={formData.age} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" name="dob" value={formData.dob} max={new Date().toISOString().split('T')[0]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number</label>
-                <input
-                  name="aadhaar"
-                  value={formData.aadhaar}
-                  onChange={e => setFormData(prev => ({ ...prev, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12) }))}
-                  inputMode="numeric"
-                  maxLength={12}
-                  placeholder="12-digit number"
-                  className="w-full px-4 py-2.5 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={e => setFormData(prev => ({ ...prev, mobile: numericPhone(e.target.value) }))}
-                  maxLength={10}
-                  placeholder="10-digit number"
-                  className="w-full px-4 py-2.5 border rounded-lg"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
-              <textarea name="fullAddress" value={formData.fullAddress} onChange={handleChange} rows={3} className="w-full px-4 py-2.5 border rounded-lg" />
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Upload Photo</label>
-              <input type="file" name="photo" onChange={handleChange} accept="image/*" className="w-full px-3 py-2 border rounded-lg" />
-            </div>
-
-            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Health Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Physical Disability</label>
-                <select name="physicalDisability" value={formData.physicalDisability} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Main Illness</label>
-                <input name="mainIllness" value={formData.mainIllness} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-                <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option value="">Select</option>
-                  <option>A+</option><option>A-</option>
-                  <option>B+</option><option>B-</option>
-                  <option>AB+</option><option>AB-</option>
-                  <option>O+</option><option>O-</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Name</label>
-                <input name="doctorName" value={formData.doctorName} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Village Name</label>
-                <input name="doctorVillage" value={formData.doctorVillage} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Mobile</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  name="doctorMobile"
-                  value={formData.doctorMobile}
-                  onChange={handlePhoneChange('doctorMobile')}
-                  maxLength={10}
-                  placeholder="10-digit number"
-                  className="w-full px-4 py-2.5 border rounded-lg"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Serious Disease</label>
-                <select name="seriousDisease" value={formData.seriousDisease} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Regular Medication</label>
-                <select name="regularMedication" value={formData.regularMedication} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Health Details</label>
-                <input name="healthDetails" value={formData.healthDetails} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Upload Medical Reports</label>
-              <input type="file" name="medicalReports" multiple
-  onChange={(e) =>
-    setFormData(prev => ({
-      ...prev,
-      medicalReports: e.target.files[0]   // keep single for now (safe)
-    }))
-  } className="w-full px-3 py-2 border rounded-lg" />
-            </div>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <h2 className="text-xl font-semibold border-b pb-2">Education & Service</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
-                <input name="education" value={formData.education} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Education Place</label>
-                <input name="educationPlace" value={formData.educationPlace} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Years of Service</label>
-                <input name="yearsOfService" value={formData.yearsOfService} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Service Place</label>
-                <input name="servicePlace" value={formData.servicePlace} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Occupation Type</label>
-                <select name="occupationType" value={formData.occupationType} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>Government</option>
-                  <option>Private</option>
-                  <option>Retired</option>
-                  <option>Self Employed</option>
-                </select>
-              </div>
-            </div>
-
-            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Daily Routine</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Wake-up Time</label>
-                <input type="time" name="wakeUpTime" value={formData.wakeUpTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Breakfast Time</label>
-                <input type="time" name="breakfastTime" value={formData.breakfastTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lunch Time</label>
-                <input type="time" name="lunchTime" value={formData.lunchTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Dinner Time</label>
-                <input type="time" name="dinnerTime" value={formData.dinnerTime} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-            </div>
-
-            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Behaviour / Nature</h2>
-            <div className="flex gap-8">
-              {['Calm', 'Angry', 'Moderate', 'Strict'].map((opt) => (
-                <label key={opt} className="flex items-center gap-2">
-                  <input type="radio" name="behaviour" value={opt} checked={formData.behaviour === opt} onChange={handleChange} />
-                  {opt}
-                </label>
-              ))}
-            </div>
-
-            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Hobbies & Games</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => (
-                <div key={i}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hobby {i}</label>
-                  <input name={`hobby${i}`} value={formData.hobbies[i - 1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-              {[1, 2, 3].map(i => (
-                <div key={i}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Game {i}</label>
-                  <input name={`game${i}`} value={formData.games[i - 1]} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <h2 className="text-xl font-semibold border-b pb-2">Emergency Contact Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Primary Contact Name</label>
-                <input name="primaryContactName" value={formData.primaryContactName} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Primary Relation</label>
-                <input name="primaryRelation" value={formData.primaryRelation} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Primary Phone</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  name="primaryPhone"
-                  value={formData.primaryPhone}
-                  onChange={handlePhoneChange('primaryPhone')}
-                  maxLength={10}
-                  placeholder="10-digit number"
-                  className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Secondary Contact Name</label>
-                <input name="secondaryContactName" value={formData.secondaryContactName} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Secondary Relation</label>
-                <input name="secondaryRelation" value={formData.secondaryRelation} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Secondary Phone</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  name="secondaryPhone"
-                  value={formData.secondaryPhone}
-                  onChange={handlePhoneChange('secondaryPhone')}
-                  maxLength={10}
-                  placeholder="10-digit number"
-                  className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Village / City</label>
-                <input name="villageCity" value={formData.villageCity} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-[#000359]" />
-              </div>
-            </div>
-          </>
-        )}
-
-
-        {step === 4 && (
-  <>
-    <h2 className="text-xl font-semibold border-b pb-2">
-      Member Timetable
-    </h2>
-
-    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-      <h3 className="font-semibold text-[#000359]">
-        Assign Activities
-      </h3>
-
-      <p className="text-sm text-gray-600 mt-1">
-        Configure timetable for this member.
-      </p>
-    </div>
-
-    <div className="mt-6 flex flex-wrap gap-4">
-      <button
-  type="button"
-  onClick={copyMondayToAllDays}
-  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
->
-  Copy Monday To All Days
-</button>
-
-      <button
-  type="button"
-  onClick={clearTimetable}
-  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
->
-  Clear Timetable
-</button>
-    </div>
-
-    <div className="mt-6 overflow-x-auto">
-      <table className="w-full min-w-[1200px] border-collapse">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="border p-3 text-left">
-              Period
-            </th>
-
-            <th className="border p-3">Monday</th>
-            <th className="border p-3">Tuesday</th>
-            <th className="border p-3">Wednesday</th>
-            <th className="border p-3">Thursday</th>
-            <th className="border p-3">Friday</th>
-            <th className="border p-3">Saturday</th>
-            <th className="border p-3">Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-  {timetableRows.map((row, index) => {
-
-    const availablePeriods = dummyPeriods.filter(
-      period =>
-        !selectedPeriods.includes(period.value) ||
-        period.value === row.period?.value
-    );
-
-    return (
-      <tr key={index}>
-              <td className="border p-2 min-w-[250px]">
-  <Select
-    value={row.period}
-    options={availablePeriods}
-    placeholder="Select Period"
-    menuPosition="fixed"
-    onChange={(selected) =>
-      updateRow(index, "period", selected)
-    }
-  />
-</td>
-
-              {[1,2,3,4,5,6].map((day) => (
-                <td key={day} className="border p-2">
-                  <Select
-  options={dummyActivities}
-  placeholder="Select Activity"
-  menuPosition="fixed"
-/>
-                </td>
-                
-              ))}
-              <td className="border p-2 text-center">
-  <button
-    type="button"
-    onClick={() => removeRow(index)}
-    className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
-    disabled={timetableRows.length === 1}
-  >
-    Remove
-  </button>
-</td>
-            </tr>
-    );
-  })}
-        </tbody>
-      </table>
-      
-    </div>
-    <button
-  type="button"
-  onClick={addRow}
-  disabled={timetableRows.length >= dummyPeriods.length}
-  className="px-4 py-2 bg-[#000359] text-white rounded-lg disabled:opacity-50"
->
-  + Add Period Row
-</button>
-
-    <div className="flex justify-between mt-10 pt-6 border-t">
-      <button
-        type="button"
-        onClick={prevStep}
-        className="px-8 py-3 border border-gray-300 rounded-lg"
-      >
-        Back
-      </button>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="px-10 py-3 bg-[#000359] text-white rounded-lg"
-      >
-        Submit Admission
-      </button>
-    </div>
-  </>
-)} 
-
-        {step === 5 && (
-          <>
-            <h2 className="text-xl font-semibold border-b pb-2">Login Credentials</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number (Login ID)</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  name="loginMobile"
-                  value={formData.loginMobile}
-                  onChange={e => setFormData(prev => ({ ...prev, loginMobile: numericPhone(e.target.value) }))}
-                  maxLength={10}
-                  placeholder="10-digit number"
-                  className="w-full px-4 py-2.5 border rounded-lg"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password (Auto)</label>
-                <input name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                <input name="role" value={formData.role} readOnly className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
-              </div>
-            </div>
-
-            <h2 className="text-xl font-semibold border-b pb-2 mt-10">Admission & System Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Registration Date</label>
-                <input type="date" name="registrationDate" value={formData.registrationDate} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Admission ID (Auto)</label>
-                <input name="admissionId" value={formData.admissionId} onChange={handleChange} className="w-full px-4 py-2.5 border bg-gray-100 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Caregiver / Staff</label>
-                <div>
-  <select
-    name="assignedCaregiver"
-    value={formData.assignedCaregiver}
-    onChange={handleChange}
-    disabled={loadingCaregivers}
-    className="w-full px-4 py-2.5 border rounded-lg bg-white disabled:bg-gray-100"
-  >
-    <option value="">
-      {loadingCaregivers
-        ? 'Loading caregivers...'
-        : 'Select Caregiver / Staff'}
-    </option>
-
-    {caregivers.map((staff) => (
-      <option key={staff._id} value={staff._id}>
-        {staff.fullName || staff.name || 'Unnamed'}
-      </option>
-    ))}
-  </select>
-
-  {/* Error */}
-  {caregiverError && (
-    <p className="text-sm text-red-500 mt-1">{caregiverError}</p>
-  )}
-
-  {/* Empty state */}
-  {!loadingCaregivers && caregivers.length === 0 && !caregiverError && (
-    <p className="text-sm text-gray-500 mt-1">
-      No caregivers available
-    </p>
-  )}
-</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fee Plan</label>
-                <select name="feePlan" value={formData.feePlan} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>Daily</option>
-                  <option>Weekly</option>
-                  <option>Monthly</option>
-                  <option>Annual</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Institute Type</label>
-                <select name="instituteType" value={formData.instituteType} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>School</option>
-                  <option>Residency</option>
-                  <option>DayCare</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                <input name="amount" value={formData.amount} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" placeholder="₹" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mess Facility</label>
-                <select name="messFacility" value={formData.messFacility} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Residency</label>
-                <select name="residency" value={formData.residency} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-                <input type="date" name="paymentDate" value={formData.paymentDate} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fee Description</label>
-              <input name="feeDescription" value={formData.feeDescription} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg" placeholder="Enter fee description" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
-                <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>Paid</option>
-                  <option>Pending</option>
-                  <option>Partial</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
-                <select name="paymentMode" value={formData.paymentMode} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg">
-                  <option>Cash</option>
-                  <option>UPI</option>
-                  <option>Bank Transfer</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Next Due Date</label>
-                <input
-                  type="date"
-                  name="nextDueDate"
-                  value={formData.nextDueDate}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border rounded-lg"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fee Remarks</label>
-              <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={3} className="w-full px-4 py-2.5 border rounded-lg" />
-            </div>
-
-            <h2 className="text-xl font-semibold border-b pb-2 mt-10">
-  Additional Services
-</h2>
-
-<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-6">
-  <p className="text-sm text-gray-600">
-    Assign optional services such as Bus, Mess, Laundry, etc.
-  </p>
-</div>
-
-<div className="overflow-x-auto">
-  <table className="w-full min-w-[900px] border-collapse">
-    <thead>
-      <tr className="bg-gray-50">
-        <th className="border p-3 text-left">
-          Service
-        </th>
-
-        <th className="border p-3 text-left">
-          Start Date
-        </th>
-
-        <th className="border p-3 text-left">
-          Days
-        </th>
-
-        <th className="border p-3 text-left">
-          Total Amount
-        </th>
-
-        <th className="border p-3 text-center">
-          Action
-        </th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {serviceRows.map((row, index) => {
-        const amount =
-          (row.service?.perDayFee || 0) *
-          (Number(row.days) || 0);
-
-        return (
-          <tr key={index}>
-            <td className="border p-2 min-w-[250px]">
-              <Select
-                value={row.service}
-                options={dummyServices}
-                placeholder="Select Service"
-                menuPosition="fixed"
-                onChange={(selected) =>
-                  updateServiceRow(
-                    index,
-                    "service",
-                    selected
-                  )
-                }
-              />
-            </td>
-
-            <td className="border p-2">
-              <input
-                type="date"
-                value={row.startDate}
-                onChange={(e) =>
-                  updateServiceRow(
-                    index,
-                    "startDate",
-                    e.target.value
-                  )
-                }
-                className="w-full px-3 py-2 border rounded-lg"
-              />
-            </td>
-
-            <td className="border p-2">
-              <input
-                type="number"
-                min="1"
-                value={row.days}
-                onChange={(e) =>
-                  updateServiceRow(
-                    index,
-                    "days",
-                    e.target.value
-                  )
-                }
-                className="w-full px-3 py-2 border rounded-lg"
-                placeholder="Days"
-              />
-            </td>
-
-            <td className="border p-2 font-semibold">
-              ₹{amount}
-            </td>
-
-            <td className="border p-2 text-center">
-              <button
-                type="button"
-                onClick={() =>
-                  removeServiceRow(index)
-                }
-                disabled={serviceRows.length === 1}
-                className="px-3 py-1 bg-red-100 text-red-600 rounded"
-              >
-                Remove
-              </button>
-            </td>
-          </tr>
-        );
-      })}
-    </tbody>
-  </table>
-</div>
-
-<div className="mt-4">
-  <button
-    type="button"
-    onClick={addServiceRow}
-    className="px-4 py-2 bg-[#000359] text-white rounded-lg"
-  >
-    + Add Service
-  </button>
-</div>
-
-            <div className="flex justify-between items-center mt-10 pt-6 border-t">
-              <div className="flex gap-4">
-                <button type="button" className="px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                  Print
-                </button>
-                <button type="button" className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  Share
-                </button>
-              </div>
-              <div className="flex gap-4">
-                <button type="button" onClick={prevStep} className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" disabled={loading}>
-                  Back
-                </button>
-                {/* <button type="submit" disabled={loading} className="px-10 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center">
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit'
-                  )}
-                </button> */}
-                <button
-  type="button"
-  onClick={nextStep}
-  className="px-10 py-3 bg-[#000359] text-white rounded-lg"
->
-  Next
-</button>
-              </div>
-            </div>
-          </>
-        )}
-
-        
-
-       
-
-        {/* Navigation buttons */}
-        {step < 4 && (
-          <div className="flex justify-between pt-8 border-t">
-            {step > 1 && <button type="button" onClick={prevStep} className="px-10 py-3 border border-gray-300 rounded-lg">Back</button>}
-            <button type="button" onClick={nextStep} className="px-12 py-3 bg-[#000359] text-white rounded-lg ml-auto">Next</button>
-          </div>
-        )}
-      </form>
-    </div>
-  );
-}
