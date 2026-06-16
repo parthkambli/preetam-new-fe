@@ -1,31 +1,33 @@
-// pages/fitnessClub/Activities/Activities.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
-
-const DUMMY_ACTIVITIES = [
-  { _id: "1", name: "Yoga", staffId: { _id: "s1", fullName: "Priya Sharma", role: "Instructor" } },
-  { _id: "2", name: "Zumba", staffId: { _id: "s2", fullName: "Rahul Mehta", role: "Trainer" } },
-  { _id: "3", name: "CrossFit", staffId: { _id: "s3", fullName: "Anita Desai", role: "Coach" } },
-];
-
-const DUMMY_STAFF = [
-  { _id: "s1", fullName: "Priya Sharma", role: "Instructor" },
-  { _id: "s2", fullName: "Rahul Mehta", role: "Trainer" },
-  { _id: "s3", fullName: "Anita Desai", role: "Coach" },
-  { _id: "s4", fullName: "Vikram Nair", role: "Instructor" },
-  { _id: "s5", fullName: "Sneha Patil", role: "Trainer" },
-];
+import { toast } from "sonner";
+import { api } from "../../../services/apiClient";
 
 export default function Activities() {
-  // ── Form state ──────────────────────────────────────────────
   const [activityName, setActivityName] = useState("");
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // ── Table state ─────────────────────────────────────────────
-  const [activities, setActivities] = useState(DUMMY_ACTIVITIES);
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      setLoading(true);
+      const res = await api.activities.getAll();
+      const data = res.data?.data || res.data || [];
+      setActivities(data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load activities");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Populate form when editing
   const handleEditClick = (a) => {
@@ -40,64 +42,58 @@ export default function Activities() {
               typeof staff === "object"
                 ? `${staff.fullName} (${staff.role || "Staff"})`
                 : "",
+            fullName: typeof staff === "object" ? staff.fullName : "",
           }
         : null
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ── Dummy staff search ───────────────────────────────────────
+  // ── Staff search ─────────────────────────────────────────────
   const loadStaffOptions = async (inputValue) => {
-    const filtered = DUMMY_STAFF.filter((s) =>
-      s.fullName.toLowerCase().includes((inputValue || "").toLowerCase())
-    );
-    return filtered.map((s) => ({
-      value: s._id,
-      label: `${s.fullName} (${s.role || "Staff"})`,
-    }));
+    try {
+      const params = {};
+      if (inputValue) params.search = inputValue;
+      const res = await api.fitnessStaff.getAll(params);
+      const staff = res.data?.data?.staff || res.data?.data || res.data || [];
+      return staff.map((s) => ({
+        value: s._id,
+        label: `${s.fullName} (${s.role || "Staff"})`,
+        fullName: s.fullName,
+      }));
+    } catch {
+      return [];
+    }
   };
 
   // ── Form submit ──────────────────────────────────────────────
-  const handleSave = () => {
+  const handleSave = async () => {
     setError("");
     if (!activityName.trim()) return setError("Activity name is required");
     if (!selectedStaff) return setError("Instructor is required");
 
     setSaving(true);
-    setTimeout(() => {
+    try {
+      const payload = {
+        name: activityName.trim(),
+        staffName: selectedStaff.fullName,
+      };
+
       if (editData) {
-        setActivities((prev) =>
-          prev.map((a) =>
-            a._id === editData._id
-              ? {
-                  ...a,
-                  name: activityName.trim(),
-                  staffId: {
-                    _id: selectedStaff.value,
-                    fullName: selectedStaff.label.split(" (")[0],
-                    role: selectedStaff.label.match(/\((.+)\)/)?.[1] || "Staff",
-                  },
-                }
-              : a
-          )
-        );
+        await api.activities.update(editData._id, payload);
+        toast.success("Activity updated successfully");
       } else {
-        setActivities((prev) => [
-          ...prev,
-          {
-            _id: Date.now().toString(),
-            name: activityName.trim(),
-            staffId: {
-              _id: selectedStaff.value,
-              fullName: selectedStaff.label.split(" (")[0],
-              role: selectedStaff.label.match(/\((.+)\)/)?.[1] || "Staff",
-            },
-          },
-        ]);
+        await api.activities.create(payload);
+        toast.success("Activity created successfully");
       }
+
       resetForm();
+      await fetchActivities();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save activity");
+    } finally {
       setSaving(false);
-    }, 400);
+    }
   };
 
   const resetForm = () => {
@@ -108,10 +104,16 @@ export default function Activities() {
   };
 
   // ── Delete ───────────────────────────────────────────────────
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm("Delete this activity?")) return;
-    setActivities((prev) => prev.filter((a) => a._id !== id));
-    if (editData?._id === id) resetForm();
+    try {
+      await api.activities.delete(id);
+      setActivities((prev) => prev.filter((a) => a._id !== id));
+      toast.success("Activity deleted successfully");
+      if (editData?._id === id) resetForm();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete activity");
+    }
   };
 
   // ── Render ───────────────────────────────────────────────────
@@ -202,7 +204,13 @@ export default function Activities() {
             </thead>
 
             <tbody className="divide-y divide-gray-100">
-              {activities.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={3} className="text-center py-12 text-gray-400">
+                    Loading...
+                  </td>
+                </tr>
+              ) : activities.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="text-center py-12 text-gray-400">
                     No activities found. Add one above.
@@ -217,9 +225,11 @@ export default function Activities() {
                     <td className="px-6 py-4 font-medium text-gray-800">{a.name}</td>
 
                     <td className="px-6 py-4 text-gray-600">
-                      {typeof a.staffId === "object" && a.staffId
-                        ? `${a.staffId.fullName} (${a.staffId.role || "Staff"})`
-                        : <span className="text-gray-300">—</span>}
+                      {a.staffName
+                        ? a.staffName
+                        : typeof a.staffId === "object" && a.staffId
+                          ? `${a.staffId.fullName} (${a.staffId.role || "Staff"})`
+                          : <span className="text-gray-300">—</span>}
                     </td>
 
                     <td className="px-6 py-4">
