@@ -212,6 +212,30 @@ staff: {
     delete: (id) => apiClient.delete(`/health-records/${id}`),
   },
   // ─────────────────────────────────────────────────────────────────────────
+// School Services
+schoolServices: {
+  getAll: (params = {}) =>
+    apiClient.get("/school/services", { params }),
+
+  getById: (id) =>
+    apiClient.get(`/school/services/${id}`),
+
+  create: (data) =>
+    apiClient.post("/school/services", data),
+
+  update: (id, data) =>
+    apiClient.put(`/school/services/${id}`, data),
+
+  toggleStatus: (id, isActive) =>
+    apiClient.patch(
+      `/school/services/${id}/status`,
+      { isActive }
+    ),
+
+  delete: (id) =>
+    apiClient.delete(`/school/services/${id}`),
+},
+
 
   // Events
   events: {

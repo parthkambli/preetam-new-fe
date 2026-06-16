@@ -1,52 +1,77 @@
 import { useState, useEffect } from "react";
+import { api } from '../../../services/apiClient';
 
 export default function AddServices({ onCancel, onSaved, editData }) {
-  const [activityName, setActivityName] = useState("");
+  const [serviceName, setServiceName] = useState("");
   const [capacity, setCapacity] = useState("");
-  const [feeAmount, setFeeAmount] = useState("");
+  const [oneDayFee, setOneDayFee] = useState("");
+
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (editData) {
-      setActivityName(editData.name || "");
+      setServiceName(editData.serviceName || "");
       setCapacity(editData.capacity || "");
-      setFeeAmount(editData.feeAmount || "");
+      setOneDayFee(editData.oneDayFee || "");
+    } else {
+      setServiceName("");
+      setCapacity("");
+      setOneDayFee("");
     }
   }, [editData]);
 
-  const handleSave = () => {
-    if (!activityName.trim()) {
-      return setError("Service name required");
-    }
-
-    if (!capacity || Number(capacity) <= 0) {
-      return setError("Valid capacity required");
-    }
-
-    if (!feeAmount || Number(feeAmount) <= 0) {
-      return setError("Valid fee amount required");
-    }
-
-    setError("");
-    setSaving(true);
-
-    // Simulate save delay
-    setTimeout(() => {
-      setSaving(false);
-
-      if (!editData) {
-        setActivityName("");
-        setCapacity("");
-        setFeeAmount("");
+  const handleSave = async () => {
+    try {
+      if (!serviceName.trim()) {
+        return setError("Service name required");
       }
 
-      onSaved?.({
-        name: activityName,
+      if (!capacity || Number(capacity) <= 0) {
+        return setError("Valid capacity required");
+      }
+
+      if (!oneDayFee || Number(oneDayFee) <= 0) {
+        return setError("Valid fee amount required");
+      }
+
+      setError("");
+      setSaving(true);
+
+      const payload = {
+        serviceName: serviceName.trim(),
         capacity: Number(capacity),
-        feeAmount: Number(feeAmount),
-      });
-    }, 500);
+        oneDayFee: Number(oneDayFee),
+      };
+
+      let response;
+
+      if (editData?._id) {
+        response = await api.schoolServices.update(
+          editData._id,
+          payload
+        );
+      } else {
+        response = await api.schoolServices.create(
+          payload
+        );
+      }
+
+      if (!editData) {
+        setServiceName("");
+        setCapacity("");
+        setOneDayFee("");
+      }
+
+      onSaved?.(response?.data?.data);
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          "Failed to save service"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -60,8 +85,8 @@ export default function AddServices({ onCancel, onSaved, editData }) {
           <input
             type="text"
             placeholder="Service Name"
-            value={activityName}
-            onChange={(e) => setActivityName(e.target.value)}
+            value={serviceName}
+            onChange={(e) => setServiceName(e.target.value)}
             className="input"
           />
 
@@ -77,15 +102,17 @@ export default function AddServices({ onCancel, onSaved, editData }) {
           <input
             type="number"
             placeholder="Fee Amount"
-            value={feeAmount}
-            onChange={(e) => setFeeAmount(e.target.value)}
+            value={oneDayFee}
+            onChange={(e) => setOneDayFee(e.target.value)}
             className="input"
             min="0"
           />
         </div>
 
         {error && (
-          <p className="text-red-500 text-sm text-center">{error}</p>
+          <p className="text-red-500 text-sm text-center">
+            {error}
+          </p>
         )}
 
         <div className="flex justify-end gap-3">
@@ -124,6 +151,134 @@ export default function AddServices({ onCancel, onSaved, editData }) {
     </div>
   );
 }
+
+
+// import { useState, useEffect } from "react";
+
+// export default function AddServices({ onCancel, onSaved, editData }) {
+//   const [activityName, setActivityName] = useState("");
+//   const [capacity, setCapacity] = useState("");
+//   const [feeAmount, setFeeAmount] = useState("");
+//   const [error, setError] = useState("");
+//   const [saving, setSaving] = useState(false);
+
+//   useEffect(() => {
+//     if (editData) {
+//       setActivityName(editData.name || "");
+//       setCapacity(editData.capacity || "");
+//       setFeeAmount(editData.feeAmount || "");
+//     }
+//   }, [editData]);
+
+//   const handleSave = () => {
+//     if (!activityName.trim()) {
+//       return setError("Service name required");
+//     }
+
+//     if (!capacity || Number(capacity) <= 0) {
+//       return setError("Valid capacity required");
+//     }
+
+//     if (!feeAmount || Number(feeAmount) <= 0) {
+//       return setError("Valid fee amount required");
+//     }
+
+//     setError("");
+//     setSaving(true);
+
+//     // Simulate save delay
+//     setTimeout(() => {
+//       setSaving(false);
+
+//       if (!editData) {
+//         setActivityName("");
+//         setCapacity("");
+//         setFeeAmount("");
+//       }
+
+//       onSaved?.({
+//         name: activityName,
+//         capacity: Number(capacity),
+//         feeAmount: Number(feeAmount),
+//       });
+//     }, 500);
+//   };
+
+//   return (
+//     <div className="max-w-3xl mx-auto">
+//       <div className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+//         <h2 className="text-lg font-semibold text-gray-800">
+//           {editData ? "Edit Service" : "Add Service"}
+//         </h2>
+
+//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//           <input
+//             type="text"
+//             placeholder="Service Name"
+//             value={activityName}
+//             onChange={(e) => setActivityName(e.target.value)}
+//             className="input"
+//           />
+
+//           <input
+//             type="number"
+//             placeholder="Capacity"
+//             value={capacity}
+//             onChange={(e) => setCapacity(e.target.value)}
+//             className="input"
+//             min="1"
+//           />
+
+//           <input
+//             type="number"
+//             placeholder="Fee Amount"
+//             value={feeAmount}
+//             onChange={(e) => setFeeAmount(e.target.value)}
+//             className="input"
+//             min="0"
+//           />
+//         </div>
+
+//         {error && (
+//           <p className="text-red-500 text-sm text-center">{error}</p>
+//         )}
+
+//         <div className="flex justify-end gap-3">
+//           <button
+//             onClick={onCancel}
+//             className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+//           >
+//             Cancel
+//           </button>
+
+//           <button
+//             onClick={handleSave}
+//             disabled={saving}
+//             className="px-5 py-2 text-sm bg-[#000359] text-white rounded-lg disabled:opacity-50"
+//           >
+//             {saving ? "Saving..." : "Save"}
+//           </button>
+//         </div>
+//       </div>
+
+//       <style jsx>{`
+//         .input {
+//           width: 100%;
+//           padding: 8px 10px;
+//           border-radius: 8px;
+//           border: 1px solid #e5e7eb;
+//           font-size: 14px;
+//           outline: none;
+//         }
+
+//         .input:focus {
+//           border-color: #000359;
+//           box-shadow: 0 0 0 2px rgba(0, 3, 89, 0.1);
+//         }
+//       `}</style>
+//     </div>
+//   );
+// }
 
 
 
