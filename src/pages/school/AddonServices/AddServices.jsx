@@ -1,112 +1,209 @@
-// Activity wala duplicate he ------------------------------------------------
+import { useState, useEffect } from "react";
+
+export default function AddServices({ onCancel, onSaved, editData }) {
+  const [activityName, setActivityName] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [feeAmount, setFeeAmount] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (editData) {
+      setActivityName(editData.name || "");
+      setCapacity(editData.capacity || "");
+      setFeeAmount(editData.feeAmount || "");
+    }
+  }, [editData]);
+
+  const handleSave = () => {
+    if (!activityName.trim()) {
+      return setError("Service name required");
+    }
+
+    if (!capacity || Number(capacity) <= 0) {
+      return setError("Valid capacity required");
+    }
+
+    if (!feeAmount || Number(feeAmount) <= 0) {
+      return setError("Valid fee amount required");
+    }
+
+    setError("");
+    setSaving(true);
+
+    // Simulate save delay
+    setTimeout(() => {
+      setSaving(false);
+
+      if (!editData) {
+        setActivityName("");
+        setCapacity("");
+        setFeeAmount("");
+      }
+
+      onSaved?.({
+        name: activityName,
+        capacity: Number(capacity),
+        feeAmount: Number(feeAmount),
+      });
+    }, 500);
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-gray-800">
+          {editData ? "Edit Service" : "Add Service"}
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            type="text"
+            placeholder="Service Name"
+            value={activityName}
+            onChange={(e) => setActivityName(e.target.value)}
+            className="input"
+          />
+
+          <input
+            type="number"
+            placeholder="Capacity"
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            className="input"
+            min="1"
+          />
+
+          <input
+            type="number"
+            placeholder="Fee Amount"
+            value={feeAmount}
+            onChange={(e) => setFeeAmount(e.target.value)}
+            className="input"
+            min="0"
+          />
+        </div>
+
+        {error && (
+          <p className="text-red-500 text-sm text-center">{error}</p>
+        )}
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-5 py-2 text-sm bg-[#000359] text-white rounded-lg disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .input {
+          width: 100%;
+          padding: 8px 10px;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+          font-size: 14px;
+          outline: none;
+        }
+
+        .input:focus {
+          border-color: #000359;
+          box-shadow: 0 0 0 2px rgba(0, 3, 89, 0.1);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // Activity api removed and using service dummy data----------------------------------
 // import { useState, useEffect } from "react";
-// import { toast } from "sonner";
-// import { api } from "../../../services/apiClient";
-// import AsyncSelect from "react-select/async";
 // import Select from "react-select";
 
-// export default function AddActivity({ onCancel, onSaved, editData }) {
+// const DUMMY_FEE_TYPES = [
+//   { _id: 'fee1', description: 'Standard Fee' },
+//   { _id: 'fee2', description: 'Premium Fee' },
+// ];
+
+// const DUMMY_STAFF = [
+//   { _id: 'st1', fullName: 'Rahul Sharma', role: 'Coach' },
+//   { _id: 'st2', fullName: 'Priya Mehta', role: 'Instructor' },
+//   { _id: 'st3', fullName: 'Anita Joshi', role: 'Instructor' },
+//   { _id: 'st4', fullName: 'Vikram Singh', role: 'Coach' },
+// ];
+
+// export default function AddServices({ onCancel, onSaved, editData }) {
 //   const [activityName, setActivityName] = useState("");
 //   const [capacity, setCapacity] = useState("");
 //   const [error, setError] = useState("");
 //   const [saving, setSaving] = useState(false);
-//   // const [staffList, setStaffList] = useState([]);
 
-//   const [feeTypes, setFeeTypes] = useState([]);
-//   const [selectedFeeType, setSelectedFeeType] = useState([]);
+//   const [selectedFeeType, setSelectedFeeType] = useState(null);
 
 //   const [slots, setSlots] = useState([
-//     { startTime: "", endTime: "", staffId: "" }
+//     { startTime: "", endTime: "", staffId: "", staffName: "" }
 //   ]);
-
-//   // useEffect(() => {
-//   //   fetchStaff();
-//   // }, []);
 
 //   useEffect(() => {
 //     if (editData) {
 //       setActivityName(editData.name || "");
 //       setCapacity(editData.capacity || "");
 //       setSlots(
-//   editData.slots?.map((slot) => ({
-//     _id: slot._id,
-//     startTime: slot.startTime || "",
-//     endTime: slot.endTime || "",
-
-//     staffId:
-//       typeof slot.staffId === "object"
-//         ? slot.staffId._id
-//         : slot.staffId || "",
-
-//     staffName:
-//       typeof slot.staffId === "object"
-//         ? `${slot.staffId.fullName} (${slot.staffId.role || "Staff"})`
-//         : "",
-//   })) || [
-//     {
-//       startTime: "",
-//       endTime: "",
-//       staffId: "",
-//       staffName: "",
-//     },
-//   ]
-// );
-
-//  setSelectedFeeType(
-//   editData.feeTypeId
-//     ? {
-//         value: editData.feeTypeId._id,
-//         label: editData.feeTypeId.description,
-//       }
-//     : null
-// );
-
+//         editData.slots?.map((slot) => ({
+//           _id: slot._id,
+//           startTime: slot.startTime || "",
+//           endTime: slot.endTime || "",
+//           staffId:
+//             typeof slot.staffId === "object"
+//               ? slot.staffId._id
+//               : slot.staffId || "",
+//           staffName:
+//             typeof slot.staffId === "object"
+//               ? `${slot.staffId.fullName} (${slot.staffId.role || "Staff"})`
+//               : "",
+//         })) || [{ startTime: "", endTime: "", staffId: "", staffName: "" }]
+//       );
+//       setSelectedFeeType(
+//         editData.feeTypeId
+//           ? { value: editData.feeTypeId._id, label: editData.feeTypeId.description }
+//           : null
+//       );
 //     }
 //   }, [editData]);
 
-//   // const fetchStaff = async () => {
-//   //   try {
-//   //     const res = await api.fitnessStaff.getAll();
-//   //     setStaffList(res.data?.data?.staff || []);
-//   //   } catch (err) {
-//   //     console.error(err);
-//   //   }
-//   // };
+//   const staffOptions = DUMMY_STAFF.map((s) => ({
+//     value: s._id,
+//     label: `${s.fullName} (${s.role})`,
+//   }));
 
-//   const fetchFeeTypes = async () => {
-//   try {
-//     const res = await api.fitnessFees.getTypes();
-//     setFeeTypes(res.data || []);
-//   } catch (err) {
-//     console.error(err);
-//   }
-// };
-
-// useEffect(() => {
-//   fetchFeeTypes();
-// }, []);
-
-//   const loadStaffOptions = async (inputValue) => {
-//   try {
-//     const res = await api.fitnessStaff.getAll({
-//       search: inputValue || "",
-//       status: "Active",
-//       page: 1,
-//       limit: 5
-//     });
-
-//     const data = res.data?.data?.staff || [];
-
-//     return data.map((staff) => ({
-//       value: staff._id,
-//       label: `${staff.fullName} (${staff.role || "Staff"})`,
-//       data: staff
-//     }));
-//   } catch (error) {
-//     console.error(error);
-//     return [];
-//   }
-// };
+//   const feeTypeOptions = DUMMY_FEE_TYPES.map((fee) => ({
+//     value: fee._id,
+//     label: fee.description,
+//   }));
 
 //   const handleSlotChange = (index, field, value) => {
 //     const updated = [...slots];
@@ -115,79 +212,55 @@
 //   };
 
 //   const addSlot = () => {
-//     setSlots([
-//       ...slots,
-//       { startTime: "", endTime: "", staffId: "" }
-//     ]);
+//     setSlots([...slots, { startTime: "", endTime: "", staffId: "", staffName: "" }]);
 //   };
 
 //   const removeSlot = (index) => {
 //     setSlots(slots.filter((_, i) => i !== index));
 //   };
 
-//   const handleSave = async () => {
+//   const handleSave = () => {
 //     if (!activityName.trim()) return setError("Activity name required");
-//     if (!capacity || Number(capacity) <= 0)
-//       return setError("Valid capacity required");
-
-//     if (!selectedFeeType)
-//   return setError("Fee type required");
-
+//     if (!capacity || Number(capacity) <= 0) return setError("Valid capacity required");
+//     if (!selectedFeeType) return setError("Fee type required");
 //     for (let slot of slots) {
 //       if (!slot.startTime || !slot.endTime || !slot.staffId) {
 //         return setError("Fill all slot fields");
 //       }
 //     }
 
-//     try {
-//       setSaving(true);
-//       const payload = {
-//   name: activityName.trim(),
-//   capacity: Number(capacity),
-//   slots,
-//   feeTypeId: selectedFeeType?.value
-// };
+//     setError("");
+//     setSaving(true);
 
-//       if (editData) {
-//         await api.fitnessActivities.update(editData._id, payload);
-//         toast.success("Updated");
-//       } else {
-//         await api.fitnessActivities.create(payload);
-//         toast.success("Added");
+//     // Simulate save delay
+//     setTimeout(() => {
+//       setSaving(false);
+//       if (!editData) {
 //         setActivityName("");
 //         setCapacity("");
-//         setSlots([{ startTime: "", endTime: "", staffId: "" }]);
+//         setSelectedFeeType(null);
+//         setSlots([{ startTime: "", endTime: "", staffId: "", staffName: "" }]);
 //       }
-
 //       onSaved?.();
-//     } catch (err) {
-//       const msg = err?.response?.data?.message || "Error";
-//       setError(msg);
-//       toast.error(msg);
-//     } finally {
-//       setSaving(false);
-//     }
+//     }, 500);
 //   };
 
 //   return (
 //     <div className="max-w-3xl mx-auto">
 //       <div className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
 
-//         {/* Header */}
 //         <h2 className="text-lg font-semibold text-gray-800">
-//           {editData ? "Edit Activity" : "Add Activity"}
+//           {editData ? "Edit Service" : "Add Service"}
 //         </h2>
 
-//         {/* Inputs */}
 //         <div className="grid grid-cols-2 gap-4">
 //           <input
 //             type="text"
-//             placeholder="Activity Name"
+//             placeholder="Service Name"
 //             value={activityName}
 //             onChange={(e) => setActivityName(e.target.value)}
 //             className="input"
 //           />
-
 //           <input
 //             type="number"
 //             placeholder="Capacity"
@@ -197,38 +270,23 @@
 //           />
 //         </div>
 
-//         {/* Fee Types */}
-//       <div className="col-span-">
-//   <label className="block text-sm font-medium text-gray-600 mb-2">
-//     Fee Types
-//   </label>
+//         <div>
+//           <label className="block text-sm font-medium text-gray-600 mb-2">
+//             Fee Type
+//           </label>
+//           <Select
+//             options={feeTypeOptions}
+//             value={selectedFeeType}
+//             onChange={setSelectedFeeType}
+//             placeholder="Select Fee Type"
+//             classNamePrefix="react-select"
+//             className="text-sm"
+//           />
+//         </div>
 
-//   <Select
-//   options={feeTypes.map((fee) => ({
-//     value: fee._id,
-//     label: fee.description,
-//   }))}
-
-//   value={selectedFeeType}
-
-//   onChange={(selected) =>
-//     setSelectedFeeType(selected)
-//   }
-
-//   placeholder="Select Fee Type"
-//   classNamePrefix="react-select"
-//   className="text-sm"
-// />
-// </div>
-
-
-//         {/* Slots */}
 //         <div className="space-y-3">
 //           <div className="flex justify-between items-center">
-//             <h3 className="text-sm font-medium text-gray-600">
-//               Time Slots
-//             </h3>
-
+//             <h3 className="text-sm font-medium text-gray-600">Time Slots</h3>
 //             <button
 //               onClick={addSlot}
 //               className="text-sm text-[#000359] font-medium hover:underline"
@@ -245,49 +303,34 @@
 //               <input
 //                 type="time"
 //                 value={slot.startTime}
-//                 onChange={(e) =>
-//                   handleSlotChange(index, "startTime", e.target.value)
-//                 }
+//                 onChange={(e) => handleSlotChange(index, "startTime", e.target.value)}
 //                 className="input"
 //               />
-
 //               <span className="text-gray-400">→</span>
-
 //               <input
 //                 type="time"
 //                 value={slot.endTime}
-//                 onChange={(e) =>
-//                   handleSlotChange(index, "endTime", e.target.value)
-//                 }
+//                 onChange={(e) => handleSlotChange(index, "endTime", e.target.value)}
 //                 className="input"
 //               />
-
-//              <AsyncSelect
-//   cacheOptions
-//   defaultOptions
-//   loadOptions={loadStaffOptions}
-//   placeholder="Search Instructor"
-//   value={
-//     slot.staffId
-//       ? {
-//           value: slot.staffId,
-//           label: slot.staffName,
-//         }
-//       : null
-//   }
-//   onChange={(selected) => {
-//     const updated = [...slots];
-
-//     updated[index].staffId = selected ? selected.value : "";
-//     updated[index].staffName = selected ? selected.label : "";
-
-//     setSlots(updated);
-//   }}
-//   isClearable
-//   className="w-full"
-//   classNamePrefix="react-select"
-// />
-
+//               <Select
+//                 options={staffOptions}
+//                 value={
+//                   slot.staffId
+//                     ? { value: slot.staffId, label: slot.staffName }
+//                     : null
+//                 }
+//                 onChange={(selected) => {
+//                   const updated = [...slots];
+//                   updated[index].staffId = selected ? selected.value : "";
+//                   updated[index].staffName = selected ? selected.label : "";
+//                   setSlots(updated);
+//                 }}
+//                 placeholder="Select Instructor"
+//                 isClearable
+//                 className="w-full"
+//                 classNamePrefix="react-select"
+//               />
 //               <button
 //                 onClick={() => removeSlot(index)}
 //                 className="text-gray-400 hover:text-red-500"
@@ -302,7 +345,6 @@
 //           <p className="text-red-500 text-sm text-center">{error}</p>
 //         )}
 
-//         {/* Buttons */}
 //         <div className="flex justify-end gap-3">
 //           <button
 //             onClick={onCancel}
@@ -310,7 +352,6 @@
 //           >
 //             Cancel
 //           </button>
-
 //           <button
 //             onClick={handleSave}
 //             disabled={saving}
@@ -321,7 +362,6 @@
 //         </div>
 //       </div>
 
-//       {/* Reusable input style */}
 //       <style jsx>{`
 //         .input {
 //           width: 100%;
@@ -339,259 +379,3 @@
 //     </div>
 //   );
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Activity api removed and using service dummy data----------------------------------
-import { useState, useEffect } from "react";
-import Select from "react-select";
-
-const DUMMY_FEE_TYPES = [
-  { _id: 'fee1', description: 'Standard Fee' },
-  { _id: 'fee2', description: 'Premium Fee' },
-];
-
-const DUMMY_STAFF = [
-  { _id: 'st1', fullName: 'Rahul Sharma', role: 'Coach' },
-  { _id: 'st2', fullName: 'Priya Mehta', role: 'Instructor' },
-  { _id: 'st3', fullName: 'Anita Joshi', role: 'Instructor' },
-  { _id: 'st4', fullName: 'Vikram Singh', role: 'Coach' },
-];
-
-export default function AddServices({ onCancel, onSaved, editData }) {
-  const [activityName, setActivityName] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const [selectedFeeType, setSelectedFeeType] = useState(null);
-
-  const [slots, setSlots] = useState([
-    { startTime: "", endTime: "", staffId: "", staffName: "" }
-  ]);
-
-  useEffect(() => {
-    if (editData) {
-      setActivityName(editData.name || "");
-      setCapacity(editData.capacity || "");
-      setSlots(
-        editData.slots?.map((slot) => ({
-          _id: slot._id,
-          startTime: slot.startTime || "",
-          endTime: slot.endTime || "",
-          staffId:
-            typeof slot.staffId === "object"
-              ? slot.staffId._id
-              : slot.staffId || "",
-          staffName:
-            typeof slot.staffId === "object"
-              ? `${slot.staffId.fullName} (${slot.staffId.role || "Staff"})`
-              : "",
-        })) || [{ startTime: "", endTime: "", staffId: "", staffName: "" }]
-      );
-      setSelectedFeeType(
-        editData.feeTypeId
-          ? { value: editData.feeTypeId._id, label: editData.feeTypeId.description }
-          : null
-      );
-    }
-  }, [editData]);
-
-  const staffOptions = DUMMY_STAFF.map((s) => ({
-    value: s._id,
-    label: `${s.fullName} (${s.role})`,
-  }));
-
-  const feeTypeOptions = DUMMY_FEE_TYPES.map((fee) => ({
-    value: fee._id,
-    label: fee.description,
-  }));
-
-  const handleSlotChange = (index, field, value) => {
-    const updated = [...slots];
-    updated[index][field] = value;
-    setSlots(updated);
-  };
-
-  const addSlot = () => {
-    setSlots([...slots, { startTime: "", endTime: "", staffId: "", staffName: "" }]);
-  };
-
-  const removeSlot = (index) => {
-    setSlots(slots.filter((_, i) => i !== index));
-  };
-
-  const handleSave = () => {
-    if (!activityName.trim()) return setError("Activity name required");
-    if (!capacity || Number(capacity) <= 0) return setError("Valid capacity required");
-    if (!selectedFeeType) return setError("Fee type required");
-    for (let slot of slots) {
-      if (!slot.startTime || !slot.endTime || !slot.staffId) {
-        return setError("Fill all slot fields");
-      }
-    }
-
-    setError("");
-    setSaving(true);
-
-    // Simulate save delay
-    setTimeout(() => {
-      setSaving(false);
-      if (!editData) {
-        setActivityName("");
-        setCapacity("");
-        setSelectedFeeType(null);
-        setSlots([{ startTime: "", endTime: "", staffId: "", staffName: "" }]);
-      }
-      onSaved?.();
-    }, 500);
-  };
-
-  return (
-    <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
-
-        <h2 className="text-lg font-semibold text-gray-800">
-          {editData ? "Edit Service" : "Add Service"}
-        </h2>
-
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Service Name"
-            value={activityName}
-            onChange={(e) => setActivityName(e.target.value)}
-            className="input"
-          />
-          <input
-            type="number"
-            placeholder="Capacity"
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-2">
-            Fee Type
-          </label>
-          <Select
-            options={feeTypeOptions}
-            value={selectedFeeType}
-            onChange={setSelectedFeeType}
-            placeholder="Select Fee Type"
-            classNamePrefix="react-select"
-            className="text-sm"
-          />
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="text-sm font-medium text-gray-600">Time Slots</h3>
-            <button
-              onClick={addSlot}
-              className="text-sm text-[#000359] font-medium hover:underline"
-            >
-              + Add Slot
-            </button>
-          </div>
-
-          {slots.map((slot, index) => (
-            <div
-              key={slot._id || index}
-              className="flex items-center gap-3 bg-gray-50 rounded-xl p-3"
-            >
-              <input
-                type="time"
-                value={slot.startTime}
-                onChange={(e) => handleSlotChange(index, "startTime", e.target.value)}
-                className="input"
-              />
-              <span className="text-gray-400">→</span>
-              <input
-                type="time"
-                value={slot.endTime}
-                onChange={(e) => handleSlotChange(index, "endTime", e.target.value)}
-                className="input"
-              />
-              <Select
-                options={staffOptions}
-                value={
-                  slot.staffId
-                    ? { value: slot.staffId, label: slot.staffName }
-                    : null
-                }
-                onChange={(selected) => {
-                  const updated = [...slots];
-                  updated[index].staffId = selected ? selected.value : "";
-                  updated[index].staffName = selected ? selected.label : "";
-                  setSlots(updated);
-                }}
-                placeholder="Select Instructor"
-                isClearable
-                className="w-full"
-                classNamePrefix="react-select"
-              />
-              <button
-                onClick={() => removeSlot(index)}
-                className="text-gray-400 hover:text-red-500"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {error && (
-          <p className="text-red-500 text-sm text-center">{error}</p>
-        )}
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-sm border rounded-lg"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-5 py-2 text-sm bg-[#000359] text-white rounded-lg"
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          padding: 8px 10px;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-          font-size: 14px;
-          outline: none;
-        }
-        .input:focus {
-          border-color: #000359;
-          box-shadow: 0 0 0 2px rgba(0, 3, 89, 0.1);
-        }
-      `}</style>
-    </div>
-  );
-}
