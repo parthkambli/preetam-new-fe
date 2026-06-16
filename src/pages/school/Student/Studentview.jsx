@@ -1475,6 +1475,7 @@ const TABS = [
   { id: 'emergency', label: 'Emergency Contacts', icon: '📞' },
   { id: 'activity',  label: 'Activities',         icon: '🎯' },
   { id: 'fee',       label: 'Fee Info',            icon: '💳' },
+  { id: 'timetable', label: 'Timetable',           icon: '📅' },
 ];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -1705,6 +1706,27 @@ export default function StudentView() {
   if (!student) return null;
 
   const ed = editSection;
+
+  const dummyTimetable = [
+  {
+    period: "P1",
+    monday: "Yoga",
+    tuesday: "Yoga",
+    wednesday: "Music",
+    thursday: "Yoga",
+    friday: "Reading",
+    saturday: "Meditation"
+  },
+  {
+    period: "P2",
+    monday: "Walking",
+    tuesday: "Walking",
+    wednesday: "Walking",
+    thursday: "Games",
+    friday: "Walking",
+    saturday: "Games"
+  }
+];
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
@@ -2085,6 +2107,55 @@ export default function StudentView() {
           }
         </SectionCard>
       )}
+
+      {/* Time Table  */}
+      {activeTab === 'timetable' && (
+  <SectionCard title="Student Timetable" icon="📅">
+
+    <div className="flex justify-end mb-4">
+      <button
+        onClick={() => window.print()}
+        className="px-4 py-2 bg-[#000359] text-white rounded-lg"
+      >
+        Download PDF
+      </button>
+    </div>
+
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[1000px] border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="border p-3">Period</th>
+            <th className="border p-3">Monday</th>
+            <th className="border p-3">Tuesday</th>
+            <th className="border p-3">Wednesday</th>
+            <th className="border p-3">Thursday</th>
+            <th className="border p-3">Friday</th>
+            <th className="border p-3">Saturday</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {dummyTimetable.map((row, index) => (
+            <tr key={index}>
+              <td className="border p-3 font-medium">
+                {row.period}
+              </td>
+
+              <td className="border p-3">{row.monday}</td>
+              <td className="border p-3">{row.tuesday}</td>
+              <td className="border p-3">{row.wednesday}</td>
+              <td className="border p-3">{row.thursday}</td>
+              <td className="border p-3">{row.friday}</td>
+              <td className="border p-3">{row.saturday}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+  </SectionCard>
+)}
       
     </div>
   );
