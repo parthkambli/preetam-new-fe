@@ -566,9 +566,7 @@
 
 
 
-
-// Activity api removed and using service dummy data----------------------------------
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import Select from 'react-select';
 
@@ -577,31 +575,18 @@ const DUMMY_SERVICES = [
     _id: 'svc1',
     name: 'Swimming',
     capacity: 20,
-    slots: [
-      { _id: 'slot1', startTime: '08:00', endTime: '09:00' },
-      { _id: 'slot2', startTime: '10:00', endTime: '11:00' },
-      { _id: 'slot3', startTime: '14:00', endTime: '15:00' },
-    ],
     feeTypeId: { _id: 'fee1', description: 'Standard Fee', daily: 200, hourly: 50 },
   },
   {
     _id: 'svc2',
     name: 'Yoga',
     capacity: 15,
-    slots: [
-      { _id: 'slot4', startTime: '07:00', endTime: '08:00' },
-      { _id: 'slot5', startTime: '17:00', endTime: '18:00' },
-    ],
     feeTypeId: { _id: 'fee2', description: 'Premium Fee', daily: 400, hourly: 100 },
   },
   {
     _id: 'svc3',
     name: 'Basketball',
     capacity: 30,
-    slots: [
-      { _id: 'slot6', startTime: '09:00', endTime: '10:30' },
-      { _id: 'slot7', startTime: '15:00', endTime: '16:30' },
-    ],
     feeTypeId: { _id: 'fee1', description: 'Standard Fee', daily: 200, hourly: 50 },
   },
 ];
@@ -614,11 +599,6 @@ const DUMMY_MEMBERS = [
   { _id: 'm5', name: 'Sneha Verma' },
 ];
 
-const DUMMY_FEE_TYPES = [
-  { _id: 'fee1', description: 'Standard Fee', daily: 200, hourly: 50 },
-  { _id: 'fee2', description: 'Premium Fee', daily: 400, hourly: 100 },
-];
-
 const DUMMY_STAFF = [
   { _id: 'st1', fullName: 'Rahul Sharma', role: 'Coach' },
   { _id: 'st2', fullName: 'Priya Mehta', role: 'Instructor' },
@@ -627,25 +607,21 @@ const DUMMY_STAFF = [
 ];
 
 const DUMMY_BOOKINGS = [
-  { _id: 'bk1', activityId: { _id: 'svc1' }, slotId: 'slot1', customerName: 'Aman Gupta', date: format(new Date(), 'yyyy-MM-dd'), slotTime: '08:00 - 09:00', activityName: 'Swimming' },
-  { _id: 'bk2', activityId: { _id: 'svc1' }, slotId: 'slot1', customerName: 'Neha Patil', date: format(new Date(), 'yyyy-MM-dd'), slotTime: '08:00 - 09:00', activityName: 'Swimming' },
-  { _id: 'bk3', activityId: { _id: 'svc2' }, slotId: 'slot4', customerName: 'Riya Shah', date: format(new Date(), 'yyyy-MM-dd'), slotTime: '07:00 - 08:00', activityName: 'Yoga' },
-  { _id: 'bk4', activityId: { _id: 'svc3' }, slotId: 'slot6', customerName: 'Karan Malhotra', date: format(new Date(), 'yyyy-MM-dd'), slotTime: '09:00 - 10:30', activityName: 'Basketball' },
+  { _id: 'bk1', activityName: 'Swimming', customerName: 'Aman Gupta', startDate: format(new Date(), 'yyyy-MM-dd'), duration: 7, amount: 1400, paymentStatus: 'Paid', paymentMode: 'Cash', paymentDate: format(new Date(), 'yyyy-MM-dd'), staffName: 'Rahul Sharma (Coach)' },
+  { _id: 'bk2', activityName: 'Yoga', customerName: 'Riya Shah', startDate: format(new Date(), 'yyyy-MM-dd'), duration: 30, amount: 12000, paymentStatus: 'Pending', paymentMode: 'Bank Transfer', paymentDate: format(new Date(), 'yyyy-MM-dd'), staffName: 'Priya Mehta (Instructor)' },
+  { _id: 'bk3', activityName: 'Basketball', customerName: 'Karan Malhotra', startDate: format(new Date(), 'yyyy-MM-dd'), duration: 14, amount: 2800, paymentStatus: 'Paid', paymentMode: 'Cash', paymentDate: format(new Date(), 'yyyy-MM-dd'), staffName: 'Vikram Singh (Coach)' },
 ];
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20];
 
 export default function BookService() {
   const [activities] = useState(DUMMY_SERVICES);
-  const [selectedActivity, setSelectedActivity] = useState('');
-  const [date, setDate] = useState('');
-  const [slots, setSlots] = useState([]);
-  const [selectedSlot, setSelectedSlot] = useState(null);
 
   // Form states
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [startDate, setStartDate] = useState('');
+  const [duration, setDuration] = useState('');
   const [memberName, setMemberName] = useState('');
-  const [selectedFeeType, setSelectedFeeType] = useState(null);
-  const [plan, setPlan] = useState('Daily');
   const [amount, setAmount] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('Paid');
   const [paymentMode, setPaymentMode] = useState('Cash');
@@ -662,72 +638,54 @@ export default function BookService() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  const feeTypeOptions = DUMMY_FEE_TYPES.map(ft => ({
-    value: ft._id,
-    label: ft.description,
-    data: ft,
-  }));
-
   const staffOptions = DUMMY_STAFF.map(s => ({
     value: s._id,
     label: `${s.fullName} (${s.role})`,
   }));
 
-  // Compute slots when activity + date selected
-  useEffect(() => {
-    if (!selectedActivity || !date) {
-      setSlots([]);
-      setSelectedSlot(null);
-      return;
+  const activityOptions = activities.map(a => ({ label: a.name, value: a._id }));
+  const filterActivityOptions = activities.map(a => ({ label: a.name, value: a.name }));
+
+  // Auto-fetch amount based on service's daily fee × duration
+  const handleServiceChange = (selected) => {
+    setSelectedActivity(selected);
+    if (selected && duration) {
+      const activity = activities.find(a => a._id === selected.value);
+      const days = Number(duration) || 0;
+      setAmount(((activity?.feeTypeId?.daily || 0) * days).toString());
+    } else {
+      setAmount('');
     }
+  };
 
-    const activity = activities.find(a => a._id === selectedActivity);
-    if (!activity) { setSlots([]); return; }
-
-    const computed = activity.slots.map(slot => {
-      const booked = bookings.filter(
-        b => b.activityId?._id === selectedActivity &&
-             b.slotId === slot._id &&
-             b.date === date
-      ).length;
-
-      return {
-        slotId: slot._id,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        booked,
-        capacity: activity.capacity,
-      };
-    });
-
-    setSlots(computed);
-    setSelectedSlot(null);
-  }, [selectedActivity, date, bookings]);
-
-  // Auto-fill amount from fee type + plan
-  useEffect(() => {
-    if (!selectedFeeType?.data || !plan) return;
-    const planMap = { Daily: 'daily', Hourly: 'hourly' };
-    const key = planMap[plan];
-    setAmount((selectedFeeType.data[key] || 0).toString());
-  }, [selectedFeeType, plan]);
+  const handleDurationChange = (value) => {
+    setDuration(value);
+    if (selectedActivity && value) {
+      const activity = activities.find(a => a._id === selectedActivity.value);
+      const days = Number(value) || 0;
+      setAmount(((activity?.feeTypeId?.daily || 0) * days).toString());
+    } else if (!value) {
+      setAmount('');
+    }
+  };
 
   // Member name suggestion
-  useEffect(() => {
-    if (!memberName.trim()) { setFilteredMembers([]); return; }
+  const handleMemberNameChange = (value) => {
+    setMemberName(value);
+    if (!value.trim()) { setFilteredMembers([]); return; }
     setFilteredMembers(
       DUMMY_MEMBERS.filter(m =>
-        m.name.toLowerCase().includes(memberName.toLowerCase())
+        m.name.toLowerCase().includes(value.toLowerCase())
       )
     );
-  }, [memberName]);
+  };
 
   // Derived: filtered + paginated bookings
   const filteredBookings = bookings.filter(b => {
     const matchMember = !filterMember || b.customerName.toLowerCase().includes(filterMember.toLowerCase());
     const matchActivity = !filterActivity || b.activityName === filterActivity;
-    const matchFrom = !filterDateFrom || b.date >= filterDateFrom;
-    const matchTo = !filterDateTo || b.date <= filterDateTo;
+    const matchFrom = !filterDateFrom || b.startDate >= filterDateFrom;
+    const matchTo = !filterDateTo || b.startDate <= filterDateTo;
     return matchMember && matchActivity && matchFrom && matchTo;
   });
 
@@ -735,35 +693,40 @@ export default function BookService() {
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
   const paginatedBookings = filteredBookings.slice((page - 1) * limit, page * limit);
 
-  const activityOptions = activities.map(a => ({ label: a.name, value: a.name }));
-
   const handleBook = () => {
-    if (!selectedSlot) return alert("Please select a slot");
-    if (!memberName.trim()) return alert("Enter member name");
+    if (!selectedActivity) return alert("Please select a service");
+    if (!startDate) return alert("Please select a start date");
+    if (!duration || Number(duration) <= 0) return alert("Please enter a valid duration");
+    if (!memberName.trim()) return alert("Enter student name");
     if (!amount || Number(amount) <= 0) return alert("Please enter a valid amount");
 
-    const activity = activities.find(a => a._id === selectedActivity);
+    const activity = activities.find(a => a._id === selectedActivity.value);
     const newBooking = {
       _id: `bk${Date.now()}`,
-      activityId: { _id: selectedActivity },
-      slotId: selectedSlot.slotId,
-      customerName: memberName,
-      date,
-      slotTime: `${selectedSlot.startTime} - ${selectedSlot.endTime}`,
       activityName: activity?.name || '',
+      customerName: memberName,
+      startDate,
+      duration: Number(duration),
+      amount: Number(amount),
+      paymentStatus,
+      paymentMode,
+      paymentDate,
+      staffName: selectedStaff?.label || '',
     };
 
     setBookings(prev => [newBooking, ...prev]);
 
     // Reset form
+    setSelectedActivity(null);
+    setStartDate('');
+    setDuration('');
     setMemberName('');
-    setSelectedFeeType(null);
     setAmount('');
     setPaymentStatus('Paid');
     setPaymentMode('Cash');
     setPaymentDate(new Date().toISOString().split('T')[0]);
     setSelectedStaff(null);
-    setSelectedSlot(null);
+    setFilteredMembers([]);
   };
 
   const handleCancel = (id) => {
@@ -776,181 +739,120 @@ export default function BookService() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <h2 className="text-xl font-semibold mb-6">Book Service</h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
-          {/* LEFT - Selection + Slots */}
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="w-72">
-                <Select
-                  options={activities.map(a => ({ label: a.name, value: a._id }))}
-                  value={activities.map(a => ({ label: a.name, value: a._id })).find(a => a.value === selectedActivity) || null}
-                  onChange={(selected) => {
-                    setSelectedActivity(selected?.value || '');
-                    setSelectedSlot(null);
-                  }}
-                  placeholder="Select Service"
-                  isClearable
-                  classNamePrefix="react-select"
-                />
-              </div>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
-              />
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-gray-700">Available Slots</h3>
-              <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
-                {slots.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                    <p className="text-sm">No slots available</p>
-                    <p className="text-xs mt-1">Please select service and date</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-100 max-h-[260px] overflow-y-auto">
-                    {slots.map(slot => {
-                      const isFull = slot.booked >= slot.capacity;
-                      const isSelected = selectedSlot?.slotId === slot.slotId;
-                      return (
-                        <div
-                          key={slot.slotId}
-                          onClick={() => !isFull && setSelectedSlot(slot)}
-                          className={`flex justify-between items-center px-4 py-3 hover:bg-white transition-all cursor-pointer
-                            ${isSelected ? 'bg-blue-50 border-l-4 border-[#000359]' : ''}
-                            ${isFull ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        >
-                          <div>
-                            <p className="font-medium text-gray-800 text-sm">
-                              {slot.startTime} - {slot.endTime}
-                            </p>
-                            <p className="text-xs text-gray-500">{slot.booked}/{slot.capacity} booked</p>
-                          </div>
-                          <div>
-                            {isFull ? (
-                              <span className="px-4 py-1 text-xs font-medium bg-gray-400 text-white rounded-lg">Full</span>
-                            ) : (
-                              <span className={`px-4 py-1 text-xs font-medium rounded-lg ${isSelected ? 'bg-[#000359] text-white' : 'bg-gray-200 text-gray-700'}`}>
-                                {isSelected ? 'Selected' : 'Select'}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Service Name</label>
+            <Select
+              options={activityOptions}
+              value={selectedActivity}
+              onChange={handleServiceChange}
+              placeholder="Select Service"
+              isClearable
+              classNamePrefix="react-select"
+            />
           </div>
 
-          {/* RIGHT - Booking Form */}
-          <div className="flex flex-col">
-            {selectedSlot ? (
-              <div className="border border-gray-200 rounded-xl p-6 bg-gray-50 h-full">
-                <h3 className="text-sm font-semibold mb-5 text-gray-700">
-                  Booking Details — {selectedSlot.startTime} - {selectedSlot.endTime}
-                </h3>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
+            />
+          </div>
 
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1.5">Member Name</label>
-                    <input
-                      type="text"
-                      placeholder="Enter member name"
-                      value={memberName}
-                      onChange={(e) => setMemberName(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
-                    />
-                    {filteredMembers.length > 0 && (
-                      <div className="border rounded-lg mt-1 max-h-48 overflow-y-auto bg-white shadow-sm">
-                        {filteredMembers.map(m => (
-                          <div
-                            key={m._id}
-                            onClick={() => { setMemberName(m.name); setFilteredMembers([]); }}
-                            className="px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer border-b last:border-none"
-                          >
-                            {m.name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Duration (days)</label>
+            <input
+              type="number"
+              min="1"
+              placeholder="e.g. 30"
+              value={duration}
+              onChange={(e) => handleDurationChange(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
+            />
+          </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1.5">Fee Type (Optional)</label>
-                      <Select
-                        options={feeTypeOptions}
-                        value={selectedFeeType}
-                        onChange={setSelectedFeeType}
-                        placeholder="Select fee type"
-                        isClearable
-                        classNamePrefix="react-select"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1.5">Plan</label>
-                      <select value={plan} onChange={(e) => setPlan(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm">
-                        <option value="Daily">Daily</option>
-                        <option value="Hourly">Hourly</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1.5">Amount (₹)</label>
-                      <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1.5">Payment Status</label>
-                      <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm">
-                        <option value="Paid">Paid</option>
-                        <option value="Pending">Pending</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1.5">Payment Mode</label>
-                      <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm">
-                        <option value="Cash">Cash</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1.5">Payment Date</label>
-                      <input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs text-gray-600 mb-1.5">Responsible Staff</label>
-                      <Select
-                        options={staffOptions}
-                        value={selectedStaff}
-                        onChange={setSelectedStaff}
-                        placeholder="Select Staff"
-                        isClearable
-                        classNamePrefix="react-select"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleBook}
-                    className="w-full bg-[#000359] hover:bg-[#000280] active:scale-[0.985] transition-all text-white font-semibold py-3.5 rounded-xl mt-4"
+          <div className="relative">
+            <label className="block text-xs text-gray-600 mb-1.5">Student Name</label>
+            <input
+              type="text"
+              placeholder="Enter student name"
+              value={memberName}
+              onChange={(e) => handleMemberNameChange(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
+            />
+            {filteredMembers.length > 0 && (
+              <div className="absolute z-10 border rounded-lg mt-1 max-h-48 overflow-y-auto bg-white shadow-sm w-full">
+                {filteredMembers.map(m => (
+                  <div
+                    key={m._id}
+                    onClick={() => { setMemberName(m.name); setFilteredMembers([]); }}
+                    className="px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer border-b last:border-none"
                   >
-                    Confirm Booking
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="border border-gray-200 rounded-xl p-6 bg-gray-50 h-full flex items-center justify-center text-center">
-                <div>
-                  <p className="text-gray-400 text-sm">Select a slot from the left</p>
-                  <p className="text-xs text-gray-500 mt-1">to proceed with booking</p>
-                </div>
+                    {m.name}
+                  </div>
+                ))}
               </div>
             )}
           </div>
+
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Fee Amount (₹)</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Payment Status</label>
+            <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]">
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Payment Mode</label>
+            <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]">
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Payment Date</label>
+            <input
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-600 mb-1.5">Responsible Staff</label>
+            <Select
+              options={staffOptions}
+              value={selectedStaff}
+              onChange={setSelectedStaff}
+              placeholder="Select Staff"
+              isClearable
+              classNamePrefix="react-select"
+            />
+          </div>
         </div>
+
+        <button
+          onClick={handleBook}
+          className="w-full sm:w-auto mt-6 bg-[#000359] hover:bg-[#000280] active:scale-[0.985] transition-all text-white font-semibold px-8 py-3.5 rounded-xl"
+        >
+          Confirm Booking
+        </button>
       </div>
 
       {/* ====================== BOOKING TABLE ====================== */}
@@ -962,15 +864,15 @@ export default function BookService() {
         <div className="flex flex-wrap gap-3 mb-5">
           <input
             type="text"
-            placeholder="Search Member Name"
+            placeholder="Search Student Name"
             value={filterMember}
             onChange={(e) => { setFilterMember(e.target.value); setPage(1); }}
             className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#000359]"
           />
           <div className="w-72">
             <Select
-              options={activityOptions}
-              value={activityOptions.find(a => a.value === filterActivity) || null}
+              options={filterActivityOptions}
+              value={filterActivityOptions.find(a => a.value === filterActivity) || null}
               onChange={(selected) => { setFilterActivity(selected?.value || ''); setPage(1); }}
               placeholder="Search Service"
               isClearable
@@ -992,29 +894,40 @@ export default function BookService() {
           )}
         </div>
 
-        <div className="rounded-xl overflow-hidden border border-gray-200">
+        <div className="rounded-xl overflow-hidden border border-gray-200 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ backgroundColor: '#000359' }}>
-                <th className="text-left px-5 py-3.5 text-white font-semibold">Member</th>
+                <th className="text-left px-5 py-3.5 text-white font-semibold">Student</th>
                 <th className="text-left px-5 py-3.5 text-white font-semibold">Service</th>
-                <th className="text-left px-5 py-3.5 text-white font-semibold">Slot</th>
-                <th className="text-left px-5 py-3.5 text-white font-semibold">Date</th>
+                <th className="text-left px-5 py-3.5 text-white font-semibold">Start Date</th>
+                <th className="text-left px-5 py-3.5 text-white font-semibold">Duration</th>
+                <th className="text-left px-5 py-3.5 text-white font-semibold">Amount</th>
+                <th className="text-left px-5 py-3.5 text-white font-semibold">Payment</th>
+                <th className="text-left px-5 py-3.5 text-white font-semibold">Staff</th>
                 <th className="text-left px-5 py-3.5 text-white font-semibold">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedBookings.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-12 text-gray-400 text-sm">No bookings found</td>
+                  <td colSpan="8" className="text-center py-12 text-gray-400 text-sm">No bookings found</td>
                 </tr>
               ) : (
                 paginatedBookings.map((b, idx) => (
                   <tr key={b._id} className={`hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="px-5 py-4 font-semibold text-gray-800">{b.customerName}</td>
-                    <td className="px-5 py-4 text-gray-600">{b.activityName}</td>
-                    <td className="px-5 py-4 text-gray-600">{b.slotTime}</td>
-                    <td className="px-5 py-4 text-gray-600">{b.date}</td>
+                    <td className="px-5 py-4 font-semibold text-gray-800 whitespace-nowrap">{b.customerName}</td>
+                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">{b.activityName}</td>
+                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">{b.startDate}</td>
+                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">{b.duration} day{b.duration !== 1 ? 's' : ''}</td>
+                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">₹{b.amount}</td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 text-xs font-medium rounded-lg ${b.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {b.paymentStatus}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-2">{b.paymentMode}</span>
+                    </td>
+                    <td className="px-5 py-4 text-gray-600 whitespace-nowrap">{b.staffName || '-'}</td>
                     <td className="px-5 py-4">
                       <button onClick={() => handleCancel(b._id)} className="px-4 py-1.5 text-xs font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
                         Cancel
@@ -1027,7 +940,7 @@ export default function BookService() {
           </table>
         </div>
 
-        {/* Simple inline pagination (replaces <Pagination> component) */}
+        {/* Simple inline pagination */}
         <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <span>Rows per page:</span>
