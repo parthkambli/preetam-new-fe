@@ -161,6 +161,13 @@ staff: {
     getAttendance: (params = {}) =>
       apiClient.get("/staff/attendance", { params }),
   },
+  // Timetable
+  timetable: {
+    getAll: () => apiClient.get("/timetable"),
+    create: (data) => apiClient.post("/timetable", data),
+    update: (id, data) => apiClient.put(`/timetable/${id}`, data),
+    delete: (id) => apiClient.delete(`/timetable/${id}`),
+  },
   // Activities
   activities: {
     // Master Activities
