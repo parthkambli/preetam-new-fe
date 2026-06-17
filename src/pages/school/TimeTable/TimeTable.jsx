@@ -3,6 +3,30 @@ import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
+const toAmPm = (timeStr) => {
+  if (!timeStr) return "";
+  const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!match) return timeStr;
+  if (match[3]) return timeStr;
+  let h = parseInt(match[1], 10);
+  const m = match[2];
+  const period = h >= 12 ? "PM" : "AM";
+  if (h === 0) h = 12;
+  else if (h > 12) h -= 12;
+  return `${h}:${m} ${period}`;
+};
+
+const toMinutes = (timeStr) => {
+  if (!timeStr) return 0;
+  const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!match) return 0;
+  let h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  if (match[3]?.toUpperCase() === "PM" && h !== 12) h += 12;
+  if (match[3]?.toUpperCase() === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+};
+
 const toTimeInputValue = (timeStr) => {
   if (!timeStr) return "";
   const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
@@ -38,7 +62,7 @@ export default function TimeTable() {
       setLoading(true);
       const res = await api.timetable.getAll();
       const data = res.data?.data || res.data || [];
-      setPeriods(data);
+      setPeriods(data.sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime)));
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load periods");
     } finally {
@@ -200,7 +224,18 @@ export default function TimeTable() {
           </div>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center gap-3 mt-8">
+          {editingId && (
+            <button
+              onClick={() => {
+                setEditingId(null);
+                setFormData({ name: "", startTime: "", endTime: "", capacity: "" });
+              }}
+              className="px-8 py-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 font-medium"
+            >
+              Cancel
+            </button>
+          )}
           <button
             onClick={handleSubmit}
             disabled={saving}
@@ -262,11 +297,11 @@ export default function TimeTable() {
                     </td>
 
                     <td className="px-6 py-5">
-                      {period.startTime}
+                      {toAmPm(period.startTime)}
                     </td>
 
                     <td className="px-6 py-5">
-                      {period.endTime}
+                      {toAmPm(period.endTime)}
                     </td>
 
                     <td className="px-6 py-5 text-center">
