@@ -93,6 +93,8 @@ import FitnessStaffAddPassMember from "./pages/FitnessStaff/Members/AddPassMembe
 import AddPassMember from './pages/fitnessClub/Members/AddPassMember';
 import ViewPassMember from './pages/fitnessClub/Members/ViewPassMember';
 import StaffProfilePage from './pages/FitnessStaff/Profile';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import DeletionPolicy from './pages/DeletionPolicy';
 
 
 
@@ -194,7 +196,14 @@ function App() {
             <Route path="/fitness-staff/members/view-pass/:id" element={<FitnessStaffAddmember viewMode={true} />} />
              <Route path="/fitness-staff/fees" element={< FitnessStaffFees />} /> 
              <Route path="/fitness-staff/reports" element={< FitnessStaffReport />} /> 
-             <Route path="/fitness-staff/profile" element={<StaffProfilePage />} />  
+             <Route path="/fitness-staff/profile" element={<StaffProfilePage />} /> 
+
+             <Route path="/privacy-policy" element={<PrivacyPolicy />} /> 
+
+             <Route
+  path="/deletion-policy"
+  element={<DeletionPolicy />}
+/>
 
 
         
