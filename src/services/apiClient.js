@@ -157,17 +157,17 @@ staff: {
       delete: (id) => apiClient.delete(`/staff/employment-types/${id}`),
     },
 
-    // Attendance
+    // Attendances
     getAttendance: (params = {}) =>
       apiClient.get("/staff/attendance", { params }),
   },
-  // Timetable
-  timetable: {
-    getAll: () => apiClient.get("/timetable"),
-    create: (data) => apiClient.post("/timetable", data),
-    update: (id, data) => apiClient.put(`/timetable/${id}`, data),
-    delete: (id) => apiClient.delete(`/timetable/${id}`),
-  },
+  // periods
+  periods: {
+  getAll: () => apiClient.get("/period"),
+  create: (data) => apiClient.post("/period", data),
+  update: (id, data) => apiClient.put(`/period/${id}`, data),
+  delete: (id) => apiClient.delete(`/period/${id}`),
+},
   // Activities
   activities: {
     // Master Activities

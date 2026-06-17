@@ -36,7 +36,7 @@ export default function TimeTable() {
   const fetchPeriods = async () => {
     try {
       setLoading(true);
-      const res = await api.timetable.getAll();
+      const res = await api.periods.getAll();
       const data = res.data?.data || res.data || [];
       setPeriods(data);
     } catch (err) {
@@ -66,10 +66,10 @@ export default function TimeTable() {
       };
 
       if (editingId) {
-        await api.timetable.update(editingId, payload);
+        await api.periods.update(editingId, payload);
         toast.success("Period updated successfully");
       } else {
-        await api.timetable.create(payload);
+        await api.periods.create(payload);
         toast.success("Period created successfully");
       }
 
@@ -97,7 +97,7 @@ export default function TimeTable() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this period?")) return;
     try {
-      await api.timetable.delete(id);
+      await api.periods.delete(id);
       setPeriods((prev) => prev.filter((p) => p._id !== id));
       toast.success("Period deleted successfully");
       if (editingId === id) {

@@ -323,7 +323,9 @@ window.dispatchEvent(
                   <th className="p-4 text-left font-semibold">Age</th>
                   <th className="p-4 text-left font-semibold">Mobile</th>
                   <th className="p-4 text-left font-semibold">Fee Plan</th>
-                  <th className="p-4 text-left font-semibold">Amount</th>
+                  <th className="p-4 text-left font-semibold">Total Fee</th>
+                  <th className="p-4 text-left font-semibold">Paid</th>
+                  <th className="p-4 text-left font-semibold">Pending</th>
                   <th className="p-4 text-left font-semibold">Status</th>
                   <th className="p-4 text-left font-semibold">Actions</th>
                 </tr>
@@ -336,7 +338,9 @@ window.dispatchEvent(
                     <td className="p-4">{adm.age}</td>
                     <td className="p-4">{adm.mobile}</td>
                     <td className="p-4">{adm.feePlan}</td>
-                    <td className="p-4">₹{adm.amount?.toLocaleString('en-IN') || '-'}</td>
+                    <td className="p-4">₹{(adm.totalFee || 0).toLocaleString('en-IN')}</td>
+                    <td className="p-4">₹{(adm.paidAmount || 0).toLocaleString('en-IN')}</td>
+                    <td className="p-4">₹{(adm.remainingAmount || 0).toLocaleString('en-IN')}</td>
                     
                     {/* Editable Status */}
                     <td className="p-4">

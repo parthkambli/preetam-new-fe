@@ -245,11 +245,13 @@ const FEE_TYPE_OPTS = ['School', 'Residency', 'DayCare'];
 
 const emptyForm = {
   description: '',
-  annual:      '',
-  monthly:     '',
-  weekly:      '',
-  daily:       '',
-  type:        'School',
+  annual: '',
+  halfYearly: '',
+  quarterly: '',
+  monthly: '',
+  weekly: '',
+  daily: '',
+  type: 'School',
 };
 
 export default function FeeTypes() {
@@ -289,13 +291,15 @@ export default function FeeTypes() {
   const handleEdit = (row) => {
     setEditId(row._id);
     setForm({
-      description: row.description,
-      annual:      row.annual  || '',
-      monthly:     row.monthly || '',
-      weekly:      row.weekly  || '',
-      daily:       row.daily   || '',
-      type:        row.type,
-    });
+  description: row.description,
+  annual: row.annual || '',
+  halfYearly: row.halfYearly || '',
+  quarterly: row.quarterly || '',
+  monthly: row.monthly || '',
+  weekly: row.weekly || '',
+  daily: row.daily || '',
+  type: row.type,
+});
     setShowForm(true);
   };
 
@@ -322,13 +326,16 @@ export default function FeeTypes() {
     setSaving(true);
     try {
       const payload = {
-        ...form,
-        description: form.description.trim(),
-        annual:  Number(form.annual)  || 0,
-        monthly: Number(form.monthly) || 0,
-        weekly:  Number(form.weekly)  || 0,
-        daily:   Number(form.daily)   || 0,
-      };
+  ...form,
+  description: form.description.trim(),
+
+  annual: Number(form.annual) || 0,
+  halfYearly: Number(form.halfYearly) || 0,
+  quarterly: Number(form.quarterly) || 0,
+  monthly: Number(form.monthly) || 0,
+  weekly: Number(form.weekly) || 0,
+  daily: Number(form.daily) || 0,
+};
 
       if (editId) {
         await api.fees.updateType(editId, payload);
@@ -389,11 +396,22 @@ export default function FeeTypes() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {['annual', 'monthly', 'weekly', 'daily'].map((field) => (
+            {[
+  'annual',
+  'halfYearly',
+  'quarterly',
+  'monthly',
+  'weekly',
+  'daily'
+].map((field) => (
               <div key={field}>
-                <label className="block text-xs font-semibold text-[#1e3a8a] mb-1 capitalize">
-                  {field}
-                </label>
+                <label className="block text-xs font-semibold text-[#1e3a8a] mb-1">
+  {field === 'halfYearly'
+    ? 'Half Yearly'
+    : field === 'quarterly'
+    ? 'Quarterly'
+    : field.charAt(0).toUpperCase() + field.slice(1)}
+</label>
                 <input
                   type="number"
                   value={form[field]}
@@ -441,7 +459,18 @@ export default function FeeTypes() {
         <table className="w-full min-w-[750px] border-collapse">
           <thead>
             <tr className="bg-[#1e3a8a]">
-              {['Sr', 'Description', 'Annual', 'Monthly', 'Weekly', 'Daily', 'Type', 'Actions'].map((h) => (
+              {[
+ 'Sr',
+ 'Description',
+ 'Annual',
+ 'Half Yearly',
+ 'Quarterly',
+ 'Monthly',
+ 'Weekly',
+ 'Daily',
+ 'Type',
+ 'Actions'
+].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-white whitespace-nowrap">
                   {h}
                 </th>
@@ -470,6 +499,12 @@ export default function FeeTypes() {
                   <td className="px-4 py-3 text-sm text-gray-700">{idx + 1}</td>
                   <td className="px-4 py-3 text-sm text-gray-700 max-w-[220px]">{row.description}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{row.annual?.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+  {row.halfYearly?.toLocaleString()}
+</td>
+<td className="px-4 py-3 text-sm text-gray-700">
+  {row.quarterly?.toLocaleString()}
+</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{row.monthly?.toLocaleString()}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{row.weekly?.toLocaleString()}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{row.daily}</td>
