@@ -177,11 +177,11 @@ export default function EmergencyContacts() {
           className="flex-1 min-w-[140px] border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white" />
         <input type="text" placeholder="Search By ID" value={searchId} onChange={e => setSearchId(e.target.value)} 
           className="flex-1 min-w-[140px] border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white" />
-        <select value={searchRelation} onChange={e => setSearchRelation(e.target.value)} 
+        {/* <select value={searchRelation} onChange={e => setSearchRelation(e.target.value)} 
           className="flex-1 min-w-[160px] border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white">
           <option value="">Search By Relation</option>
           {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
-        </select>
+        </select> */}
         <input type="date" value={searchDate} onChange={e => setSearchDate(e.target.value)} 
           className="flex-1 min-w-[160px] border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1a2a5e] bg-white" />
       </div>
@@ -258,9 +258,14 @@ export default function EmergencyContacts() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Primary Relation</label>
-                  <select name="primaryRelation" value={form.primaryRelation} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm">
-                    {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <input
+                      type="text"
+                      name="primaryRelation"
+                      value={form.primaryRelation}
+                      onChange={handleChange}
+                      placeholder="Enter relation"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"
+                    />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Primary Phone</label>
@@ -277,9 +282,14 @@ export default function EmergencyContacts() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Secondary Relation</label>
-                  <select name="secondaryRelation" value={form.secondaryRelation} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm">
-                    {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <input
+                  type="text"
+                  name="secondaryRelation"
+                  value={form.secondaryRelation}
+                  onChange={handleChange}
+                  placeholder="Enter relation"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"
+                />
                 </div>
               </div>
 
