@@ -3,6 +3,18 @@ import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const DayCell = ({ booked, capacity }) => {
+  const pct = capacity > 0 ? (booked / capacity) * 100 : 0;
+  let color;
+  if (pct >= 100) color = 'bg-red-100 text-red-700';
+  else if (pct >= 80) color = 'bg-yellow-100 text-yellow-700';
+  else color = 'bg-green-100 text-green-700';
+  return <span className={`px-2 py-1 rounded text-xs font-medium ${color}`}>{booked}/{capacity}</span>;
+};
+
 const toTimeInputValue = (timeStr) => {
   if (!timeStr) return "";
   const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
@@ -232,6 +244,9 @@ export default function TimeTable() {
                 <th className="px-6 py-4 text-center">
                   Capacity
                 </th>
+                {DAY_LABELS.map(d => (
+                  <th key={d} className="px-3 py-4 text-center text-xs">{d}</th>
+                ))}
                 <th className="px-6 py-4 text-center">
                   Actions
                 </th>
@@ -241,13 +256,13 @@ export default function TimeTable() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-400">
+                  <td colSpan={5 + DAY_LABELS.length} className="text-center py-12 text-gray-400">
                     Loading...
                   </td>
                 </tr>
               ) : periods.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                  <td colSpan={5 + DAY_LABELS.length} className="text-center py-8 text-gray-500">
                     No periods found
                   </td>
                 </tr>
@@ -272,6 +287,15 @@ export default function TimeTable() {
                     <td className="px-6 py-5 text-center">
                       {period.capacity}
                     </td>
+
+                    {DAYS.map(day => (
+                      <td key={day} className="px-3 py-5 text-center">
+                        <DayCell
+                          booked={period.dayCounts?.[day] || 0}
+                          capacity={period.capacity}
+                        />
+                      </td>
+                    ))}
 
                     <td className="px-6 py-5">
                       <div className="flex justify-center gap-3">

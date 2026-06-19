@@ -1,5 +1,5 @@
 // pages/school/admission/AddAdmissionForm.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
@@ -110,6 +110,8 @@ useEffect(() => {
   fetchStaff();
 }, []);
 
+const DAY_LABELS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
 const fetchPeriods = async () => {
   try {
     const res = await api.periods.getAll();
@@ -119,6 +121,7 @@ const fetchPeriods = async () => {
         value: p._id,
         label: `${p.name} (${p.startTime} - ${p.endTime})`,
         capacity: p.capacity,
+        dayCounts: p.dayCounts || {},
       }))
     );
   } catch (err) {
@@ -151,6 +154,9 @@ const fetchServices = async () => {
           value: service._id,
           label: service.serviceName,
           oneDayFee: service.oneDayFee,
+          capacity: service.capacity,
+          bookedCount: service.bookedCount,
+          availableSeats: service.availableSeats,
         }))
     );
   } catch (err) {
@@ -287,6 +293,8 @@ const validateTimetable = () => {
 
   // ── Services ───────────────────────────────────────────────
   const [serviceRows, setServiceRows] = useState([{ service: null, startDate: '', endDate: '', days: '' }]);
+  const [serviceAvailability, setServiceAvailability] = useState({});
+  const avlFetchIdRef = useRef(0);
 
   const addServiceRow = () => setServiceRows((prev) => [...prev, { service: null, startDate: '', endDate: '', days: '' }]);
   const removeServiceRow = (i) => setServiceRows((prev) => prev.filter((_, idx) => idx !== i));
@@ -307,6 +315,36 @@ const validateTimetable = () => {
     }
     setServiceRows(updated);
   };
+
+  // Fetch date-range-specific availability when service + dates change
+  useEffect(() => {
+    const id = ++avlFetchIdRef.current;
+    const validIndices = [];
+
+    serviceRows.forEach((row, index) => {
+      const serviceId = row.service?.value;
+      const startDate = row.startDate;
+      const endDate = row.endDate;
+      if (serviceId && startDate && endDate) {
+        validIndices.push(index);
+        api.serviceBookings.getAvailableSeats(serviceId, { startDate, endDate })
+          .then(res => {
+            if (avlFetchIdRef.current !== id) return;
+            setServiceAvailability(prev => ({ ...prev, [index]: res.data }));
+          })
+          .catch(() => {});
+      }
+    });
+
+    // Clean up stale entries
+    setServiceAvailability(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(k => {
+        if (!validIndices.includes(Number(k))) delete next[Number(k)];
+      });
+      return next;
+    });
+  }, [serviceRows]);
 
   // ── Fee summary (client-side preview) ──────────────────────
   const admissionFeeTotal = Math.max(0, (Number(formData.feeAmount) || 0) - (Number(formData.discount) || 0));
@@ -672,6 +710,20 @@ const caregiverOptions = caregivers.map((c) => ({
                             onChange={(v) => updateRow(index, "period", v)}
                             classNamePrefix="react-select"
                           />
+                          {row.period && row.period.dayCounts && (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {DAY_LABELS.map(day => {
+                                const booked = row.period.dayCounts[day] || 0;
+                                const cap = row.period.capacity || 0;
+                                const full = cap > 0 && booked >= cap;
+                                return (
+                                  <span key={day} className={`text-[10px] px-1 py-0.5 rounded ${full ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                    {day.slice(0, 3)} {booked}/{cap}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </td>
                         {['monday','tuesday','wednesday','thursday','friday','saturday'].map((day) => (
                           <td key={day} className="p-2 min-w-[160px]">
@@ -869,6 +921,17 @@ const caregiverOptions = caregivers.map((c) => ({
                               onChange={(v) => updateServiceRow(index, 'service', v)}
                               classNamePrefix="react-select"
                             />
+                            {row.service && serviceAvailability[index] && (
+                              <div className="mt-1.5 text-xs">
+                                <span className={`px-2 py-0.5 rounded ${
+                                  serviceAvailability[index].availableSeats > 0
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {serviceAvailability[index].bookedCount}/{serviceAvailability[index].capacity} booked on these dates · {serviceAvailability[index].availableSeats} available
+                                </span>
+                              </div>
+                            )}
                           </td>
                           <td className="px-3 py-2">
                             <input type="date" value={row.startDate} onChange={(e) => updateServiceRow(index, 'startDate', e.target.value)} className={inputCls} />
