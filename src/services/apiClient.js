@@ -96,6 +96,16 @@ export const api = {
   });
 },
     delete: (id) => apiClient.delete(`/school/admission/${id}`),
+    collectPayment: (id, data) => apiClient.post(`/school/admission/${id}/collect-payment`, data),
+  },
+
+  // Service bookings (standalone collection)
+  serviceBookings: {
+    getAll: (params) => apiClient.get('/school/service-bookings', { params }),
+    create: (data) => apiClient.post('/school/service-bookings', data),
+    cancel: (id) => apiClient.patch(`/school/service-bookings/${id}/cancel`),
+    getAvailableSeats: (serviceId, params) =>
+      apiClient.get(`/school/service-bookings/seats/${serviceId}`, { params }),
   },
 
   // Followups

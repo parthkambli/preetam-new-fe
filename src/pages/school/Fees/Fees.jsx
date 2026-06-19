@@ -78,7 +78,7 @@ import AllotFees   from './AllotFees';
 import FeeTypes    from './FeeTypes';
 
 export default function Fees() {
-  const [activeTab, setActiveTab] = useState('add-payments');
+  const [activeTab, setActiveTab] = useState('all-payments');
   const [statsLoading, setStatsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalParticipants: 0,
@@ -174,7 +174,7 @@ export default function Fees() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'add-payments' && <AddPayments onSuccess={fetchStats} />}
+      {activeTab === 'all-payments' && <AddPayments />}
       {activeTab === 'allot-fees'   && <AllotFees   onSuccess={fetchStats} />}
       {activeTab === 'fee-types'    && <FeeTypes />}
     </div>
