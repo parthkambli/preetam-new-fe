@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 
 const numericPhone = (val) => val.replace(/\D/g, '').slice(0, 10);
 
@@ -18,9 +19,8 @@ export default function EditAdmission() {
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
 
-  const [caregivers, setCaregivers] = useState([]);
-  const [loadingCaregivers, setLoadingCaregivers] = useState(false);
-  const [caregiverError, setCaregiverError] = useState(null);
+  const [selectedCaregiver, setSelectedCaregiver] = useState(null);
+  const [selectedResponsibleStaff, setSelectedResponsibleStaff] = useState(null);
 
   const [photoFile, setPhotoFile] = useState(null);
   const [healthFiles, setHealthFiles] = useState([]);
@@ -63,11 +63,31 @@ export default function EditAdmission() {
   const [services, setServices] = useState([]);
   const [feeTypes, setFeeTypes] = useState([]);
   const [selectedFeeType, setSelectedFeeType] = useState(null);
-  const [staffList, setStaffList] = useState([]);
 
   const [serviceRows, setServiceRows] = useState([{ service: null, startDate: '', endDate: '', days: '' }]);
   const [serviceAvailability, setServiceAvailability] = useState({});
   const avlFetchIdRef = useRef(0);
+
+  // ── Load initial selected staff for edit mode ──
+  useEffect(() => {
+    const loadInitial = async () => {
+      if (formData.assignedCaregiver) {
+        try {
+          const res = await api.fitnessStaff.getById(formData.assignedCaregiver);
+          const s = res.data?.data || res.data;
+          if (s) setSelectedCaregiver({ value: s._id, label: s.fullName, data: s });
+        } catch {}
+      }
+      if (formData.responsibleStaffId) {
+        try {
+          const res = await api.fitnessStaff.getById(formData.responsibleStaffId);
+          const s = res.data?.data || res.data;
+          if (s) setSelectedResponsibleStaff({ value: s._id, label: `${s.fullName} (${s.role})`, data: s });
+        } catch {}
+      }
+    };
+    if (formData.assignedCaregiver || formData.responsibleStaffId) loadInitial();
+  }, [formData.assignedCaregiver, formData.responsibleStaffId]);
 
   const handleFeeTypeChange = (option) => {
     setSelectedFeeType(option);
@@ -128,13 +148,6 @@ export default function EditAdmission() {
       }));
       setFeeTypes(options);
     } catch (err) { console.error("Failed to fetch fee types", err); }
-  };
-
-  const fetchStaff = async () => {
-    try {
-      const res = await api.fitnessStaff.getAll();
-      setStaffList(res.data?.data?.staff || []);
-    } catch (err) { console.error("Failed to fetch staff", err); }
   };
 
   const handleFeePlanChange = (e) => {
@@ -316,7 +329,6 @@ export default function EditAdmission() {
     fetchActivities();
     fetchServices();
     fetchFeeTypes();
-    fetchStaff();
   }, [id]);
 
   // ── Sync timetable ──
@@ -359,28 +371,6 @@ export default function EditAdmission() {
       if (match) setSelectedEnquiry(match);
     }
   }, [enquiryOptions, formData.enquiryId]);
-
-  // ── Load caregivers on step 5 ──
-  useEffect(() => {
-    if (step !== 5) return;
-    const fetch = async () => {
-      try {
-        setLoadingCaregivers(true);
-        setCaregiverError(null);
-        const res = await api.fitnessStaff.getAll();
-        const raw = res.data?.data?.staff || [];
-        const norm = (s) => s?.toLowerCase().replace(/[\s_-]/g, '');
-        setCaregivers(
-          raw.filter((s) => {
-            const role = typeof s.role === 'string' ? s.role : s.role?.roleName;
-            return norm(role) === 'caregiver' && (s.status?.toLowerCase() === 'active' || s.isActive === true);
-          })
-        );
-      } catch { setCaregiverError('Failed to load caregivers'); }
-      finally { setLoadingCaregivers(false); }
-    };
-    fetch();
-  }, [step]);
 
   // ── Handlers ──
   const handleChange = (e) => {
@@ -483,15 +473,29 @@ export default function EditAdmission() {
     }
   };
 
-  const staffOptions = staffList.map((staff) => ({
-    value: staff._id,
-    label: `${staff.fullName} (${staff.role})`,
-  }));
+  const loadStaffOptions = async (inputValue) => {
+    try {
+      const res = await api.fitnessStaff.getAll({ search: inputValue || '', status: 'Active', page: 1, limit: 10 });
+      const list = res.data?.data?.staff || [];
+      return list.map((s) => ({
+        value: s._id,
+        label: `${s.fullName} (${s.role})`,
+        data: s,
+      }));
+    } catch { return []; }
+  };
 
-  const caregiverOptions = caregivers.map((c) => ({
-    value: c._id,
-    label: c.fullName,
-  }));
+  const loadCaregiverOptions = async (inputValue) => {
+    try {
+      const res = await api.fitnessStaff.getAll({ search: inputValue || '', status: 'Active', role: 'caregiver', page: 1, limit: 10 });
+      const list = res.data?.data?.staff || [];
+      return list.map((s) => ({
+        value: s._id,
+        label: s.fullName,
+        data: s,
+      }));
+    } catch { return []; }
+  };
 
   const nextStep = () => setStep((p) => Math.min(p + 1, 5));
   const prevStep = () => setStep((p) => Math.max(p - 1, 1));
@@ -793,20 +797,19 @@ export default function EditAdmission() {
                 </div>
                 <div>
                   <label className={labelCls}>Assigned Caregiver / Staff</label>
-                  <Select
-                    options={caregiverOptions}
+                  <AsyncSelect
+                    cacheOptions
+                    defaultOptions
+                    loadOptions={loadCaregiverOptions}
                     placeholder="Select Caregiver"
-                    value={
-                      caregiverOptions.find((c) => c.value === formData.assignedCaregiver) || null
-                    }
-                    onChange={(selected) =>
-                      setFormData((prev) => ({ ...prev, assignedCaregiver: selected?.value || "" }))
-                    }
-                    isLoading={loadingCaregivers}
+                    value={selectedCaregiver}
+                    onChange={(selected) => {
+                      setSelectedCaregiver(selected);
+                      setFormData((prev) => ({ ...prev, assignedCaregiver: selected?.value || "" }));
+                    }}
                     isClearable
                     classNamePrefix="react-select"
                   />
-                  {caregiverError && <p className="text-xs text-red-500 mt-1">{caregiverError}</p>}
                 </div>
 
                 <div>
@@ -1005,13 +1008,16 @@ export default function EditAdmission() {
                 </div>
                 <div>
                   <label className={labelCls}>Responsible Staff</label>
-                  <Select
-                    options={staffOptions}
+                  <AsyncSelect
+                    cacheOptions
+                    defaultOptions
+                    loadOptions={loadStaffOptions}
                     placeholder="Search Staff..."
-                    value={staffOptions.find((s) => s.value === formData.responsibleStaffId) || null}
-                    onChange={(selected) =>
-                      setFormData((prev) => ({ ...prev, responsibleStaffId: selected?.value || "" }))
-                    }
+                    value={selectedResponsibleStaff}
+                    onChange={(selected) => {
+                      setSelectedResponsibleStaff(selected);
+                      setFormData((prev) => ({ ...prev, responsibleStaffId: selected?.value || "" }));
+                    }}
                     classNamePrefix="react-select"
                     isClearable
                   />

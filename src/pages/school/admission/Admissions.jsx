@@ -169,9 +169,10 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
+import Pagination from '../../../components/Pagination';
 
 const PAYMENT_MODES = ['Cash', 'Bank Transfer'];
 
@@ -179,7 +180,7 @@ const emptyPaymentForm = {
   amount: '',
   paymentMode: 'Cash',
   paymentDate: new Date().toISOString().split('T')[0],
-  description: '',
+  description: 'Pending Fees',
   responsibleStaff: '',
 };
 
@@ -193,42 +194,35 @@ export default function SchoolAdmission() {
   const [selectedAdmission, setSelectedAdmission] = useState(null);
   const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
   const [savingPayment, setSavingPayment] = useState(false);
-  const [staffList, setStaffList] = useState([]);
+  const [selectedStaffOption, setSelectedStaffOption] = useState(null);
 
-  const [filters, setFilters] = useState({
-    admissionId: '',
-    name: '',
-    mobile: '',
-    feePlan: '',
-    status: ''
-  });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => {
-    fetchAdmissions();
-  }, [filters]);
-
-  // ── Load staff list when modal opens ─────────────────────────
-  useEffect(() => {
-    if (showModal && staffList.length === 0) {
-      api.fitnessStaff.getAll().then(res => {
-        setStaffList(res.data?.data?.staff || res.data?.staff || res.data || []);
-      }).catch(() => {});
-    }
-  }, [showModal, staffList.length]);
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterFeePlan, setFilterFeePlan] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterPayment, setFilterPayment] = useState('');
 
   const fetchAdmissions = async () => {
     setLoading(true);
     setError('');
     try {
-      const params = {};
-      if (filters.admissionId) params.admissionId = filters.admissionId;
-      if (filters.name) params.name = filters.name;
-      if (filters.mobile) params.mobile = filters.mobile;
-      if (filters.feePlan) params.feePlan = filters.feePlan;
-      if (filters.status) params.status = filters.status;
-      
+      const params = { page, limit };
+      if (filterSearch) params.search = filterSearch;
+      if (filterFeePlan) params.feePlan = filterFeePlan;
+      if (filterStatus) params.status = filterStatus;
+      if (filterPayment) params.paymentFilter = filterPayment;
+
       const response = await api.schoolAdmission.getAll(params);
-      setAdmissions(response.data);
+      const data = response.data?.data || response.data || [];
+      const pagination = response.data?.pagination || {};
+
+      setAdmissions(Array.isArray(data) ? data : []);
+      setTotalCount(pagination.totalRecords || 0);
+      setTotalPages(pagination.totalPages || 1);
     } catch (err) {
       setError('Failed to load admissions');
       console.error(err);
@@ -237,9 +231,17 @@ export default function SchoolAdmission() {
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+  useEffect(() => {
+    fetchAdmissions();
+  }, [page, limit]);
+
+  useEffect(() => {
+    if (page !== 1) {
+      setPage(1);
+    } else {
+      fetchAdmissions();
+    }
+  }, [filterSearch, filterFeePlan, filterStatus, filterPayment]);
 
   // ── Toggle status ────────────────────────────────────────────
   const toggleStatus = async (adm) => {
@@ -273,11 +275,12 @@ export default function SchoolAdmission() {
   // ── Payment modal handlers ───────────────────────────────────
   const openPaymentModal = (adm) => {
     setSelectedAdmission(adm);
+    setSelectedStaffOption(null);
     setPaymentForm({
       amount: adm.remainingAmount || '',
       paymentMode: 'Cash',
       paymentDate: new Date().toISOString().split('T')[0],
-      description: adm.feeDescription || 'School Fee',
+      description: 'Pending Fees',
       responsibleStaff: '',
     });
     setShowModal(true);
@@ -286,6 +289,7 @@ export default function SchoolAdmission() {
   const closePaymentModal = () => {
     setShowModal(false);
     setSelectedAdmission(null);
+    setSelectedStaffOption(null);
     setPaymentForm(emptyPaymentForm);
     setSavingPayment(false);
   };
@@ -321,11 +325,18 @@ export default function SchoolAdmission() {
     }
   };
 
-  // ── Select options ───────────────────────────────────────────
-  const staffOptions = staffList.map(s => ({
-    value: s._id,
-    label: s.fullName,
-  }));
+  const loadStaffOptions = async (inputValue) => {
+    try {
+      const res = await api.fitnessStaff.getAll({ search: inputValue || '', status: 'Active', page: 1, limit: 10 });
+      const list = res.data?.data?.staff || [];
+      return list.map((s) => ({
+        value: s._id,
+        label: `${s.fullName} (${s.role || 'Staff'})`,
+      }));
+    } catch {
+      return [];
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -343,40 +354,37 @@ export default function SchoolAdmission() {
       <div className="bg-white p-4 rounded-xl shadow flex flex-wrap gap-4">
         <input
           type="text"
-          placeholder="Admission ID"
-          className="border rounded px-4 py-2 min-w-[180px]"
-          value={filters.admissionId}
-          onChange={(e) => handleFilterChange('admissionId', e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Name"
-          className="border rounded px-4 py-2 min-w-[180px]"
-          value={filters.name}
-          onChange={(e) => handleFilterChange('name', e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Mobile"
-          className="border rounded px-4 py-2 min-w-[180px]"
-          value={filters.mobile}
-          onChange={(e) => handleFilterChange('mobile', e.target.value)}
+          placeholder="Search by Admission ID, Name, or Mobile"
+          className="border rounded px-4 py-2 min-w-[280px]"
+          value={filterSearch}
+          onChange={(e) => setFilterSearch(e.target.value)}
         />
         <select 
           className="border rounded px-4 py-2"
-          value={filters.feePlan}
-          onChange={(e) => handleFilterChange('feePlan', e.target.value)}
+          value={filterFeePlan}
+          onChange={(e) => setFilterFeePlan(e.target.value)}
         >
           <option value="">Fee Plan</option>
           <option>Daily</option>
           <option>Weekly</option>
           <option>Monthly</option>
+          <option>Quarterly</option>
+          <option>HalfYearly</option>
           <option>Annual</option>
         </select>
         <select 
           className="border rounded px-4 py-2"
-          value={filters.status}
-          onChange={(e) => handleFilterChange('status', e.target.value)}
+          value={filterPayment}
+          onChange={(e) => setFilterPayment(e.target.value)}
+        >
+          <option value="">Payment Status</option>
+          <option>Paid</option>
+          <option>Pending</option>
+        </select>
+        <select 
+          className="border rounded px-4 py-2"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
         >
           <option value="">Status</option>
           <option>Active</option>
@@ -467,6 +475,17 @@ export default function SchoolAdmission() {
         </div>
       )}
 
+      {!loading && !error && admissions.length > 0 && (
+        <Pagination
+          page={page}
+          limit={limit}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          setPage={setPage}
+          setLimit={setLimit}
+        />
+      )}
+
       {/* ── Collect Payment Modal ────────────────────────────────── */}
       {showModal && selectedAdmission && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -528,20 +547,25 @@ export default function SchoolAdmission() {
                   value={paymentForm.description}
                   onChange={e => setPaymentForm(p => ({ ...p, description: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  placeholder="Fee description"
+                  placeholder="Pending Fees"
                 />
               </div>
 
               {/* Responsible Staff */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">Responsible Staff</label>
-                <Select
-                  options={staffOptions}
-                  onChange={option => setPaymentForm(p => ({ ...p, responsibleStaff: option ? option.value : '' }))}
-                  value={staffOptions.find(o => o.value === paymentForm.responsibleStaff) || null}
-                  placeholder="Select staff..."
+                <AsyncSelect
+                  cacheOptions
+                  defaultOptions
+                  loadOptions={loadStaffOptions}
+                  value={selectedStaffOption}
+                  onChange={option => {
+                    setSelectedStaffOption(option);
+                    setPaymentForm(p => ({ ...p, responsibleStaff: option ? option.value : '' }));
+                  }}
+                  placeholder="Search staff..."
                   isClearable
-                  isSearchable
+                  classNamePrefix="react-select"
                   className="text-sm"
                 />
               </div>

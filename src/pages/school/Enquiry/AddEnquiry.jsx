@@ -1,9 +1,8 @@
-
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { api } from '../../../services/apiClient';
 
 export default function AddSchoolEnquiry() {
@@ -14,9 +13,12 @@ export default function AddSchoolEnquiry() {
     gender: 'Male',
     activity: '',
     source: 'Walk-in',
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    responsibleStaff: '',
   });
+  const [selectedResponsibleStaff, setSelectedResponsibleStaff] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [activityOptions, setActivityOptions] = useState([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const navigate = useNavigate();
@@ -26,7 +28,6 @@ export default function AddSchoolEnquiry() {
     const fetchActivities = async () => {
       try {
         const res = await api.activities.getAll();
-        // Normalize: API may return array directly or nested under a key
         const raw = Array.isArray(res.data?.data) ? res.data.data : [];
 
         const options = raw
@@ -43,171 +44,197 @@ export default function AddSchoolEnquiry() {
     fetchActivities();
   }, []);
 
+  const loadStaffOptions = async (inputValue) => {
+    try {
+      const res = await api.fitnessStaff.getAll({ search: inputValue || '', status: 'Active', page: 1, limit: 10 });
+      const list = res.data?.data?.staff || [];
+      return list.map((s) => ({
+        value: s._id,
+        label: `${s.fullName} (${s.role})`,
+        data: s,
+      }));
+    } catch { return []; }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       await api.schoolEnquiry.create(form);
       toast.success('Enquiry added successfully!');
       navigate('/school/enquiry');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to add enquiry. Please try again.';
+      setError(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Allow only numeric input for contact
   const handleContactChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // strip non-digits
+    const value = e.target.value.replace(/\D/g, '');
     if (value.length <= 10) {
       setForm({ ...form, contact: value });
     }
   };
 
-  const fieldClass = "border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#000359] bg-white";
-  const rowClass   = "flex items-center gap-6 py-3";
-  const labelClass = "text-sm font-medium text-gray-800 w-44 shrink-0 text-left";
+  const genderOptions = [
+    { label: 'Male', value: 'Male' },
+    { label: 'Female', value: 'Female' },
+    { label: 'Other', value: 'Other' },
+  ];
 
-  // react-select custom styles to match existing field style
-  const selectStyles = {
-    control: (base, state) => ({
-      ...base,
-      minHeight: '38px',
-      borderRadius: '0.5rem',
-      borderColor: state.isFocused ? '#000359' : '#d1d5db',
-      boxShadow: state.isFocused ? '0 0 0 2px rgba(0,3,89,0.3)' : 'none',
-      fontSize: '0.875rem',
-      backgroundColor: 'white',
-      width: '224px',
-      '&:hover': { borderColor: '#000359' }
-    }),
-    option: (base, state) => ({
-      ...base,
-      fontSize: '0.875rem',
-      backgroundColor: state.isSelected
-        ? '#000359'
-        : state.isFocused
-        ? '#e0e7ff'
-        : 'white',
-      color: state.isSelected ? 'white' : '#1f2937'
-    }),
-    menu: (base) => ({ ...base, zIndex: 50 }),
-    placeholder: (base) => ({ ...base, color: '#9ca3af' })
-  };
+  const sourceOptions = [
+    { label: 'Walk-in', value: 'Walk-in' },
+    { label: 'App', value: 'App' },
+    { label: 'Call', value: 'Call' },
+    { label: 'Website', value: 'Website' },
+    { label: 'Reference', value: 'Reference' },
+  ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-xl font-bold text-gray-800 mb-8">Add Enquiry</h1>
+    <div className="max-w-4xl mx-auto p-4">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold text-gray-800">Add Enquiry</h1>
+        <button
+          onClick={() => navigate('/school/enquiry')}
+          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          Back
+        </button>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-1">
-        {/* Full Name */}
-        <div className={rowClass}>
-          <label className={labelClass}>Full Name:</label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-            className={`${fieldClass} w-72`}
-            required
-          />
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-8">
+        <div className="border border-blue-200 rounded-lg p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Full Name</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#000359]"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Contact</label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={form.contact}
+                onChange={handleContactChange}
+                maxLength={10}
+                placeholder="10-digit number"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#000359]"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Age</label>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={form.age}
+                onChange={e => setForm({ ...form, age: e.target.value })}
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#000359]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Gender</label>
+              <Select
+                options={genderOptions}
+                value={genderOptions.find((opt) => opt.value === form.gender) || null}
+                onChange={(selected) =>
+                  setForm({ ...form, gender: selected?.value || '' })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Interested Activity</label>
+              <Select
+                options={activityOptions}
+                isLoading={activitiesLoading}
+                isClearable
+                placeholder="Select activity..."
+                value={activityOptions.find(o => o.value === form.activity) || null}
+                onChange={(selected) =>
+                  setForm({ ...form, activity: selected ? selected.value : '' })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Responsible Staff</label>
+              <AsyncSelect
+                cacheOptions
+                defaultOptions
+                loadOptions={loadStaffOptions}
+                value={selectedResponsibleStaff}
+                onChange={(selected) => {
+                  setSelectedResponsibleStaff(selected);
+                  setForm({ ...form, responsibleStaff: selected?.value || '' });
+                }}
+                placeholder="Search staff..."
+                isClearable
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Source</label>
+              <Select
+                options={sourceOptions}
+                value={{ label: form.source, value: form.source }}
+                onChange={(selected) =>
+                  setForm({ ...form, source: selected?.value || 'Walk-in' })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Enquiry Date</label>
+              <input
+                type="date"
+                value={form.date}
+                onChange={e => setForm({ ...form, date: e.target.value })}
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#000359]"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Contact — digits only, max 10 */}
-        <div className={rowClass}>
-          <label className={labelClass}>Contact:</label>
-          <input
-            type="tel"
-            inputMode="numeric"
-            value={form.contact}
-            onChange={handleContactChange}
-            maxLength={10}
-            placeholder="10-digit number"
-            className={`${fieldClass} w-72`}
-            required
-          />
-        </div>
-
-        {/* Age */}
-        <div className={rowClass}>
-          <label className={labelClass}>Age:</label>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={form.age}
-            onChange={e => setForm({ ...form, age: e.target.value })}
-            className={`${fieldClass} w-28`}
-          />
-        </div>
-
-        {/* Gender */}
-        <div className={rowClass}>
-          <label className={labelClass}>Gender:</label>
-          <select
-            value={form.gender}
-            onChange={e => setForm({ ...form, gender: e.target.value })}
-            className={`${fieldClass} w-36`}
+        <div className="flex justify-end gap-4 mt-8">
+          <button
+            type="button"
+            onClick={() => navigate('/school/enquiry')}
+            className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+            disabled={loading}
           >
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-        </div>
-
-        {/* Interested Activity — react-select with API data */}
-        <div className={rowClass}>
-          <label className={labelClass}>Interested Activity:</label>
-          <Select
-            options={activityOptions}
-            isLoading={activitiesLoading}
-            isClearable
-            placeholder="Select activity..."
-            styles={selectStyles}
-            value={activityOptions.find(o => o.value === form.activity) || null}
-            onChange={(selected) =>
-              setForm({ ...form, activity: selected ? selected.value : '' })
-            }
-          />
-        </div>
-
-        {/* Source */}
-        <div className={rowClass}>
-          <label className={labelClass}>Source:</label>
-          <select
-            value={form.source}
-            onChange={e => setForm({ ...form, source: e.target.value })}
-            className={`${fieldClass} w-44`}
-          >
-            <option>Walk-in</option>
-            <option>App</option>
-            <option>Call</option>
-            <option>Website</option>
-            <option>Reference</option>
-          </select>
-        </div>
-
-        {/* Enquiry Date */}
-        <div className={rowClass}>
-          <label className={labelClass}>Enquiry Date:</label>
-          <input
-            type="date"
-            value={form.date}
-            // min={new Date().toISOString().split('T')[0]}
-            onChange={e => setForm({ ...form, date: e.target.value })}
-            className={`${fieldClass} w-44`}
-          />
-        </div>
-
-        {/* Submit */}
-        <div className="flex justify-center pt-8">
+            Cancel
+          </button>
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#000359] text-white px-16 py-2.5 rounded-lg text-sm font-bold hover:bg-[#00047a] transition disabled:opacity-50"
+            className="px-10 py-3 bg-[#000359] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50"
           >
-            {loading ? 'Submitting...' : 'Submit'}
+            {loading ? 'Saving...' : 'Save Enquiry'}
           </button>
         </div>
       </form>
