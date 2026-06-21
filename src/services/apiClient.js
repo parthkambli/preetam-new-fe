@@ -422,6 +422,12 @@ fitnessFees: {
   },
 },
 
+  // School Renewals
+  renewals: {
+    getExpiring: (params) => apiClient.get("/school/renewals", { params }),
+    renew: (data) => apiClient.post("/school/renewals/renew", data),
+  },
+
   //schoolDashboard
   schoolDashboard: {
     getData: () => apiClient.get("/school/dashboard"),
