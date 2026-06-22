@@ -253,6 +253,20 @@ export default function ViewAdmission() {
           </div>
         </section>
 
+        {/* QR Code */}
+        <section className="p-8 flex flex-col items-center">
+          <h2 className="text-xl font-semibold mb-3">Student QR Code</h2>
+          {data.qrCode ? (
+            <>
+              <img src={data.qrCode} alt="QR Code" className="w-40 h-40 border p-2 rounded-lg bg-white" />
+              <a href={data.qrCode} download={`qr-${data.admissionId}.png`}
+                 className="mt-2 text-sm text-blue-600 hover:underline">Download QR</a>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">QR not generated</p>
+          )}
+        </section>
+
         {/* ✅ UPDATED EMERGENCY SECTION */}
         <section className="p-8">
           <h2 className="text-xl font-semibold mb-6">Emergency Contact & Declaration</h2>
