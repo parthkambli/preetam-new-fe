@@ -391,7 +391,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { api } from '../../../services/apiClient';
 
 const STATUS_OPTIONS = ['Stable', 'Critical', 'Recovering', 'Under Observation'];
@@ -420,32 +420,7 @@ export default function AddUpdateHealthRecord() {
   const [saving, setSaving] = useState(false);
 
   // React Select state
-  const [studentOptions, setStudentOptions] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [loadingStudents, setLoadingStudents] = useState(false);
-
-  // Fetch students for dropdown
-  useEffect(() => {
-    const fetchStudents = async () => {
-      setLoadingStudents(true);
-      try {
-        const res = await api.students.getAll();
-        const students = res.data?.data || res.data || [];
-        setStudentOptions(
-          students.map(s => ({
-            value: s._id,
-            label: `${s.fullName} (${s.studentId || s.admissionIdStr || ''})`,
-            student: s,
-          }))
-        );
-      } catch (err) {
-        toast.error('Failed to load students list.');
-      } finally {
-        setLoadingStudents(false);
-      }
-    };
-    fetchStudents();
-  }, []);
 
   // Load existing record if editing
   useEffect(() => {
@@ -567,6 +542,21 @@ export default function AddUpdateHealthRecord() {
 
   const handleCancel = () => navigate('/school/health-records');
 
+  const loadStudentOptions = async (inputValue) => {
+    try {
+      const params = inputValue ? { searchName: inputValue } : { limit: 10 };
+      const res = await api.students.getAll(params);
+      const students = res.data || [];
+      return students.map(s => ({
+        value: s._id,
+        label: `${s.fullName} (${s.studentId || s.admissionIdStr || ''})`,
+        student: s,
+      }));
+    } catch {
+      return [];
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -578,12 +568,14 @@ export default function AddUpdateHealthRecord() {
           {/* Student Name */}
           <div>
             <label className="block text-xs font-semibold text-[#1e3a8a] mb-1">Name*</label>
-            <Select
-              options={studentOptions}
+            <AsyncSelect
+              cacheOptions
+              defaultOptions
+              loadOptions={loadStudentOptions}
               value={selectedStudent}
               onChange={handleStudentSelect}
-              isLoading={loadingStudents}
-              placeholder="Select student..."
+              placeholder="Search student..."
+              isClearable
               styles={{
                 control: (base, state) => ({
                   ...base,
@@ -600,6 +592,7 @@ export default function AddUpdateHealthRecord() {
                   color: state.isSelected ? 'white' : '#374151',
                 }),
               }}
+              classNamePrefix="react-select"
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>

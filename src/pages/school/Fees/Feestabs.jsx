@@ -1,12 +1,11 @@
 // components/layout/fees/FeesTabs.jsx
 
 const TABS = [
-  { key: 'add-payments', label: 'Add Payments' },
-  { key: 'allot-fees',   label: 'Allot Fees'   },
+  { key: 'all-payments', label: 'All Payments' },
   { key: 'fee-types',    label: 'Fee Types'    },
 ];
 
-export default function FeesTabs({ activeTab = 'add-payments', onTabChange }) {
+export default function FeesTabs({ activeTab = 'all-payments', onTabChange }) {
   return (
     <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
       <div

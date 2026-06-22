@@ -96,6 +96,16 @@ export const api = {
   });
 },
     delete: (id) => apiClient.delete(`/school/admission/${id}`),
+    collectPayment: (id, data) => apiClient.post(`/school/admission/${id}/collect-payment`, data),
+  },
+
+  // Service bookings (standalone collection)
+  serviceBookings: {
+    getAll: (params) => apiClient.get('/school/service-bookings', { params }),
+    create: (data) => apiClient.post('/school/service-bookings', data),
+    cancel: (id) => apiClient.patch(`/school/service-bookings/${id}/cancel`),
+    getAvailableSeats: (serviceId, params) =>
+      apiClient.get(`/school/service-bookings/seats/${serviceId}`, { params }),
   },
 
   // Followups
@@ -157,17 +167,17 @@ staff: {
       delete: (id) => apiClient.delete(`/staff/employment-types/${id}`),
     },
 
-    // Attendance
+    // Attendances
     getAttendance: (params = {}) =>
       apiClient.get("/staff/attendance", { params }),
   },
-  // Timetable
-  timetable: {
-    getAll: () => apiClient.get("/timetable"),
-    create: (data) => apiClient.post("/timetable", data),
-    update: (id, data) => apiClient.put(`/timetable/${id}`, data),
-    delete: (id) => apiClient.delete(`/timetable/${id}`),
-  },
+  // periods
+  periods: {
+  getAll: () => apiClient.get("/period"),
+  create: (data) => apiClient.post("/period", data),
+  update: (id, data) => apiClient.put(`/period/${id}`, data),
+  delete: (id) => apiClient.delete(`/period/${id}`),
+},
   // Activities
   activities: {
     // Master Activities
@@ -411,6 +421,12 @@ fitnessFees: {
     return apiClient.get(`/reports/summary${query ? "?" + query : ""}`);
   },
 },
+
+  // School Renewals
+  renewals: {
+    getExpiring: (params) => apiClient.get("/school/renewals", { params }),
+    renew: (data) => apiClient.post("/school/renewals/renew", data),
+  },
 
   //schoolDashboard
   schoolDashboard: {

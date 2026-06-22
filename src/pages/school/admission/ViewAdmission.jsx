@@ -136,55 +136,40 @@ export default function ViewAdmission() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const dummyTimetable = [
-  {
-    period: "P1",
-    monday: "Yoga",
-    tuesday: "Yoga",
-    wednesday: "Music",
-    thursday: "Yoga",
-    friday: "Reading",
-    saturday: "Meditation",
-  },
-  {
-    period: "P2",
-    monday: "Walking",
-    tuesday: "Walking",
-    wednesday: "Walking",
-    thursday: "Games",
-    friday: "Walking",
-    saturday: "Games",
-  },
-  {
-    period: "P3",
-    monday: "Prayer",
-    tuesday: "Reading",
-    wednesday: "Prayer",
-    thursday: "Reading",
-    friday: "Prayer",
-    saturday: "Music",
-  }
-];
-
-const dummyServices = [
-  {
-    service: "Bus Service",
-    startDate: "15-Jun-2026",
-    days: 30,
-    amount: 1500,
-  },
-  {
-    service: "Mess Service",
-    startDate: "20-Jun-2026",
-    days: 15,
-    amount: 2250,
-  },
-];
+  const [periodMap, setPeriodMap] = useState({});
+  const [activityMap, setActivityMap] = useState({});
+  const [serviceMap, setServiceMap] = useState({});
+  const [staffMap, setStaffMap] = useState({});
 
   useEffect(() => {
     fetchAdmission();
+    fetchReferenceData();
   }, [id]);
+
+  const fetchReferenceData = async () => {
+    try {
+      const [periodsRes, activitiesRes, servicesRes, staffRes] = await Promise.all([
+        api.periods.getAll(),
+        api.activities.getAll(),
+        api.schoolServices.getAll(),
+        api.fitnessStaff.getAll()
+      ]);
+      const pm = {};
+      (periodsRes.data.data || []).forEach(p => { pm[p._id] = `${p.name} (${p.startTime} - ${p.endTime})`; });
+      setPeriodMap(pm);
+      const am = {};
+      (activitiesRes.data.data || []).forEach(a => { am[a._id] = a.name; });
+      setActivityMap(am);
+      const sm = {};
+      (servicesRes.data.data || []).forEach(s => { sm[s._id] = s.serviceName; });
+      setServiceMap(sm);
+      const stm = {};
+      (staffRes.data?.data?.staff || []).forEach(s => { stm[s._id] = s.fullName; });
+      setStaffMap(stm);
+    } catch (err) {
+      console.error('Failed to fetch reference data', err);
+    }
+  };
 
   const fetchAdmission = async () => {
     setLoading(true);
@@ -268,6 +253,20 @@ const dummyServices = [
           </div>
         </section>
 
+        {/* QR Code */}
+        <section className="p-8 flex flex-col items-center">
+          <h2 className="text-xl font-semibold mb-3">Student QR Code</h2>
+          {data.qrCode ? (
+            <>
+              <img src={data.qrCode} alt="QR Code" className="w-40 h-40 border p-2 rounded-lg bg-white" />
+              <a href={data.qrCode} download={`qr-${data.admissionId}.png`}
+                 className="mt-2 text-sm text-blue-600 hover:underline">Download QR</a>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">QR not generated</p>
+          )}
+        </section>
+
         {/* ✅ UPDATED EMERGENCY SECTION */}
         <section className="p-8">
           <h2 className="text-xl font-semibold mb-6">Emergency Contact & Declaration</h2>
@@ -299,9 +298,13 @@ const dummyServices = [
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div><strong>Admission ID:</strong> {data.admissionId}</div>
             <div><strong>Login Mobile:</strong> {data.loginMobile}</div>
-            <div><strong>Assigned Caregiver:</strong> {data.assignedCaregiver || '-'}</div>
+            <div><strong>Assigned Caregiver:</strong> {staffMap[data.assignedCaregiver] || data.assignedCaregiver || '-'}</div>
+            <div><strong>Responsible Staff:</strong> {staffMap[data.responsibleStaffId] || data.responsibleStaffId || '-'}</div>
             <div><strong>Fee Plan:</strong> {data.feePlan}</div>
-            <div><strong>Amount:</strong> ₹{data.amount?.toLocaleString() || '-'}</div>
+            <div><strong>Fee Amount:</strong> ₹{data.feeAmount?.toLocaleString() || '-'}</div>
+            <div><strong>Discount:</strong> ₹{data.discount?.toLocaleString() || '0'}</div>
+            <div><strong>Total Fee:</strong> ₹{data.totalFee?.toLocaleString() || data.amount?.toLocaleString() || '-'}</div>
+            <div><strong>Paid Amount:</strong> ₹{data.paidAmount?.toLocaleString() || '0'}</div>
             <div><strong>Payment Status:</strong> {data.paymentStatus}</div>
             <div><strong>Payment Mode:</strong> {data.paymentMode || '-'}</div>
             <div><strong>Next Due:</strong> {data.nextDueDate ? new Date(data.nextDueDate).toLocaleDateString() : '-'}</div>
@@ -330,23 +333,23 @@ const dummyServices = [
       </thead>
 
       <tbody>
-        {dummyTimetable.map((row, index) => (
+        {(data.timetable || []).map((row, index) => (
           <tr key={index}>
             <td className="border p-3 font-medium bg-gray-50">
-              {row.period}
+              {periodMap[row.periodId] || row.periodId || '-'}
             </td>
 
             {[
-              row.monday,
-              row.tuesday,
-              row.wednesday,
-              row.thursday,
-              row.friday,
-              row.saturday,
-            ].map((activity, idx) => (
+              row.mondayActivityId,
+              row.tuesdayActivityId,
+              row.wednesdayActivityId,
+              row.thursdayActivityId,
+              row.fridayActivityId,
+              row.saturdayActivityId,
+            ].map((activityId, idx) => (
               <td key={idx} className="border p-3">
                 <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                  {activity}
+                  {activityMap[activityId] || activityId || '-'}
                 </span>
               </td>
             ))}
@@ -376,6 +379,10 @@ const dummyServices = [
           </th>
 
           <th className="border p-3 text-left">
+            End Date
+          </th>
+
+          <th className="border p-3 text-left">
             Days
           </th>
 
@@ -386,24 +393,28 @@ const dummyServices = [
       </thead>
 
       <tbody>
-        {dummyServices.map((service, index) => (
+        {(data.services || []).map((service, index) => (
           <tr key={index}>
             <td className="border p-3">
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                {service.service}
+                {serviceMap[service.serviceId] || service.serviceId || '-'}
               </span>
             </td>
 
             <td className="border p-3">
-              {service.startDate}
+              {service.startDate ? new Date(service.startDate).toLocaleDateString() : '-'}
             </td>
 
             <td className="border p-3">
-              {service.days}
+              {service.endDate ? new Date(service.endDate).toLocaleDateString() : '-'}
+            </td>
+
+            <td className="border p-3">
+              {service.days || '-'}
             </td>
 
             <td className="border p-3 font-semibold">
-              ₹{service.amount}
+              ₹{service.totalFee?.toLocaleString() || '-'}
             </td>
           </tr>
         ))}

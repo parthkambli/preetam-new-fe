@@ -322,7 +322,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../../services/apiClient';
 import Pagination from "../../../components/Pagination";
 
-export default function FitnessFollowups() {
+export default function SchoolFollowups() {
   const [followups, setFollowups] = useState([]);
   const [upcomingFollowups, setUpcomingFollowups] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -371,12 +371,7 @@ useEffect(() => {
 
   const fetchActivities = async () => {
     try {
-      let res;
-      try {
-        res = await api.fitnessActivities.getAll();
-      } catch (e) {
-        res = await api.activities.getAll();
-      }
+      const res = await api.activities.getAll();
       const activityData = res?.data?.data || res?.data || [];
       setActivities(Array.isArray(activityData) ? activityData : []);
     } catch (err) {
@@ -389,7 +384,7 @@ useEffect(() => {
     setLoading(true);
     setError('');
     try {
-      const params = { enquiryType: 'fitness',
+      const params = { enquiryType: 'school',
         page,
         limit
        };
@@ -445,7 +440,7 @@ setTotalCount(
 
   const fetchUpcomingFollowups = async () => {
     try {
-      const response = await api.followups.getUpcoming({ enquiryType: 'fitness' });
+      const response = await api.followups.getUpcoming({ enquiryType: 'school' });
       setUpcomingFollowups(response.data?.data || response.data || []);
     } catch (err) {
       console.error(err);
@@ -497,7 +492,7 @@ setTotalCount(
 
     try {
       await api.followups.create({
-        enquiryType: 'fitness',
+        enquiryType: 'school',
         enquiryId: selectedFollowup.enquiryId,
         personName: selectedFollowup.personName,
         mobile: selectedFollowup.mobile,
@@ -519,7 +514,7 @@ setTotalCount(
 
   return (
     <div className="p-6 space-y-5">
-      <h1 className="text-xl font-semibold text-gray-800">Fitness Follow-Ups</h1>
+      <h1 className="text-xl font-semibold text-gray-800">School Follow-Ups</h1>
 
       {/* Upcoming Follow-ups */}
       {upcomingFollowups.length > 0 && (

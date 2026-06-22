@@ -1,9 +1,10 @@
 // pages/school/admission/AddAdmissionForm.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 
 const generateAdmissionId = () => {
   const date = new Date();
@@ -20,25 +21,10 @@ const generatePassword = (mobile) => {
 
 const numericPhone = (val) => val.replace(/\D/g, '').slice(0, 10);
 
-const dummyPeriods = [
-  { value: 'p1', label: 'P1 (09:00 - 10:00)' },
-  { value: 'p2', label: 'P2 (10:00 - 11:00)' },
-  { value: 'p3', label: 'P3 (11:00 - 12:00)' },
-  { value: 'tea-break', label: 'Tea Break (12:00 - 12:15)' },
-];
-
-const dummyActivities = [
-  { value: 'yoga', label: 'Yoga' },
-  { value: 'music', label: 'Music' },
-  { value: 'reading', label: 'Reading' },
-  { value: 'walking', label: 'Walking' },
-  { value: 'meditation', label: 'Meditation' },
-];
-
 const dummyServices = [
-  { value: 'bus', label: 'Bus Service', perDayFee: 50 },
-  { value: 'mess', label: 'Mess Service', perDayFee: 150 },
-  { value: 'laundry', label: 'Laundry Service', perDayFee: 30 },
+  { value: 'bus', label: 'Bus Service', oneDayFee: 50 },
+  { value: 'mess', label: 'Mess Service', oneDayFee: 150 },
+  { value: 'laundry', label: 'Laundry Service', oneDayFee: 30 },
 ];
 
 export default function AddAdmission() {
@@ -50,9 +36,8 @@ export default function AddAdmission() {
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
 
-  const [caregivers, setCaregivers] = useState([]);
-  const [loadingCaregivers, setLoadingCaregivers] = useState(false);
-  const [caregiverError, setCaregiverError] = useState(null);
+  const [selectedCaregiver, setSelectedCaregiver] = useState(null);
+  const [selectedResponsibleStaff, setSelectedResponsibleStaff] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: '', age: '', gender: 'Male', dob: '', aadhaar: '',
@@ -71,19 +56,200 @@ export default function AddAdmission() {
     // Admission
     loginMobile: '', password: '', role: 'Participant',
     registrationDate: '', admissionId: '', assignedCaregiver: '',
-    feePlan: 'Monthly', instituteType: 'School',
+    feePlan: 'monthly', instituteType: 'School',
     messFacility: 'No', residency: 'No',
     // Admission Fee
-    admissionAmount: '',
-    feeDescription: 'Senior Citizen Happiness School (Age 55+)',
-    paymentStatus: 'Pending', paymentMode: 'Cash',
-    paymentDate: '', nextDueDate: '', feeRemarks: '',
+    feeTypeId: '',
+    feeAmount: 0,
+    discount: 0,
+    totalFee: 0,
+    paidAmount: 0,
+    remainingAmount: 0,
+    startDate: '',
+    endDate: '',
+    responsibleStaffId: '',
+    paymentStatus: 'Pending',
+    paymentMode: 'Cash',
+    paymentDate: '',
+    nextDueDate: '',
+    feeRemarks: '',
   });
+  
 
   // ── Timetable ──────────────────────────────────────────────
   const [timetableRows, setTimetableRows] = useState([
     { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null },
   ]);
+  const [periods, setPeriods] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [services, setServices] = useState([]);
+  const [feeTypes, setFeeTypes] = useState([]);
+  const [selectedFeeType, setSelectedFeeType] = useState(null);
+
+
+const handleFeeTypeChange = (option) => {
+  setSelectedFeeType(option);
+
+  setFormData((prev) => ({
+    ...prev,
+    feeTypeId: option?.value || "",
+  }));
+
+  updateFeeAmount(
+    option?.data,
+    formData.feePlan
+  );
+};
+
+useEffect(() => {
+  fetchPeriods();
+  fetchActivities();
+  fetchServices();
+  fetchFeeTypes();
+}, []);
+
+const DAY_LABELS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+const fetchPeriods = async () => {
+  try {
+    const res = await api.periods.getAll();
+
+    setPeriods(
+      (res.data.data || []).map((p) => ({
+        value: p._id,
+        label: `${p.name} (${p.startTime} - ${p.endTime})`,
+        capacity: p.capacity,
+        dayCounts: p.dayCounts || {},
+      }))
+    );
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const fetchActivities = async () => {
+  try {
+    const res = await api.activities.getAll();
+
+    setActivities(
+      (res.data.data || []).map((a) => ({
+        value: a._id,
+        label: a.name,
+      }))
+    );
+  } catch (err) {
+    console.error(err);
+  }
+};
+const fetchServices = async () => {
+  try {
+    const res = await api.schoolServices.getAll();
+
+    setServices(
+      (res.data.data || [])
+        .filter((service) => service.isActive)
+        .map((service) => ({
+          value: service._id,
+          label: service.serviceName,
+          oneDayFee: service.oneDayFee,
+          capacity: service.capacity,
+          bookedCount: service.bookedCount,
+          availableSeats: service.availableSeats,
+        }))
+    );
+  } catch (err) {
+    console.error("Failed to fetch services", err);
+  }
+};
+
+// const fetchFeeTypes = async () => {
+//   try {
+//     const res = await api.fees.getTypes();
+
+//     const options = [].map((fee) => ({
+//       value: fee._id,
+//       label: fee.description,
+//       data: fee,
+//     }));
+
+//     setFeeTypes(options);
+//   } catch (err) {
+//     console.error("Failed to fetch fee types", err);
+//   }
+// };
+
+const fetchFeeTypes = async () => {
+  try {
+    const res = await api.fees.getTypes();
+
+    console.log("FEE TYPES RESPONSE", res.data);
+
+    const options = (res.data || []).map((fee) => ({
+      value: fee._id,
+      label: fee.description,
+      data: fee,
+    }));
+
+    setFeeTypes(options);
+
+    console.log("OPTIONS", options);
+  } catch (err) {
+    console.error("Failed to fetch fee types", err);
+  }
+};
+
+const handleFeePlanChange = (e) => {
+  const plan = e.target.value;
+
+  console.log("PLAN CHANGED:", plan);
+  console.log("SELECTED FEE:", selectedFeeType);
+
+  setFormData((prev) => ({
+    ...prev,
+    feePlan: plan,
+  }));
+
+  updateFeeAmount(selectedFeeType?.data, plan);
+};
+
+// const updateFeeAmount = (feeType, plan) => {
+//   if (!feeType || !plan) return;
+
+//   const amount = feeType[plan] || 0;
+
+//   setFormData((prev) => ({
+//     ...prev,
+//     feeAmount: amount,
+//   }));
+// };
+const updateFeeAmount = (feeType, plan) => {
+  console.log("FEE TYPE:", feeType);
+  console.log("PLAN:", plan);
+
+  if (!feeType || !plan) return;
+
+  const amount = feeType[plan] || 0;
+
+  console.log("AMOUNT:", amount);
+
+  setFormData((prev) => ({
+    ...prev,
+    feeAmount: amount,
+  }));
+};
+
+const validateTimetable = () => {
+  for (let i = 0; i < timetableRows.length; i++) {
+    const row = timetableRows[i];
+
+    if (!row.period) {
+      alert(`Please select period for row ${i + 1}`);
+      return false;
+    }
+  }
+
+  return true;
+};
 
   const selectedPeriods = timetableRows.map((r) => r.period?.value).filter(Boolean);
 
@@ -109,22 +275,96 @@ export default function AddAdmission() {
     );
 
   // ── Services ───────────────────────────────────────────────
-  const [serviceRows, setServiceRows] = useState([{ service: null, startDate: '', days: '' }]);
+  const [serviceRows, setServiceRows] = useState([{ service: null, startDate: '', endDate: '', days: '' }]);
+  const [serviceAvailability, setServiceAvailability] = useState({});
+  const avlFetchIdRef = useRef(0);
 
-  const addServiceRow = () => setServiceRows((prev) => [...prev, { service: null, startDate: '', days: '' }]);
+  const addServiceRow = () => setServiceRows((prev) => [...prev, { service: null, startDate: '', endDate: '', days: '' }]);
   const removeServiceRow = (i) => setServiceRows((prev) => prev.filter((_, idx) => idx !== i));
   const updateServiceRow = (i, field, value) => {
     const updated = [...serviceRows];
     updated[i][field] = value;
+    // Auto-calculate endDate when startDate or days changes
+    if (field === 'startDate' || field === 'days') {
+      const days = field === 'days' ? Number(value) : (Number(updated[i].days) || 0);
+      const startDate = field === 'startDate' ? value : updated[i].startDate;
+      if (startDate && days > 0) {
+        const ed = new Date(startDate);
+        ed.setDate(ed.getDate() + days);
+        updated[i].endDate = ed.toISOString().slice(0, 10);
+      } else {
+        updated[i].endDate = '';
+      }
+    }
     setServiceRows(updated);
   };
 
-  // ── Fee summary ────────────────────────────────────────────
-  const admissionFee = Number(formData.admissionAmount) || 0;
+  // Fetch date-range-specific availability when service + dates change
+  useEffect(() => {
+    const id = ++avlFetchIdRef.current;
+    const validIndices = [];
+
+    serviceRows.forEach((row, index) => {
+      const serviceId = row.service?.value;
+      const startDate = row.startDate;
+      const endDate = row.endDate;
+      if (serviceId && startDate && endDate) {
+        validIndices.push(index);
+        api.serviceBookings.getAvailableSeats(serviceId, { startDate, endDate })
+          .then(res => {
+            if (avlFetchIdRef.current !== id) return;
+            setServiceAvailability(prev => ({ ...prev, [index]: res.data }));
+          })
+          .catch(() => {});
+      }
+    });
+
+    // Clean up stale entries
+    setServiceAvailability(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(k => {
+        if (!validIndices.includes(Number(k))) delete next[Number(k)];
+      });
+      return next;
+    });
+  }, [serviceRows]);
+
+  // ── Fee summary (client-side preview) ──────────────────────
+  const admissionFeeTotal = Math.max(0, (Number(formData.feeAmount) || 0) - (Number(formData.discount) || 0));
   const servicesTotal = serviceRows.reduce((sum, row) => {
-    return sum + (row.service?.perDayFee || 0) * (Number(row.days) || 0);
+    return sum + (row.service?.oneDayFee || 0) * (Number(row.days) || 0);
   }, 0);
-  const grandTotal = admissionFee + servicesTotal;
+  const grandTotal = admissionFeeTotal + servicesTotal;
+
+  // Auto-calculate totalFee, remainingAmount, paymentStatus, endDate preview
+  useEffect(() => {
+    const remaining = Math.max(0, grandTotal - (Number(formData.paidAmount) || 0));
+    const status = (remaining <= 0 && Number(formData.paidAmount) > 0) ? 'Paid' : 'Pending';
+
+    setFormData((prev) => ({
+      ...prev,
+      totalFee: grandTotal,
+      remainingAmount: remaining,
+      paymentStatus: status,
+    }));
+  }, [grandTotal, formData.paidAmount]);
+
+  useEffect(() => {
+    if (formData.startDate && formData.feePlan) {
+      const d = new Date(formData.startDate);
+      const planMap = { daily: 1, weekly: 7, monthly: 1, quarterly: 3, halfYearly: 6, annual: 12 };
+      const unit = planMap[formData.feePlan];
+      if (unit) {
+        if (formData.feePlan === 'daily' || formData.feePlan === 'weekly') {
+          d.setDate(d.getDate() + unit);
+        } else {
+          d.setMonth(d.getMonth() + unit);
+        }
+        const endStr = d.toISOString().slice(0, 10);
+        setFormData((prev) => ({ ...prev, endDate: endStr }));
+      }
+    }
+  }, [formData.startDate, formData.feePlan]);
 
   // ── Load enquiries ─────────────────────────────────────────
   useEffect(() => {
@@ -156,28 +396,6 @@ export default function AddAdmission() {
       setFormData((prev) => ({ ...prev, loginMobile: prev.mobile, password: generatePassword(prev.mobile) }));
     }
   }, [formData.mobile]);
-
-  // ── Load caregivers on step 5 ──────────────────────────────
-  useEffect(() => {
-    if (step !== 5) return;
-    const fetch = async () => {
-      try {
-        setLoadingCaregivers(true);
-        setCaregiverError(null);
-        const res = await api.staff.getAll();
-        const raw = res.data?.data || res.data || [];
-        const norm = (s) => s?.toLowerCase().replace(/[\s_-]/g, '');
-        setCaregivers(
-          raw.filter((s) => {
-            const role = typeof s.role === 'string' ? s.role : s.role?.roleName;
-            return norm(role) === 'caregiver' && (s.status?.toLowerCase() === 'active' || s.isActive === true);
-          })
-        );
-      } catch { setCaregiverError('Failed to load caregivers'); }
-      finally { setLoadingCaregivers(false); }
-    };
-    fetch();
-  }, [step]);
 
   // ── Handlers ───────────────────────────────────────────────
   const handleChange = (e) => {
@@ -232,6 +450,36 @@ export default function AddAdmission() {
       if (formData.registrationDate) fd.set('registrationDate', new Date(formData.registrationDate).toISOString());
       if (formData.paymentDate) fd.set('paymentDate', new Date(formData.paymentDate).toISOString());
       if (formData.nextDueDate) fd.set('nextDueDate', new Date(formData.nextDueDate).toISOString());
+
+      // ── Append timetable & services as JSON strings ──
+      fd.append('timetable', JSON.stringify(timetableRows.map(row => ({
+        periodId: row.period?.value || null,
+        mondayActivityId: row.monday?.value || null,
+        tuesdayActivityId: row.tuesday?.value || null,
+        wednesdayActivityId: row.wednesday?.value || null,
+        thursdayActivityId: row.thursday?.value || null,
+        fridayActivityId: row.friday?.value || null,
+        saturdayActivityId: row.saturday?.value || null,
+      }))));
+      fd.append('services', JSON.stringify(serviceRows.filter(s => s.service).map(row => {
+        const days = Number(row.days) || 0;
+        const perDayFee = row.service?.oneDayFee || 0;
+        let endDate = null;
+        if (row.startDate && days > 0) {
+          const ed = new Date(row.startDate);
+          ed.setDate(ed.getDate() + days);
+          endDate = ed.toISOString().slice(0, 10);
+        }
+        return {
+          serviceId: row.service?.value,
+          startDate: row.startDate || null,
+          endDate,
+          days,
+          perDayFee,
+          totalFee: perDayFee * days,
+        };
+      })));
+
       await api.schoolAdmission.create(fd);
       toast.success('Admission submitted successfully!');
       navigate('/school/admission');
@@ -240,6 +488,29 @@ export default function AddAdmission() {
     } finally {
       setLoading(false);
     }
+  };
+  const loadStaffOptions = async (inputValue) => {
+    try {
+      const res = await api.fitnessStaff.getAll({ search: inputValue || '', status: 'Active', page: 1, limit: 10 });
+      const list = res.data?.data?.staff || [];
+      return list.map((s) => ({
+        value: s._id,
+        label: `${s.fullName} (${s.role})`,
+        data: s,
+      }));
+    } catch { return []; }
+  };
+
+  const loadCaregiverOptions = async (inputValue) => {
+    try {
+      const res = await api.fitnessStaff.getAll({ search: inputValue || '', status: 'Active', role: 'caregiver', page: 1, limit: 10 });
+      const list = res.data?.data?.staff || [];
+      return list.map((s) => ({
+        value: s._id,
+        label: s.fullName,
+        data: s,
+      }));
+    } catch { return []; }
   };
 
   const nextStep = () => setStep((p) => Math.min(p + 1, 5));
@@ -399,17 +670,48 @@ export default function AddAdmission() {
                 </thead>
                 <tbody className="divide-y">
                   {timetableRows.map((row, index) => {
-                    const availablePeriods = dummyPeriods.filter(
-                      (p) => !selectedPeriods.includes(p.value) || p.value === row.period?.value
-                    );
+                    const availablePeriods = periods.filter(
+                        (p) =>
+                          !selectedPeriods.includes(p.value) ||
+                          p.value === row.period?.value
+                      );
                     return (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="p-2 min-w-[220px]">
-                          <Select value={row.period} options={availablePeriods} placeholder="Select Period" menuPosition="fixed" onChange={(v) => updateRow(index, 'period', v)} classNamePrefix="react-select" />
+                          <Select
+                            value={row.period}
+                            options={availablePeriods}
+                            placeholder="Select Period"
+                            menuPosition="fixed"
+                            onChange={(v) => updateRow(index, "period", v)}
+                            classNamePrefix="react-select"
+                          />
+                          {row.period && row.period.dayCounts && (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {DAY_LABELS.map(day => {
+                                const booked = row.period.dayCounts[day] || 0;
+                                const cap = row.period.capacity || 0;
+                                const full = cap > 0 && booked >= cap;
+                                return (
+                                  <span key={day} className={`text-[10px] px-1 py-0.5 rounded ${full ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                    {day.slice(0, 3)} {booked}/{cap}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </td>
                         {['monday','tuesday','wednesday','thursday','friday','saturday'].map((day) => (
                           <td key={day} className="p-2 min-w-[160px]">
-                            <Select options={dummyActivities} value={row[day]} placeholder="Activity" menuPosition="fixed" onChange={(v) => updateRow(index, day, v)} isClearable classNamePrefix="react-select" />
+                            <Select
+                                options={activities}
+                                value={row[day]}
+                                placeholder="Activity"
+                                menuPosition="fixed"
+                                onChange={(v) => updateRow(index, day, v)}
+                                isClearable
+                                classNamePrefix="react-select"
+                              />
                           </td>
                         ))}
                         <td className="p-2 text-center">
@@ -422,13 +724,25 @@ export default function AddAdmission() {
               </table>
             </div>
 
-            <button type="button" onClick={addRow} disabled={timetableRows.length >= dummyPeriods.length} className="mt-4 px-4 py-2 bg-[#000359] text-white rounded-lg text-sm disabled:opacity-50">
+            <button type="button" onClick={addRow} disabled={timetableRows.length >= periods.length} className="mt-4 px-4 py-2 bg-[#000359] text-white rounded-lg text-sm disabled:opacity-50">
               + Add Period Row
             </button>
+            
 
             <div className="flex justify-between mt-10 pt-6 border-t">
               <button type="button" onClick={prevStep} className="px-8 py-3 border border-gray-300 rounded-lg text-sm">Back</button>
-              <button type="button" onClick={nextStep} className="px-10 py-3 bg-[#000359] text-white rounded-lg text-sm">Next</button>
+              
+              <button
+                  type="button"
+                  onClick={() => {
+                    if (validateTimetable()) {
+                      nextStep();
+                    }
+                  }}
+                  className="px-10 py-3 bg-[#000359] text-white rounded-lg text-sm"
+                >
+                  Next
+                </button>
             </div>
           </>
         )}
@@ -470,18 +784,24 @@ export default function AddAdmission() {
                 </div>
                 <div>
                   <label className={labelCls}>Assigned Caregiver / Staff</label>
-                  <select name="assignedCaregiver" value={formData.assignedCaregiver} onChange={handleChange} disabled={loadingCaregivers} className={`${inputCls} ${loadingCaregivers ? 'bg-gray-50' : ''}`}>
-                    <option value="">{loadingCaregivers ? 'Loading...' : 'Select Caregiver'}</option>
-                    {caregivers.map((s) => (<option key={s._id} value={s._id}>{s.fullName || s.name || 'Unnamed'}</option>))}
-                  </select>
-                  {caregiverError && <p className="text-xs text-red-500 mt-1">{caregiverError}</p>}
+                  <AsyncSelect
+  cacheOptions
+  defaultOptions
+  loadOptions={loadCaregiverOptions}
+  placeholder="Select Caregiver"
+  value={selectedCaregiver}
+  onChange={(selected) => {
+    setSelectedCaregiver(selected);
+    setFormData((prev) => ({
+      ...prev,
+      assignedCaregiver: selected?.value || "",
+    }));
+  }}
+  isClearable
+  classNamePrefix="react-select"
+/>
                 </div>
-                <div>
-                  <label className={labelCls}>Fee Plan</label>
-                  <select name="feePlan" value={formData.feePlan} onChange={handleChange} className={inputCls}>
-                    <option>Daily</option><option>Weekly</option><option>Monthly</option><option>Annual</option>
-                  </select>
-                </div>
+                
                 <div>
                   <label className={labelCls}>Institute Type</label>
                   <select name="instituteType" value={formData.instituteType} onChange={handleChange} className={inputCls}>
@@ -497,56 +817,46 @@ export default function AddAdmission() {
               </div>
             </div>
 
-            {/* ── ADMISSION FEE ── */}
+            {/* ── FEE SETUP ── */}
             <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Admission Fee</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Fee Setup</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
-                  <label className={labelCls}>Fee Amount (₹)</label>
-                  <input
-                    type="number"
-                    name="admissionAmount"
-                    value={formData.admissionAmount}
-                    onChange={handleChange}
-                    placeholder="e.g. 5000"
-                    className={inputCls}
+                  <label className={labelCls}>Fee Type</label>
+                  <Select
+                    placeholder="Select Fee Type"
+                    options={feeTypes}
+                    value={selectedFeeType}
+                    onChange={handleFeeTypeChange}
+                    classNamePrefix="react-select"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Payment Status</label>
-                  <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className={inputCls}>
-                    <option>Paid</option><option>Pending</option><option>Partial</option>
+                  <label className={labelCls}>Fee Plan</label>
+                  <select name="feePlan" value={formData.feePlan} onChange={handleFeePlanChange} className={inputCls}>
+                    <option value="annual">Yearly</option>
+                    <option value="halfYearly">Half Yearly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="daily">Daily</option>
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Payment Mode</label>
-                  <select name="paymentMode" value={formData.paymentMode} onChange={handleChange} className={inputCls}>
-                    <option>Cash</option><option>UPI</option><option>Bank Transfer</option>
-                  </select>
+                  <label className={labelCls}>Fee Amount</label>
+                  <input value={formData.feeAmount} readOnly className={`${inputCls} bg-gray-50`} />
                 </div>
                 <div>
-                  <label className={labelCls}>Payment Date</label>
-                  <input type="date" name="paymentDate" value={formData.paymentDate} onChange={handleChange} className={inputCls} />
+                  <label className={labelCls}>Discount</label>
+                  <input type="number" name="discount" value={formData.discount} onChange={handleChange} className={inputCls} />
                 </div>
-                <div>
-                  <label className={labelCls}>Next Due Date</label>
-                  <input type="date" name="nextDueDate" value={formData.nextDueDate} min={new Date().toISOString().split('T')[0]} onChange={handleChange} className={inputCls} />
-                </div>
-              </div>
-              <div className="mt-4">
-                <label className={labelCls}>Fee Description</label>
-                <input name="feeDescription" value={formData.feeDescription} onChange={handleChange} className={inputCls} />
-              </div>
-              <div className="mt-4">
-                <label className={labelCls}>Fee Remarks</label>
-                <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={2} className={inputCls} />
               </div>
             </div>
 
-            {/* ── ADDITIONAL SERVICES ── */}
+            {/* ── SERVICES TABLE (inside fee section) ── */}
             <div>
               <h2 className="text-xl font-semibold border-b pb-2 mb-4">Additional Services</h2>
-              <p className="text-sm text-gray-500 mb-4">Assign optional services such as Bus, Mess, Laundry, etc. Total is auto-calculated from per-day fee × days.</p>
+              <p className="text-sm text-gray-500 mb-4">Assign optional services. Each row total is added to the grand total.</p>
 
               <div className="overflow-x-auto rounded-xl border">
                 <table className="w-full min-w-[800px] text-sm border-collapse">
@@ -554,6 +864,7 @@ export default function AddAdmission() {
                     <tr className="bg-[#000359] text-white">
                       <th className="px-4 py-3 text-left font-medium">Service</th>
                       <th className="px-4 py-3 text-left font-medium">Start Date</th>
+                      <th className="px-4 py-3 text-left font-medium">End Date</th>
                       <th className="px-4 py-3 text-left font-medium">No. of Days</th>
                       <th className="px-4 py-3 text-left font-medium">Per Day (₹)</th>
                       <th className="px-4 py-3 text-left font-medium">Total (₹)</th>
@@ -562,22 +873,44 @@ export default function AddAdmission() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {serviceRows.map((row, index) => {
-                      const perDay = row.service?.perDayFee || 0;
-                      const total = perDay * (Number(row.days) || 0);
+                      const perDay = row.service?.oneDayFee || 0;
+                      const days = Number(row.days) || 0;
+                      const total = perDay * days;
+                      // Auto-calculate endDate for this row
+                      let rowEndDate = row.endDate;
+                      if (row.startDate && days > 0 && !row.endDate) {
+                        const ed = new Date(row.startDate);
+                        ed.setDate(ed.getDate() + days);
+                        rowEndDate = ed.toISOString().slice(0, 10);
+                      }
                       return (
                         <tr key={index} className="hover:bg-gray-50">
                           <td className="px-3 py-2 min-w-[220px]">
                             <Select
                               value={row.service}
-                              options={dummyServices}
+                              options={services}
                               placeholder="Select Service"
                               menuPosition="fixed"
                               onChange={(v) => updateServiceRow(index, 'service', v)}
                               classNamePrefix="react-select"
                             />
+                            {row.service && serviceAvailability[index] && (
+                              <div className="mt-1.5 text-xs">
+                                <span className={`px-2 py-0.5 rounded ${
+                                  serviceAvailability[index].availableSeats > 0
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {serviceAvailability[index].bookedCount}/{serviceAvailability[index].capacity} booked on these dates · {serviceAvailability[index].availableSeats} available
+                                </span>
+                              </div>
+                            )}
                           </td>
                           <td className="px-3 py-2">
                             <input type="date" value={row.startDate} onChange={(e) => updateServiceRow(index, 'startDate', e.target.value)} className={inputCls} />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input value={rowEndDate || ''} readOnly className={`${inputCls} bg-gray-50`} />
                           </td>
                           <td className="px-3 py-2">
                             <input type="number" min="1" value={row.days} onChange={(e) => updateServiceRow(index, 'days', e.target.value)} placeholder="Days" className={inputCls} />
@@ -599,37 +932,84 @@ export default function AddAdmission() {
                   </tbody>
                 </table>
               </div>
-
               <button type="button" onClick={addServiceRow} className="mt-4 px-4 py-2 bg-[#000359] text-white rounded-lg text-sm hover:opacity-90">
                 + Add Service
               </button>
             </div>
 
-            {/* ── FEE SUMMARY ── */}
+            {/* ── GRAND TOTAL DISPLAY ── */}
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-              <h3 className="text-base font-semibold text-gray-800 mb-4">Fee Summary</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Admission Fee</span>
-                  <span className="font-medium text-gray-800">
-                    {admissionFee > 0 ? `₹${admissionFee.toLocaleString()}` : '—'}
-                  </span>
+              <div className="flex justify-between text-base font-bold text-gray-900">
+                <span>Grand Total (Admission Fee + Services)</span>
+                <span className="text-[#000359] text-lg">₹{grandTotal.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* ── PAYMENT INFO ── */}
+            <div>
+              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Payment</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                  <label className={labelCls}>Amount Paid</label>
+                  <input type="number" name="paidAmount" value={formData.paidAmount} onChange={handleChange} className={inputCls} />
                 </div>
+                <div>
+                  <label className={labelCls}>Remaining Amount</label>
+                  <input value={formData.remainingAmount} readOnly className={`${inputCls} bg-gray-50`} />
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Status</label>
+                  <input value={formData.paymentStatus} readOnly className={`${inputCls} bg-gray-50`} />
+                </div>
+                <div>
+                  <label className={labelCls}>Next Due Date</label>
+                  <input type="date" name="nextDueDate" value={formData.nextDueDate} onChange={handleChange} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Mode</label>
+                  <select name="paymentMode" value={formData.paymentMode} onChange={handleChange} className={inputCls}>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Date</label>
+                  <input type="date" name="paymentDate" value={formData.paymentDate} onChange={handleChange} className={inputCls} />
+                </div>
+              </div>
+            </div>
 
-                {serviceRows.map((row, i) => {
-                  const total = (row.service?.perDayFee || 0) * (Number(row.days) || 0);
-                  if (!row.service || total === 0) return null;
-                  return (
-                    <div key={i} className="flex justify-between text-sm text-gray-600">
-                      <span>{row.service.label} ({row.days} days × ₹{row.service.perDayFee})</span>
-                      <span className="font-medium text-gray-800">₹{total.toLocaleString()}</span>
-                    </div>
-                  );
-                })}
-
-                <div className="border-t pt-3 flex justify-between text-base font-bold text-gray-900">
-                  <span>Grand Total</span>
-                  <span className="text-[#000359]">₹{grandTotal.toLocaleString()}</span>
+            {/* ── SCHEDULE ── */}
+            <div>
+              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Schedule</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                  <label className={labelCls}>Start Date</label>
+                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>End Date (Auto)</label>
+                  <input value={formData.endDate} readOnly className={`${inputCls} bg-gray-50`} />
+                </div>
+                <div>
+                  <label className={labelCls}>Responsible Staff</label>
+                  <AsyncSelect
+                    cacheOptions
+                    defaultOptions
+                    loadOptions={loadStaffOptions}
+                    placeholder="Search Staff..."
+                    value={selectedResponsibleStaff}
+                    onChange={(selected) => {
+                      setSelectedResponsibleStaff(selected);
+                      setFormData((prev) => ({ ...prev, responsibleStaff: selected?.value || "" }));
+                    }}
+                    classNamePrefix="react-select"
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Fee Remarks</label>
+                  <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={2} className={inputCls} />
                 </div>
               </div>
             </div>

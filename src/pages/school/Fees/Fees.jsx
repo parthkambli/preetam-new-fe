@@ -78,12 +78,13 @@ import AllotFees   from './AllotFees';
 import FeeTypes    from './FeeTypes';
 
 export default function Fees() {
-  const [activeTab, setActiveTab] = useState('add-payments');
+  const [activeTab, setActiveTab] = useState('all-payments');
   const [statsLoading, setStatsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalParticipants: 0,
     totalAssigned: 0,
     totalCollected: 0,
+    totalPending: 0,
   });
 
   const fetchStats = async () => {
@@ -95,7 +96,7 @@ export default function Fees() {
       ]);
 
       const allotments = allotRes.data || [];
-      const payments   = payRes.data  || [];
+      const payments   = payRes.data?.data || payRes.data || [];
 
       // Unique participants (by studentId)
       const uniqueStudents = new Set(
@@ -108,6 +109,7 @@ export default function Fees() {
         totalParticipants: uniqueStudents.size,
         totalAssigned,
         totalCollected,
+        totalPending: totalAssigned - totalCollected,
       });
     } catch (err) {
       // Stats are non-critical — fail silently, don't disrupt the page
@@ -149,6 +151,12 @@ export default function Fees() {
       border:     'border-red-400',
       valueColor: 'text-gray-800',
     },
+    {
+      value:      statsLoading ? '—' : fmt(stats.totalPending),
+      label:      'Total Pending (₹)',
+      border:     'border-yellow-500',
+      valueColor: 'text-yellow-700',
+    },
   ];
 
   return (
@@ -161,7 +169,7 @@ export default function Fees() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         {statCards.map((card) => (
           <div
             key={card.label}
@@ -174,7 +182,7 @@ export default function Fees() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'add-payments' && <AddPayments onSuccess={fetchStats} />}
+      {activeTab === 'all-payments' && <AddPayments />}
       {activeTab === 'allot-fees'   && <AllotFees   onSuccess={fetchStats} />}
       {activeTab === 'fee-types'    && <FeeTypes />}
     </div>
