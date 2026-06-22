@@ -198,12 +198,7 @@ function App() {
              <Route path="/fitness-staff/reports" element={< FitnessStaffReport />} /> 
              <Route path="/fitness-staff/profile" element={<StaffProfilePage />} /> 
 
-             <Route path="/privacy-policy" element={<PrivacyPolicy />} /> 
 
-             <Route
-  path="/deletion-policy"
-  element={<DeletionPolicy />}
-/>
 
 
         
@@ -223,6 +218,12 @@ function App() {
 
           {/* 404 Route */}
           <Route path="*" element={<div>404 - Not Found</div>} />
+                       <Route path="/privacy-policy" element={<PrivacyPolicy />} /> 
+
+             <Route
+  path="/deletion-policy"
+  element={<DeletionPolicy />}
+/>
         </Routes>
       </BrowserRouter>
     </OrgProvider>

@@ -1,3 +1,4 @@
+
 // src/pages/DeletionPolicy.jsx
 
 export default function DeletionPolicy() {
@@ -8,30 +9,29 @@ export default function DeletionPolicy() {
       </h1>
 
       <p className="text-gray-600 mb-8">
-        Last Updated: June 17, 2026
+        Last Updated: June 18, 2026
       </p>
 
       <div className="space-y-8 text-gray-700 leading-8">
         <p>
-          At <strong>Preetam Anand Shala</strong>, we respect your right to
-          control your personal information. This Data Deletion Policy explains
-          how users can request deletion of their personal data and how we
-          process such requests.
+          At <strong>Sport Fitness Club</strong>, we respect your privacy and
+          provide users with the ability to request deletion of their account
+          and associated personal information.
         </p>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            1. Requesting Data Deletion
+            1. Requesting Account Deletion
           </h2>
 
           <p>
-            Users may request deletion of their account and associated personal
-            information by contacting us through the details provided below.
+            Users may request deletion of their account by contacting us through
+            the contact information provided below.
           </p>
 
           <p className="mt-3">
-            Requests should include sufficient information to verify the
-            identity of the account holder.
+            We may require identity verification before processing deletion
+            requests.
           </p>
         </section>
 
@@ -41,14 +41,9 @@ export default function DeletionPolicy() {
           </h2>
 
           <ul className="list-disc pl-6 space-y-2">
-            <li>Name and profile information</li>
-            <li>Phone number</li>
-            <li>Email address</li>
-            <li>Membership details</li>
-            <li>Attendance records</li>
-            <li>Emergency contact information</li>
-            <li>Fitness activity preferences</li>
-            <li>Other personal information associated with the account</li>
+                <li>Name</li>
+            <li>Mobile Number</li>
+            
           </ul>
         </section>
 
@@ -59,15 +54,17 @@ export default function DeletionPolicy() {
 
           <p>
             Certain information may be retained where required by law,
-            regulatory obligations, fraud prevention requirements, dispute
-            resolution needs, or legitimate business purposes.
+            regulatory requirements, fraud prevention, financial recordkeeping,
+            or dispute resolution.
           </p>
 
           <ul className="list-disc pl-6 mt-3 space-y-2">
-            <li>Payment transaction records</li>
-            <li>Legal compliance records</li>
-            <li>Audit and security logs</li>
-            <li>Information required for dispute resolution</li>
+            <li>Payment Records</li>
+            <li>Transaction References</li>
+            <li>Tax Records</li>
+            <li>Fraud Prevention Records</li>
+            <li>Security Logs</li>
+            <li>Legal Compliance Records</li>
           </ul>
         </section>
 
@@ -77,57 +74,63 @@ export default function DeletionPolicy() {
           </h2>
 
           <p>
-            Once a valid deletion request is received and verified, we will
-            process the request within a reasonable period, typically within
-            30 days.
+            Verified deletion requests are typically processed within 30 days.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            5. Account Deactivation
+            5. Third-Party Services
           </h2>
 
           <p>
-            In some situations, we may first deactivate an account before
-            permanently deleting the associated data.
+            Where applicable, we will take reasonable steps to request deletion
+            of personal information shared with authorized third-party service
+            providers.
+          </p>
+
+          <p className="mt-3">
+            Certain payment-related records processed by Razorpay may be
+            retained according to applicable legal and regulatory requirements.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            6. Third-Party Services
+            6. Children's Data
           </h2>
 
-          <p>
-            If your information has been shared with authorized third-party
-            service providers, we will take reasonable steps to request
-            deletion of that information where applicable.
-          </p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+            <p className="font-semibold">
+              This application is not intended for children under 13 years of
+              age.
+            </p>
+
+            <p className="mt-3">
+              If we become aware that personal information belonging to a child
+              under 13 has been collected, we will take reasonable steps to
+              remove that information.
+            </p>
+          </div>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            7. Changes to This Policy
-          </h2>
-
-          <p>
-            We may update this Data Deletion Policy from time to time. Any
-            updates will be posted on this page.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-3">
-            8. Contact Us
+            7. Contact Us
           </h2>
 
           <div className="bg-gray-100 rounded-lg p-5">
             <p>
-              <strong>Preetam Anand Shala</strong>
+              <strong>Sport Fitness Club</strong>
             </p>
-            <p>Phone: 8767534698</p>
+
             <p>Email: supportpreetam@gmail.com</p>
+            <p>Phone: +91 8767534698</p>
+
+            <p className="mt-3">
+              To request account deletion, please email us with your registered
+              mobile number and account details for verification.
+            </p>
           </div>
         </section>
       </div>

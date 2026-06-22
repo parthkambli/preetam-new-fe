@@ -1,20 +1,24 @@
+
 // src/pages/PrivacyPolicy.jsx
 
 export default function PrivacyPolicy() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 bg-white">
-      <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
+      <h1 className="text-4xl font-bold mb-2">
+        Privacy Policy
+      </h1>
 
       <p className="text-gray-600 mb-8">
-        Last Updated: June 17, 2026
+        Last Updated: June 18, 2026
       </p>
 
       <div className="space-y-8 text-gray-700 leading-8">
         <p>
-          Welcome to <strong>Preetam Anand Shala</strong>. We respect your
+          Welcome to <strong>Sport Fitness Club</strong>. We respect your
           privacy and are committed to protecting your personal information.
           This Privacy Policy explains how we collect, use, store, and protect
-          your information when you use our services.
+          your information when you use the Sport Fitness Club mobile
+          application and related services.
         </p>
 
         <section>
@@ -27,17 +31,7 @@ export default function PrivacyPolicy() {
           </p>
 
           <ul className="list-disc pl-6 space-y-2">
-            <li>Full Name</li>
             <li>Mobile Number</li>
-            <li>Email Address</li>
-            <li>Date of Birth</li>
-            <li>Gender</li>
-            <li>Address</li>
-            <li>Membership Details</li>
-            <li>Attendance Records</li>
-            <li>Payment Information</li>
-            <li>Emergency Contact Details</li>
-            <li>Fitness Activity Preferences</li>
           </ul>
         </section>
 
@@ -47,137 +41,175 @@ export default function PrivacyPolicy() {
           </h2>
 
           <ul className="list-disc pl-6 space-y-2">
-            <li>Manage memberships</li>
+            <li>Create and manage member accounts</li>
+            <li>Provide secure login access</li>
+            <li>Manage memberships and membership renewals</li>
+            <li>Process activity bookings</li>
+            <li>Track attendance records</li>
+            <li>Generate member QR codes</li>
             <li>Process payments</li>
-            <li>Track attendance</li>
-            <li>Communicate important updates</li>
             <li>Provide customer support</li>
-            <li>Improve our services</li>
-            <li>Maintain security and prevent fraud</li>
+            <li>Improve app functionality and performance</li>
+            <li>Prevent fraud and unauthorized access</li>
           </ul>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            3. Data Storage and Security
+            3. App Permissions
           </h2>
 
+          <h3 className="text-lg font-medium mb-2">
+            Camera Permission
+          </h3>
+
           <p>
-            We implement reasonable security measures to protect your
-            information from unauthorized access, disclosure, alteration, or
-            misuse.
+            Used for QR code scanning and profile image capture where applicable.
           </p>
 
-          <p className="mt-3">
-            However, no method of internet transmission or electronic storage
-            is completely secure.
+          <h3 className="text-lg font-medium mt-4 mb-2">
+            Storage / Gallery Permission
+          </h3>
+
+          <p>
+            Used for selecting and uploading profile photographs.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            4. Sharing of Information
+            4. Payments
+          </h2>
+
+          <p>
+            Membership purchases and activity purchases may be processed through
+            Razorpay or authorized payment service providers.
+          </p>
+
+          <p className="mt-3">
+            We do not store credit card numbers, debit card numbers, banking
+            passwords, UPI PINs, or other sensitive payment credentials.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-3">
+            5. Data Security
+          </h2>
+
+          <p>
+            We implement reasonable technical and organizational safeguards to
+            protect your information from unauthorized access, misuse,
+            disclosure, or destruction.
+          </p>
+
+          <p className="mt-3">
+            No method of internet transmission or electronic storage is
+            completely secure.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-3">
+            6. Sharing of Information
           </h2>
 
           <p className="mb-3">
             We do not sell, rent, or trade your personal information.
           </p>
 
-          <p>Your information may be shared only:</p>
-
-          <ul className="list-disc pl-6 mt-3 space-y-2">
+          <ul className="list-disc pl-6 space-y-2">
             <li>When required by law</li>
-            <li>
-              With authorized service providers involved in payment processing
-              or system maintenance
-            </li>
-            <li>To protect our legal rights and security</li>
+            <li>For fraud prevention and security purposes</li>
+            <li>To comply with legal obligations</li>
+            <li>With trusted service providers necessary to operate the app</li>
           </ul>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            5. Payment Information
+            7. Attendance, Memberships and Bookings
           </h2>
 
           <p>
-            Online payments may be processed through third-party payment
-            providers. We do not store complete credit card or debit card
-            information on our servers.
+            The application stores membership information, attendance records,
+            booking history, activity enrollments, membership passes, and
+            related information necessary to provide fitness club services.
+          </p>
+
+          <p className="mt-3">
+            QR codes may be generated and used for member identification and
+            attendance management.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            6. Cookies and Analytics
+            8. Data Retention
           </h2>
 
           <p>
-            Our website may use cookies and analytics tools to improve user
-            experience and understand website usage. You can disable cookies
-            through your browser settings.
+            We retain information only for as long as necessary to provide our
+            services, comply with legal obligations, resolve disputes, and
+            maintain business records.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            7. Member Rights
+            9. User Rights
           </h2>
-
-          <p className="mb-3">You may request:</p>
 
           <ul className="list-disc pl-6 space-y-2">
-            <li>Access to your information</li>
-            <li>Correction of inaccurate information</li>
-            <li>Deletion of personal information where legally permitted</li>
+            <li>Access your information</li>
+            <li>Correct inaccurate information</li>
+            <li>Request account deletion</li>
+            <li>Request data removal where legally permitted</li>
           </ul>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            8. Retention of Data
+            10. Children's Privacy
+          </h2>
+
+          <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+            <p className="font-semibold">
+              Sport Fitness Club is not intended for children under 13 years of
+              age.
+            </p>
+
+            <p className="mt-3">
+              We do not knowingly collect personal information from children
+              under 13 years old. If such information is discovered, it will be
+              removed as soon as reasonably possible.
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-3">
+            11. Changes to This Policy
           </h2>
 
           <p>
-            We retain member information only for as long as necessary to
-            provide services, comply with legal obligations, and resolve
-            disputes.
+            We may update this Privacy Policy from time to time. Updates will be
+            posted on this page with a revised date.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">
-            9. Children's Privacy
-          </h2>
-
-          <p>
-            Our services are not intended for children without parental or
-            guardian consent.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-3">
-            10. Changes to This Policy
-          </h2>
-
-          <p>
-            We may update this Privacy Policy from time to time. Updated
-            versions will be posted on this page.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-3">
-            11. Contact Us
+            12. Contact Us
           </h2>
 
           <div className="bg-gray-100 rounded-lg p-5">
             <p>
-              <strong>Preetam Anand Shala</strong>
+              <strong>Sport Fitness Club</strong>
             </p>
-            <p>Phone: 8767534698</p>
+
             <p>Email: supportpreetam@gmail.com</p>
+            <p>Phone: +91 8767534698</p>
           </div>
         </section>
       </div>
