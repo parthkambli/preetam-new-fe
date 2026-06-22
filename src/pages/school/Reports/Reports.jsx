@@ -357,7 +357,7 @@ export default function Reports() {
 
       // Fetch Admissions
       const admissionsRes = await api.schoolAdmission.getAll();
-      const admissions = admissionsRes.data || [];
+      const admissions = admissionsRes.data?.data || admissionsRes.data || [];
       setAdmissionsData(admissions.map(a => ({
         name: a.fullName,
         date: a.createdAt ? new Date(a.createdAt).toISOString().split('T')[0] : '',
