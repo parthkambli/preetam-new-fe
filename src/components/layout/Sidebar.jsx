@@ -329,15 +329,25 @@ export default function Sidebar({ isOpen, onClose }) {
 
   // Determine menu based on user role (priority) or organization (fallback)
   let menu = [];
-// work from here 
-  if (user?.role === 'SchoolStaff') {
-    menu = [
-      { to: "/school-staff", label: "Dashboard", icon: "🏠" }, 
-      { to: "/school-staff/my-schedule", label: "My Schedule", icon: "📅" },
-      { to: "/school-staff/attendance", label: "Attendance", icon: "✅" },
-    ];
-  } 
-  else if (user?.role === 'FitnessStaff') {
+
+  if (user?.role === 'FitnessStaff') {
+    if (currentOrg?.id === 'school') {
+      menu = [
+        { to: "/school-staff/dashboard", label: "Dashboard", icon: "🏠" },
+        { to: "/school-staff/my-schedule", label: "My Schedule", icon: "📅" },
+        { to: "/school-staff/enquiry", label: "Enquiry", icon: "✏️" },
+        { to: "/school-staff/follow-ups", label: "Follow-ups", icon: "💬" },
+        { to: "/school-staff/admission", label: "Admission", icon: "🎓" },
+        { to: "/school-staff/participants", label: "Participants", icon: "👥" },
+        { to: "/school-staff/attendance", label: "Attendance", icon: "✅" },
+        { to: "/school-staff/services", label: "Services", icon: "🍛" },
+        { to: "/school-staff/fees", label: "Fees", icon: "💰" },
+        { to: "/school-staff/health-records", label: "Health Records", icon: "🩺" },
+        { to: "/school-staff/emergency-contacts", label: "Emergency Contacts", icon: "📞" },
+        { to: "/school-staff/reports", label: "Reports", icon: "📊" },
+        { to: "/school-staff/profile", label: "Profile", icon: "👤" },
+      ];
+    } else {
   const fullMenu = [
     {
       to: "/fitness-staff",
@@ -391,6 +401,7 @@ export default function Sidebar({ isOpen, onClose }) {
       !item.permission ||
       item.permission.some(p => hasPermission(p))
     );
+  }
 }
   else {
     // Fallback for Admin or other roles - keep your original full menus

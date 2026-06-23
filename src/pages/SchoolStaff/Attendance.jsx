@@ -1,165 +1,7 @@
-
-// import React, { useState } from "react";
-// import { Users, Search, Check, UserCheck } from "lucide-react";
-
-// function Card({ className = "", ...props }) {
-//   return <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 ${className}`} {...props} />;
-// }
-
-// export default function Attendance() {
-//   const [selectedDate, setSelectedDate] = useState(12);
-//   const [search, setSearch] = useState("");
-//   const [selectedMembers, setSelectedMembers] = useState(new Set(["Ramesh Deshmukh", "Vijay Pawar"]));
-
-//   const dates = [
-//     { day: "MON", date: 12 }, { day: "TUE", date: 13 }, { day: "WED", date: 14 },
-//     { day: "THU", date: 15 }, { day: "FRI", date: 16 }, { day: "SAT", date: 17 },
-//   ];
-
-//   const members = [
-//     "Sunita Patil", "Anita Joshi", "Nisha Naik", "Mahesh Patil", "Dinesh Kamat",
-//     "Sonia Verma", "Ramesh Deshmukh", "Vijay Pawar", "Rajesh Sawant", "Seema Khare",
-//     "Amit Sharma", "John Doe"
-//   ];
-
-//   const toggleMember = (name) => {
-//     const newSet = new Set(selectedMembers);
-//     if (newSet.has(name)) newSet.delete(name);
-//     else newSet.add(name);
-//     setSelectedMembers(newSet);
-//   };
-
-//   const toggleSelectAll = () => {
-//     if (selectedMembers.size === members.length) {
-//       setSelectedMembers(new Set());
-//     } else {
-//       setSelectedMembers(new Set(members));
-//     }
-//   };
-
-//   const filteredMembers = members.filter(name =>
-//     name.toLowerCase().includes(search.toLowerCase())
-//   );
-
-//   return (
-//     <div className="max-w-5xl mx-auto space-y-8">
-//       <div className="flex justify-between items-center">
-//         <h2 className="text-3xl font-bold text-[#000033]">Mark Attendance</h2>
-//         <p className="text-lg font-medium text-gray-600">12 October 2026</p>
-//       </div>
-
-//       {/* Date Selector */}
-//       <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
-//         {dates.map((d) => (
-//           <button
-//             key={d.date}
-//             onClick={() => setSelectedDate(d.date)}
-//             className={`flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all font-medium ${
-//               selectedDate === d.date
-//                 ? "bg-[#000033] text-white shadow-lg scale-105"
-//                 : "bg-white border border-gray-200 hover:border-gray-300 text-gray-600"
-//             }`}
-//           >
-//             <span className="text-xs opacity-75">{d.day}</span>
-//             <span className="text-2xl font-bold mt-1">{d.date}</span>
-//           </button>
-//         ))}
-//       </div>
-
-//       <Card className="p-8">
-//         {/* Header */}
-//         <div className="flex items-center justify-between mb-6">
-//           <div className="flex items-center gap-3">
-//             <UserCheck className="text-[#000033]" size={28} />
-//             <div>
-//               <h3 className="text-2xl font-bold text-gray-900">Mark Attendance – {selectedDate} Oct</h3>
-//               <p className="text-gray-500">Total Members: {members.length}</p>
-//             </div>
-//           </div>
-
-//           <label className="flex items-center gap-2 cursor-pointer">
-//             <input
-//               type="checkbox"
-//               checked={selectedMembers.size === members.length}
-//               onChange={toggleSelectAll}
-//               className="w-5 h-5 accent-[#000033]"
-//             />
-//             <span className="font-medium text-gray-700">Select All</span>
-//           </label>
-//         </div>
-
-//         {/* Search Bar */}
-//         <div className="relative mb-8">
-//           <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
-//           <input
-//             type="text"
-//             placeholder="Search member name..."
-//             value={search}
-//             onChange={(e) => setSearch(e.target.value)}
-//             className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#000033] transition-all text-sm"
-//           />
-//         </div>
-
-//         {/* Members Grid */}
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[520px] overflow-y-auto pr-2 custom-scrollbar">
-//           {filteredMembers.map((name, index) => {
-//             const isChecked = selectedMembers.has(name);
-//             return (
-//               <div
-//                 key={index}
-//                 onClick={() => toggleMember(name)}
-//                 className={`group flex items-center justify-between px-5 py-4 rounded-2xl border transition-all cursor-pointer hover:shadow-md ${
-//                   isChecked 
-//                     ? "border-[#000033] bg-[#000033]/5" 
-//                     : "border-gray-100 hover:border-gray-200"
-//                 }`}
-//               >
-//                 <div className="flex items-center gap-3">
-//                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 font-medium">
-//                     {name.split(" ").map(n => n[0]).join("")}
-//                   </div>
-//                   <span className="font-medium text-gray-800">{name}</span>
-//                 </div>
-
-//                 <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-//                   isChecked 
-//                     ? "bg-[#000033] border-[#000033]" 
-//                     : "border-gray-300 group-hover:border-gray-400"
-//                 }`}>
-//                   {isChecked && <Check className="text-white" size={16} />}
-//                 </div>
-//               </div>
-//             );
-//           })}
-//         </div>
-
-//         {/* Action Buttons */}
-//         <div className="flex gap-4 mt-10 pt-6 border-t">
-//           <button
-//             onClick={() => alert(`Attendance Saved! ${selectedMembers.size} members marked present`)}
-//             className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold py-4 rounded-2xl transition-all active:scale-[0.98]"
-//           >
-//             Save Attendance ({selectedMembers.size})
-//           </button>
-
-//           <button
-//             onClick={() => setSelectedMembers(new Set())}
-//             className="flex-1 border border-gray-300 hover:bg-gray-50 font-semibold py-4 rounded-2xl transition-all"
-//           >
-//             Reset
-//           </button>
-//         </div>
-//       </Card>
-//     </div>
-//   );
-// }
-
-
-
-/// NEW ONE 
-
-
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { api } from "../../services/apiClient";
+import QRScanner from "../../components/QRScanner";
 
 function Card({ className = "", ...props }) {
   return (
@@ -184,430 +26,430 @@ function CardContent({ className = "", ...props }) {
   return <div className={`px-5 sm:px-6 pb-5 sm:pb-6 ${className}`} {...props} />;
 }
 
-function Button({ children, className = "", ...props }) {
-  return (
-    <button
-      className={`font-semibold transition-all duration-200 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
+const getISTNow = () => {
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utcMs + 5.5 * 60 * 60000);
+};
 
-export default function MySchedule() {
-  const [selectedDate, setSelectedDate] = useState(12);
-  const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
-  const [isViewingAttendance, setIsViewingAttendance] = useState(false);
-  const [activeActivityId, setActiveActivityId] = useState(null);
+const getISTDateParts = () => {
+  const d = getISTNow();
+  return {
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth(),
+    date: d.getUTCDate(),
+    day: d.getUTCDay(),
+  };
+};
 
-  const dates = [
-    { day: "MON", date: 12 },
-    { day: "TUE", date: 13 },
-    { day: "WED", date: 14 },
-    { day: "THU", date: 15 },
-    { day: "FRI", date: 16 },
-    { day: "SAT", date: 17 },
-  ];
+const getISTWeekDates = () => {
+  const { year, month, date, day } = getISTDateParts();
+  const todayUTC = Date.UTC(year, month, date);
+  const todayIST = new Date(todayUTC);
+  const dayOfWeek = day;
 
-  const activities = [
-    {
-      id: "yoga",
-      title: "Yoga",
-      time: "08:00 AM",
-      place: "Meet at courtyard",
-      participants: [
-        "Sunita Patil",
-        "Ramesh Deshmukh",
-        "Anita Joshi",
-        "Vijay Pawar",
-        "Nisha Naik",
-        "Rajesh Sawant",
-        "Mahesh Patil",
-        "Seema Khare",
-        "Dinesh Kamat",
-      ],
-    },
-    {
-      id: "zumba",
-      title: "Zumba",
-      time: "10:30 AM",
-      place: "Activity Hall",
-      participants: [
-        "Aarti More",
-        "Pooja Jadhav",
-        "Rohit Kale",
-        "Sneha Patil",
-        "Kunal Shinde",
-        "Bhavna Chavan",
-      ],
-    },
-    {
-      id: "meditation",
-      title: "Meditation",
-      time: "02:00 PM",
-      place: "Room 204",
-      participants: [
-        "Meena Pawar",
-        "Suresh Naik",
-        "Kalpana More",
-        "Nitin Patil",
-        "Komal Sawant",
-      ],
-    },
-  ];
+  const monday = new Date(todayIST);
+  monday.setUTCDate(todayIST.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
 
-  const createDefaultAttendanceForActivity = (participants) =>
-    participants.reduce((acc, name) => {
-      acc[name] = null;
-      return acc;
-    }, {});
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const days = [];
 
-  const [attendanceByDate, setAttendanceByDate] = useState(() =>
-    dates.reduce((dateAcc, dateItem) => {
-      dateAcc[dateItem.date] = activities.reduce((activityAcc, activity) => {
-        activityAcc[activity.id] = createDefaultAttendanceForActivity(
-          activity.participants
-        );
-        return activityAcc;
-      }, {});
-      return dateAcc;
-    }, {})
-  );
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(monday);
+    d.setUTCDate(monday.getUTCDate() + i);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
 
-  const [statusByDate, setStatusByDate] = useState(() =>
-    dates.reduce((dateAcc, dateItem) => {
-      dateAcc[dateItem.date] = activities.reduce((activityAcc, activity) => {
-        activityAcc[activity.id] = "Pending";
-        return activityAcc;
-      }, {});
-      return dateAcc;
-    }, {})
-  );
+    days.push({
+      dayName: dayNames[i],
+      dayAbbr: dayNames[i].slice(0, 3).toUpperCase(),
+      dateNum: d.getUTCDate(),
+      fullDate: `${y}-${m}-${dd}`,
+      isToday:
+        d.getUTCDate() === todayIST.getUTCDate() &&
+        d.getUTCMonth() === todayIST.getUTCMonth() &&
+        d.getUTCFullYear() === todayIST.getUTCFullYear(),
+    });
+  }
 
-  const activeActivity = useMemo(() => {
-    return activities.find((activity) => activity.id === activeActivityId) || null;
-  }, [activeActivityId]);
+  return days;
+};
 
-  const currentAttendance = useMemo(() => {
-    if (!activeActivityId) return {};
-    return attendanceByDate[selectedDate]?.[activeActivityId] || {};
-  }, [attendanceByDate, selectedDate, activeActivityId]);
+const getDefaultDay = () => {
+  const { day } = getISTDateParts();
+  const names = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  return day === 0 ? 'monday' : names[day];
+};
 
-  const getActivityAttendance = (activityId) => {
-    return attendanceByDate[selectedDate]?.[activityId] || {};
+const getDefaultDate = () => {
+  const { year, month, date } = getISTDateParts();
+  const y = year;
+  const m = String(month + 1).padStart(2, '0');
+  const d = String(date).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+export default function SchoolStaffAttendance() {
+  const weekDays = useMemo(() => getISTWeekDates(), []);
+  const [selectedDay, setSelectedDay] = useState(getDefaultDay);
+  const [selectedDate, setSelectedDate] = useState(getDefaultDate);
+
+  const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [slotStudents, setSlotStudents] = useState([]);
+  const [slotLoading, setSlotLoading] = useState(false);
+  const [studentCache, setStudentCache] = useState({});
+
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedAdmissionId, setScannedAdmissionId] = useState(null);
+  const [scanPeriods, setScanPeriods] = useState([]);
+  const [scanPeriodsLoading, setScanPeriodsLoading] = useState(false);
+  const [scanMarking, setScanMarking] = useState(false);
+
+  useEffect(() => {
+    fetchAttendance();
+  }, [selectedDate]);
+
+  useEffect(() => {
+    const dayMap = {
+      monday: weekDays[0],
+      tuesday: weekDays[1],
+      wednesday: weekDays[2],
+      thursday: weekDays[3],
+      friday: weekDays[4],
+      saturday: weekDays[5],
+    };
+    const dayObj = dayMap[selectedDay];
+    if (dayObj) {
+      setSelectedDate(dayObj.fullDate);
+    }
+  }, [selectedDay]);
+
+  const fetchAttendance = async () => {
+    try {
+      setLoading(true);
+      const res = await api.schoolStaffPanel.getAttendance({ date: selectedDate });
+      setAttendance(res.data?.attendance || []);
+    } catch (err) {
+      console.error('Failed to fetch attendance', err);
+      setAttendance([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getActivityStatus = (activityId) => {
-    return statusByDate[selectedDate]?.[activityId] || "Pending";
+  const handleCardClick = async (slot) => {
+    const cacheKey = `${selectedDate}_${slot.periodId}_${slot.activityId}`;
+
+    setSelectedSlot(slot);
+
+    if (studentCache[cacheKey]) {
+      setSlotStudents(studentCache[cacheKey]);
+      return;
+    }
+
+    try {
+      setSlotLoading(true);
+      const res = await api.schoolStaffPanel.getAttendanceStudents({
+        date: selectedDate,
+        periodId: slot.periodId,
+        activityId: slot.activityId,
+      });
+      const students = (res.data?.students || []).sort((a, b) =>
+        (a.fullName || '').localeCompare(b.fullName || '')
+      );
+      setSlotStudents(students);
+      setStudentCache(prev => ({ ...prev, [cacheKey]: students }));
+    } catch (err) {
+      console.error('Failed to fetch students', err);
+      setSlotStudents([]);
+    } finally {
+      setSlotLoading(false);
+    }
   };
 
-  const getCounts = (activityId) => {
-    const activity = activities.find((item) => item.id === activityId);
-    const attendance = getActivityAttendance(activityId);
+  const handleScan = async (decodedText) => {
+    let admissionId;
+    try {
+      const parsed = JSON.parse(decodedText);
+      admissionId = parsed.admissionId;
+    } catch {
+      admissionId = decodedText.trim();
+    }
+    if (!admissionId) return;
 
-    const total = activity?.participants.length || 0;
-    const present = Object.values(attendance).filter(
-      (value) => value === "Present"
-    ).length;
-    const absent = Object.values(attendance).filter(
-      (value) => value === "Absent"
-    ).length;
+    try {
+      setScanPeriodsLoading(true);
+      const res = await api.schoolStaffPanel.getStudentPeriods({
+        admissionId,
+        date: selectedDate,
+      });
+      const periods = res.data?.periods || [];
 
-    return { total, present, absent };
+      if (periods.length === 0) {
+        toast.error('No active periods found for this student today');
+        setShowScanner(false);
+        return;
+      }
+
+      setScannedAdmissionId(admissionId);
+      setScanPeriods(periods);
+
+      if (periods.length === 1) {
+        await handleScanMark(admissionId, periods[0].periodId, periods[0].activityId);
+      }
+    } catch (err) {
+      console.error('Failed to fetch student periods', err);
+      toast.error('Student not found or inactive');
+      setShowScanner(false);
+    } finally {
+      setScanPeriodsLoading(false);
+    }
   };
 
-  const handleStatusChange = (name, value) => {
-    setAttendanceByDate((prev) => ({
-      ...prev,
-      [selectedDate]: {
-        ...prev[selectedDate],
-        [activeActivityId]: {
-          ...prev[selectedDate][activeActivityId],
-          [name]: value,
-        },
-      },
-    }));
+  const handleScanMark = async (admissionId, periodId, activityId) => {
+    try {
+      setScanMarking(true);
+      const res = await api.schoolStaffPanel.scanMark({
+        admissionId,
+        periodId,
+        activityId,
+        date: selectedDate,
+      });
+      const data = res.data;
+      if (data.alreadyMarked) {
+        toast.info(`${data.student?.fullName || 'Student'} already marked ${data.status || 'today'}`);
+      } else {
+        toast.success(`${data.student?.fullName || 'Student'} marked Present`);
+      }
+      setShowScanner(false);
+      setScannedAdmissionId(null);
+      setScanPeriods([]);
+      setStudentCache({});
+      fetchAttendance();
+    } catch (err) {
+      console.error('Failed to mark attendance', err);
+      toast.error(err.response?.data?.message || 'Failed to mark attendance');
+    } finally {
+      setScanMarking(false);
+    }
   };
 
-  const handleSaveAttendance = () => {
-    if (!activeActivityId) return;
-
-    setStatusByDate((prev) => ({
-      ...prev,
-      [selectedDate]: {
-        ...prev[selectedDate],
-        [activeActivityId]: "Marked",
-      },
-    }));
-
-    setIsMarkingAttendance(false);
-    setIsViewingAttendance(false);
-  };
-
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    setIsMarkingAttendance(false);
-    setIsViewingAttendance(false);
-    setActiveActivityId(null);
-  };
-
-  const openMarkModal = (activityId) => {
-    setActiveActivityId(activityId);
-    setIsViewingAttendance(false);
-    setIsMarkingAttendance(true);
-  };
-
-  const openViewModal = (activityId) => {
-    setActiveActivityId(activityId);
-    setIsMarkingAttendance(false);
-    setIsViewingAttendance(true);
+  const dayNames = {
+    monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
+    thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday',
   };
 
   return (
     <div className="space-y-6 px-1 sm:px-0">
-      <h2 className="text-[32px] sm:text-2xl font-bold text-[#000033]">
-        Mark Attendance
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-[32px] sm:text-2xl font-bold text-[#000033]">
+          Attendance
+        </h2>
+        <button
+          onClick={() => setShowScanner(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer"
+        >
+          Scan QR
+        </button>
+      </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-        {dates.map((item) => (
+        {weekDays.map((d) => (
           <button
-            key={item.date}
-            onClick={() => handleDateChange(item.date)}
+            key={d.fullDate}
+            onClick={() => { setSelectedDay(d.dayName.toLowerCase()); setSelectedSlot(null); }}
             className={`flex flex-col items-center justify-center min-w-[72px] sm:min-w-[80px] h-[78px] sm:h-20 rounded-2xl transition-all shrink-0 ${
-              selectedDate === item.date
-                ? "bg-blue-600 text-white shadow-lg"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              selectedDay === d.dayName.toLowerCase()
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
             }`}
           >
-            <span className="text-[10px] font-bold mb-1">{item.day}</span>
+            <span className="text-[10px] font-bold mb-1">{d.dayAbbr}</span>
             <span className="text-[28px] sm:text-xl font-bold leading-none">
-              {item.date}
+              {d.dateNum}
             </span>
+            {d.isToday && (
+              <span className="text-[8px] font-bold mt-0.5">TODAY</span>
+            )}
           </button>
         ))}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-6">
-        {activities.map((activity) => {
-          const counts = getCounts(activity.id);
-          const currentStatus = getActivityStatus(activity.id);
-
-          return (
-            <Card key={activity.id} className="bg-white p-5 sm:p-6">
-              <div className="flex flex-col gap-4 mb-4">
-                <div>
-                  <h3 className="text-[28px] sm:text-xl font-bold text-gray-900 leading-tight">
-                    {activity.title} – {activity.time}
-                  </h3>
-                  <p className="text-[16px] sm:text-sm text-gray-600 mt-2">
-                    {activity.place}
-                  </p>
+        {loading ? (
+          <div className="col-span-full text-center py-12 text-gray-400">
+            Loading attendance...
+          </div>
+        ) : attendance.length === 0 ? (
+          <div className="col-span-full text-center py-12 text-gray-400">
+            No activities scheduled for {dayNames[selectedDay] || selectedDay}
+          </div>
+        ) : (
+          attendance.map((s, i) => (
+            <Card
+              key={`${s.periodId}_${s.activityId}_${i}`}
+              className="bg-white p-5 sm:p-6 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => handleCardClick(s)}
+            >
+              <div className="flex flex-col gap-2">
+                <h3 className="text-[28px] sm:text-xl font-bold text-gray-900">
+                  {s.activityName}
+                </h3>
+                <p className="text-[16px] sm:text-sm text-blue-600 font-medium">
+                  {s.periodName} &mdash; {s.startTime?.slice(0, 5)} to {s.endTime?.slice(0, 5)}
+                </p>
+                <div className="flex items-center gap-4 mt-3">
+                  <span className="text-[20px] sm:text-lg font-semibold text-gray-800">
+                    Total: {s.totalStudents}
+                  </span>
+                  <span className="text-[20px] sm:text-lg font-semibold text-green-600">
+                    P: {s.presentCount}
+                  </span>
+                  <span className="text-[20px] sm:text-lg font-semibold text-red-500">
+                    A: {s.absentCount}
+                  </span>
                 </div>
-
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[13px] sm:text-xs font-medium text-gray-600">
-                      Status
-                    </span>
-                    <span
-                      className={`text-white text-[11px] sm:text-[10px] px-3 py-1 rounded-full font-bold ${
-                        currentStatus === "Marked" ? "bg-green-500" : "bg-red-500"
-                      }`}
-                    >
-                      {currentStatus}
-                    </span>
-                  </div>
-
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      className="bg-[#4CAF50] hover:bg-[#45a049] min-h-[38px] sm:h-8 px-4 sm:px-3 text-[13px] sm:text-[10px] font-bold text-white rounded-md"
-                      onClick={() => openMarkModal(activity.id)}
-                    >
-                      Mark
-                    </Button>
-
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 min-h-[38px] sm:h-8 px-4 sm:px-3 text-[13px] sm:text-[10px] font-bold text-white rounded-md"
-                      onClick={() => openViewModal(activity.id)}
-                    >
-                      View
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-[20px] sm:text-lg font-semibold text-gray-800">
-                  Participants - {counts.total}
-                </p>
-                <p className="text-[16px] sm:text-sm text-gray-700">
-                  Present - {counts.present}
-                </p>
-                <p className="text-[16px] sm:text-sm text-gray-700">
-                  Absent - {counts.absent}
-                </p>
               </div>
             </Card>
-          );
-        })}
-
-        {isMarkingAttendance && activeActivity && (
-          <Card className="xl:col-span-2">
-            <CardHeader className="flex items-center justify-between border-b">
-              <CardTitle className="text-[24px] sm:text-xl">
-                Mark Attendance – {activeActivity.title} ({selectedDate} Oct)
-              </CardTitle>
-              <button
-                onClick={() => setIsMarkingAttendance(false)}
-                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold"
-              >
-                ✕
-              </button>
-            </CardHeader>
-
-            <CardContent className="pt-5">
-              <div className="mb-5 space-y-2">
-                <p className="text-[16px] sm:text-sm font-medium text-gray-800">
-                  Participants - {activeActivity.participants.length}
-                </p>
-                <p className="text-[16px] sm:text-sm text-green-700 font-medium">
-                  Present - {getCounts(activeActivity.id).present}
-                </p>
-                <p className="text-[16px] sm:text-sm text-red-700 font-medium">
-                  Absent - {getCounts(activeActivity.id).absent}
-                </p>
-              </div>
-
-              <div className="max-h-[420px] overflow-y-auto space-y-4">
-                {activeActivity.participants.map((name, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-col gap-3 border-b border-gray-100 pb-4"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-2 h-2 rounded-full bg-black shrink-0" />
-                      <span className="text-[16px] sm:text-sm font-medium text-gray-700 break-words">
-                        {name}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(name, "Present")}
-                        className={`px-4 py-2 rounded-lg text-[13px] sm:text-xs font-bold border ${
-                          currentAttendance[name] === "Present"
-                            ? "bg-green-500 text-white border-green-500"
-                            : "bg-white text-green-600 border-green-300"
-                        }`}
-                      >
-                        Present
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(name, "Absent")}
-                        className={`px-4 py-2 rounded-lg text-[13px] sm:text-xs font-bold border ${
-                          currentAttendance[name] === "Absent"
-                            ? "bg-red-500 text-white border-red-500"
-                            : "bg-white text-red-600 border-red-300"
-                        }`}
-                      >
-                        Absent
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                <Button
-                  className="flex-1 bg-[#4CAF50] hover:bg-[#45a049] font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
-                  onClick={handleSaveAttendance}
-                >
-                  Save
-                </Button>
-
-                <Button
-                  className="flex-1 bg-[#C62828] hover:bg-[#b71c1c] font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
-                  onClick={() => setIsMarkingAttendance(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          ))
         )}
 
-        {isViewingAttendance && activeActivity && (
-          <Card className="xl:col-span-2">
-            <CardHeader className="flex items-center justify-between border-b">
-              <CardTitle className="text-[24px] sm:text-xl">
-                View Attendance – {activeActivity.title} ({selectedDate} Oct)
-              </CardTitle>
-              <button
-                onClick={() => setIsViewingAttendance(false)}
-                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold"
-              >
-                ✕
-              </button>
-            </CardHeader>
-
-            <CardContent className="pt-5">
-              <div className="mb-5 space-y-2">
-                <p className="text-[16px] sm:text-sm font-medium text-gray-800">
-                  Participants - {activeActivity.participants.length}
-                </p>
-                <p className="text-[16px] sm:text-sm text-green-700 font-medium">
-                  Present - {getCounts(activeActivity.id).present}
-                </p>
-                <p className="text-[16px] sm:text-sm text-red-700 font-medium">
-                  Absent - {getCounts(activeActivity.id).absent}
-                </p>
-              </div>
-
-              <div className="max-h-[420px] overflow-y-auto space-y-4">
-                {activeActivity.participants.map((name, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-2 h-2 rounded-full bg-black shrink-0" />
-                      <span className="text-[16px] sm:text-sm font-medium text-gray-700 break-words">
-                        {name}
-                      </span>
-                    </div>
-
-                    <span
-                      className={`text-[13px] sm:text-xs font-bold px-3 py-1.5 rounded-full shrink-0 ${
-                        currentAttendance[name] === "Present"
-                          ? "bg-green-100 text-green-700"
-                          : currentAttendance[name] === "Absent"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {currentAttendance[name] || "Not Marked"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6">
-                <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 font-bold text-white py-3 rounded-lg text-[15px] sm:text-sm"
-                  onClick={() => setIsViewingAttendance(false)}
+        {selectedSlot && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setSelectedSlot(null)}
+          >
+            <Card
+              className="w-full max-w-lg max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CardHeader className="flex items-center justify-between border-b">
+                <CardTitle className="text-[24px] sm:text-xl">
+                  {selectedSlot.activityName}
+                </CardTitle>
+                <button
+                  onClick={() => setSelectedSlot(null)}
+                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold flex items-center justify-center cursor-pointer"
                 >
-                  Close
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  ✕
+                </button>
+              </CardHeader>
+              <CardContent className="pt-5">
+                <p className="text-sm text-gray-600 mb-4">
+                  {selectedSlot.periodName} &mdash; {selectedSlot.startTime?.slice(0, 5)} to {selectedSlot.endTime?.slice(0, 5)}
+                </p>
+                <p className="text-sm font-semibold text-gray-800 mb-4">
+                  Total: {selectedSlot.totalStudents} &middot; Present: {selectedSlot.presentCount} &middot; Absent: {selectedSlot.absentCount}
+                </p>
+
+                {slotLoading ? (
+                  <p className="text-gray-400 text-sm">Loading students...</p>
+                ) : slotStudents.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No students enrolled</p>
+                ) : (
+                  <div className="space-y-3">
+                    {slotStudents.map((student) => (
+                      <div key={student._id} className="flex items-center justify-between border-b border-gray-100 pb-3">
+                        <div className="flex items-center gap-3">
+                          {student.photo ? (
+                            <img
+                              src={student.photo}
+                              alt={student.fullName}
+                              className="w-9 h-9 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold">
+                              {student.fullName?.split(' ').map(n => n?.[0]).join('').slice(0, 2) || '?'}
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">{student.fullName}</p>
+                            <p className="text-xs text-gray-500">{student.admissionId}</p>
+                          </div>
+                        </div>
+                        <span
+                          className={`text-xs font-bold px-3 py-1.5 rounded-full shrink-0 ${
+                            student.status === 'Present'
+                              ? 'bg-green-100 text-green-700'
+                              : student.status === 'Absent'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {student.status || 'Not Marked'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
+
+      {showScanner && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => {
+            setShowScanner(false);
+            setScannedAdmissionId(null);
+            setScanPeriods([]);
+          }}
+        >
+          <Card
+            className="w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex items-center justify-between border-b">
+              <CardTitle className="text-lg">Scan Student QR</CardTitle>
+              <button
+                onClick={() => {
+                  setShowScanner(false);
+                  setScannedAdmissionId(null);
+                  setScanPeriods([]);
+                }}
+                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-sm font-bold flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </CardHeader>
+            <CardContent className="pt-5">
+              {scannedAdmissionId && scanPeriods.length > 0 ? (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-4">
+                    Select period to mark Present:
+                  </p>
+                  <div className="space-y-3">
+                    {scanPeriods.map((p, i) => (
+                      <button
+                        key={`${p.periodId}_${p.activityId}_${i}`}
+                        onClick={() => handleScanMark(scannedAdmissionId, p.periodId, p.activityId)}
+                        disabled={scanMarking}
+                        className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50 cursor-pointer"
+                      >
+                        <p className="text-sm font-bold text-gray-800">{p.periodName}</p>
+                        <p className="text-xs text-gray-500">{p.activityName} &mdash; {p.startTime?.slice(0, 5)} to {p.endTime?.slice(0, 5)}</p>
+                      </button>
+                    ))}
+                  </div>
+                  {scanMarking && (
+                    <p className="text-sm text-blue-600 mt-3">Marking attendance...</p>
+                  )}
+                </div>
+              ) : scanPeriodsLoading ? (
+                <p className="text-gray-400 text-sm text-center py-8">Fetching student periods...</p>
+              ) : (
+                <QRScanner onScan={handleScan} />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

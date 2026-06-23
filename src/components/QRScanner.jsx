@@ -66,7 +66,15 @@ export default function QRScanner({ onScan }) {
   const qrRef = useRef(null);
   const isRunning = useRef(false);
   const containerId = useRef(`qr-reader-${Date.now()}`); // ✅ unique id
+  const hasScanned = useRef(false);
+  (decodedText) => {
+  if (hasScanned.current) return;
 
+  hasScanned.current = true;
+
+  console.log("QR DETECTED:", decodedText);
+  onScan(decodedText);
+}
   useEffect(() => {
     let qr;
 

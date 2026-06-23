@@ -44,10 +44,29 @@ import SchoolAdduser from './pages/school/UserManagement/Adduser';
 import Profile from './pages/school/Profile/Profile';
 import TimeTable from './pages/school/TimeTable/TimeTable'
 import Services from './pages/school/AddonServices/Services'
+
+// school staff panel 
 import SchoolStaffDashboard from "./pages/SchoolStaff/Dashboard";
 import SchoolStaffAttendance from './pages/SchoolStaff/Attendance';
 import SchoolStaffMySchedule from './pages/SchoolStaff/Myschedule';
-
+import SchoolStaffEnquiry from './pages/SchoolStaff/enquiry/EnquiryList';
+import SchoolStaffAddEnquiry from './pages/SchoolStaff/enquiry/AddEnquiry';
+import SchoolStaffFollowups from './pages/SchoolStaff/Followups/SchoolFollowups';
+import SchoolStaffAdmission from './pages/SchoolStaff/Admission/AdmissionList';
+import SchoolStaffAddAdmission from './pages/SchoolStaff/Admission/AddAdmission';
+import SchoolStaffViewAdmission from './pages/SchoolStaff/Admission/ViewAdmission';
+import SchoolStaffEditAdmission from './pages/SchoolStaff/Admission/EditAdmission';
+import SchoolStaffStudents from './pages/SchoolStaff/Students/StudentsList';
+import SchoolStaffViewStudent from './pages/SchoolStaff/Students/ViewStudent';
+import SchoolStaffViewStudentAttendance from './pages/SchoolStaff/Attendance/ViewStudentAttendance';
+import SchoolStaffFees from './pages/SchoolStaff/Fees/Fees';
+import SchoolStaffHealthRecords from './pages/SchoolStaff/HealthRecords/HealthRecords';
+import SchoolStaffViewHealthRecord from './pages/SchoolStaff/HealthRecords/ViewHealthRecord';
+import SchoolStaffAddHealthRecord from './pages/SchoolStaff/HealthRecords/AddHealthRecord';
+import SchoolStaffServices from './pages/SchoolStaff/Services/Services';
+import SchoolStaffEmergencyContacts from './pages/SchoolStaff/EmergencyContacts/EmergencyContacts';
+import SchoolStaffReports from './pages/SchoolStaff/Reports';
+import SchoolStaffProfile from './pages/SchoolStaff/Profile';
 
 // ====================== FITNESS CLUB PAGES ======================
 import FitnessDashboard from './pages/fitnessClub/Dashboard';
@@ -145,9 +164,29 @@ function App() {
             <Route path="/school/user-management" element={<SchoolUserManagement />} />
             <Route path="/school/user-management/Add-user" element={<SchoolAdduser />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/school-staff/dashboard" element={<SchoolStaffDashboard/>} />
             <Route path="/school-staff" element={<SchoolStaffDashboard/>} />
-             <Route path="/school-staff/attendance" element={<SchoolStaffAttendance />} /> 
-             <Route path="/school-staff/my-schedule" element={<SchoolStaffMySchedule />} /> 
+            <Route path="/school-staff/my-schedule" element={<SchoolStaffMySchedule />} />
+            <Route path="/school-staff/enquiry" element={<SchoolStaffEnquiry />} />
+            <Route path="/school-staff/enquiry/add" element={<SchoolStaffAddEnquiry />} />
+            <Route path="/school-staff/follow-ups" element={<SchoolStaffFollowups />} />
+            <Route path="/school-staff/admission" element={<SchoolStaffAdmission />} />
+            <Route path="/school-staff/admission/add" element={<SchoolStaffAddAdmission />} />
+            <Route path="/school-staff/admission/view/:id" element={<SchoolStaffViewAdmission />} />
+            <Route path="/school-staff/admission/edit/:id" element={<SchoolStaffEditAdmission />} />
+            <Route path="/school-staff/participants" element={<SchoolStaffStudents />} />
+            <Route path="/school-staff/participants/view/:id" element={<SchoolStaffViewStudent />} />
+            <Route path="/school-staff/attendance" element={<SchoolStaffAttendance />} />
+            <Route path="/school-staff/student-attendance/:id" element={<SchoolStaffViewStudentAttendance />} />
+            <Route path="/school-staff/fees" element={<SchoolStaffFees />} />
+            <Route path="/school-staff/health-records" element={<SchoolStaffHealthRecords />} />
+            <Route path="/school-staff/health-records/view/:id" element={<SchoolStaffViewHealthRecord />} />
+            <Route path="/school-staff/health-records/add-update" element={<SchoolStaffAddHealthRecord />} />
+            <Route path="/school-staff/health-records/edit/:id" element={<SchoolStaffAddHealthRecord />} />
+            <Route path="/school-staff/services" element={<SchoolStaffServices />} />
+            <Route path="/school-staff/emergency-contacts" element={<SchoolStaffEmergencyContacts />} />
+            <Route path="/school-staff/reports" element={<SchoolStaffReports />} />
+            <Route path="/school-staff/profile" element={<SchoolStaffProfile />} />
 
             {/* ====================== FITNESS CLUB ROUTES ====================== */}
             <Route path="/fitness/dashboard" element={<FitnessDashboard />} />
@@ -194,7 +233,7 @@ function App() {
             <Route path="/fitness-staff/members/view-pass/:id" element={<FitnessStaffAddmember viewMode={true} />} />
              <Route path="/fitness-staff/fees" element={< FitnessStaffFees />} /> 
              <Route path="/fitness-staff/reports" element={< FitnessStaffReport />} /> 
-             <Route path="/fitness-staff/profile" element={<StaffProfilePage />} />  
+             <Route path="/fitness-staff/profile" element={<StaffProfilePage />} /> 
 
 
         

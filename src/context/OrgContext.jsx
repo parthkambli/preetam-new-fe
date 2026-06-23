@@ -166,8 +166,11 @@ export function OrgProvider({ children }) {
     const org = availableOrgs.find(o => o.id === orgId);
     if (org) {
       setCurrentOrg(org);
-      localStorage.setItem('currentOrgId', orgId);
+    } else {
+      // Fallback for staff switching to an org not in their backend availableOrgs
+      setCurrentOrg({ id: orgId, name: orgId === 'school' ? 'Senior Citizen School' : 'Sport Fitness Club' });
     }
+    localStorage.setItem('currentOrgId', orgId);
   };
 
   const updateUser = (userData) => {

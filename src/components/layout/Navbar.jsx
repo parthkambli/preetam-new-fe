@@ -174,22 +174,27 @@ export default function Navbar({ onMenuClick }) {
   const { currentOrg, switchOrg, availableOrgs, user } = useOrg();
   const navigate = useNavigate();
 
+  const bothOrgs = [
+    { id: 'school', name: 'Senior Citizen School' },
+    { id: 'fitness', name: 'Sport Fitness Club' },
+  ];
+
+  const isStaff = user?.role === 'FitnessStaff';
+
   const handleOrgChange = (e) => {
     switchOrg(e.target.value);
-    navigate(`/${e.target.value}/dashboard`);
+    if (isStaff) {
+      navigate(`/${e.target.value === 'school' ? 'school-staff' : 'fitness-staff'}/dashboard`);
+    } else {
+      navigate(`/${e.target.value}/dashboard`);
+    }
   };
 
-  const profileRoutes = {
-  FitnessStaff: "/fitness-staff/profile",
-  SchoolStaff: "/school-staff/profile",
-  FitnessMember: "/fitness-member/profile",
-};
-
-const profilePath = profileRoutes[user?.role] || "/profile";
+  const profilePath = currentOrg?.id === 'school' ? '/school-staff/profile' : '/fitness-staff/profile';
 
   // Check if user is admin
   const isAdmin = user?.role?.toLowerCase() === 'superadmin' || 
-                  user?.role === 'super_admin'; // adjust according to your actual roles
+                  user?.role === 'super_admin';
 
   return (
     <nav className="bg-[#000359] text-gray-800 px-4 py-3 flex justify-between items-center shadow-sm border-b border-gray-200 mx-2 mt-2 rounded-xl">
@@ -215,15 +220,15 @@ const profilePath = profileRoutes[user?.role] || "/profile";
           </svg>
         </button>
 
-        {/* Org switcher pill - Show ONLY for Admin */}
-        {isAdmin && availableOrgs.length > 0 && (
+        {/* Org switcher pill - Show for Admin and Staff */}
+        {(isAdmin || isStaff) && (
           <div className="relative">
             <select
               value={currentOrg?.id || ''}
               onChange={handleOrgChange}
               className="appearance-none bg-white border border-gray-300 rounded-full px-4 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer hover:bg-gray-50 transition shadow-sm"
             >
-              {availableOrgs.map(org => (
+              {(isAdmin ? availableOrgs : bothOrgs).map(org => (
                 <option key={org.id} value={org.id}>
                   {org.name}
                 </option>
