@@ -850,6 +850,14 @@ const validateTimetable = () => {
                   <label className={labelCls}>Discount</label>
                   <input type="number" name="discount" value={formData.discount} onChange={handleChange} className={inputCls} />
                 </div>
+                <div>
+                  <label className={labelCls}>Start Date</label>
+                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>End Date (Auto)</label>
+                  <input value={formData.endDate} readOnly className={`${inputCls} bg-gray-50`} />
+                </div>
               </div>
             </div>
 
@@ -864,8 +872,8 @@ const validateTimetable = () => {
                     <tr className="bg-[#000359] text-white">
                       <th className="px-4 py-3 text-left font-medium">Service</th>
                       <th className="px-4 py-3 text-left font-medium">Start Date</th>
-                      <th className="px-4 py-3 text-left font-medium">End Date</th>
                       <th className="px-4 py-3 text-left font-medium">No. of Days</th>
+                      <th className="px-4 py-3 text-left font-medium">End Date</th>
                       <th className="px-4 py-3 text-left font-medium">Per Day (₹)</th>
                       <th className="px-4 py-3 text-left font-medium">Total (₹)</th>
                       <th className="px-4 py-3 text-center font-medium">Action</th>
@@ -910,11 +918,12 @@ const validateTimetable = () => {
                             <input type="date" value={row.startDate} onChange={(e) => updateServiceRow(index, 'startDate', e.target.value)} className={inputCls} />
                           </td>
                           <td className="px-3 py-2">
-                            <input value={rowEndDate || ''} readOnly className={`${inputCls} bg-gray-50`} />
-                          </td>
-                          <td className="px-3 py-2">
                             <input type="number" min="1" value={row.days} onChange={(e) => updateServiceRow(index, 'days', e.target.value)} placeholder="Days" className={inputCls} />
                           </td>
+                          <td className="px-3 py-2">
+                            <input value={rowEndDate || ''} readOnly className={`${inputCls} bg-gray-50`} />
+                          </td>
+                          
                           <td className="px-3 py-2 text-gray-600">
                             {perDay > 0 ? `₹${perDay}` : <span className="text-gray-300">—</span>}
                           </td>
@@ -981,16 +990,9 @@ const validateTimetable = () => {
 
             {/* ── SCHEDULE ── */}
             <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Schedule</h2>
+              {/* <h2 className="text-xl font-semibold border-b pb-2 mb-6">Schedule</h2> */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div>
-                  <label className={labelCls}>Start Date</label>
-                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>End Date (Auto)</label>
-                  <input value={formData.endDate} readOnly className={`${inputCls} bg-gray-50`} />
-                </div>
+                
                 <div>
                   <label className={labelCls}>Responsible Staff</label>
                   <AsyncSelect
@@ -1009,7 +1011,7 @@ const validateTimetable = () => {
                 </div>
                 <div>
                   <label className={labelCls}>Fee Remarks</label>
-                  <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={2} className={inputCls} />
+                  <textarea name="feeRemarks" value={formData.feeRemarks} onChange={handleChange} rows={1} className={inputCls} />
                 </div>
               </div>
             </div>

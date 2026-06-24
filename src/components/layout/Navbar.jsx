@@ -190,7 +190,9 @@ export default function Navbar({ onMenuClick }) {
     }
   };
 
-  const profilePath = currentOrg?.id === 'school' ? '/school-staff/profile' : '/fitness-staff/profile';
+  const profilePath = isStaff
+    ? (currentOrg?.id === 'school' ? '/school-staff/profile' : '/fitness-staff/profile')
+    : '/profile';
 
   // Check if user is admin
   const isAdmin = user?.role?.toLowerCase() === 'superadmin' || 

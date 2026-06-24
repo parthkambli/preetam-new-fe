@@ -149,7 +149,7 @@ function App() {
             <Route path="/school/staff/attendance-detail/:id" element={<SchoolStaffAttendanceDetail />} />
             <Route path="/school/activities" element={<SchoolActivities />} />
             <Route path="/school/attendance" element={<SchoolAttendance />} />
-            <Route path="/school/student-attendance/:id" element={<ViewStudentAttandance />} />
+            <Route path="/school/student-attendance/:periodId/:activityId/:date" element={<ViewStudentAttandance />} />
             <Route path="/school/fees" element={<SchoolFees />} />
             <Route path="/school/health-records" element={<HealthRecords />} />
             <Route path="/school/health-records/view/:id" element={<Viewhealthrecords />} />
@@ -217,6 +217,7 @@ function App() {
             <Route path="/fitness/user-management/Add-user" element={<FitnessAdduser />} />
 
              {/* fitness staff panel routes... */}
+             <Route path="/fitness-staff/dashboard" element={<FitnessStaffDashboard/>} />
             <Route path="/fitness-staff" element={<FitnessStaffDashboard/>} />
             <Route path="/fitness-staff/enquiry" element={<FitnessStaffEnquiry />} />
             <Route path="/fitness-staff/enquiry/add" element={<FitnessStaffAddEnquiry />} />

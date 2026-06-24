@@ -281,10 +281,9 @@
 
 
 
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from 'sonner';
-import { api } from '../../services/apiClient';   // Adjust path if needed
+import { api } from '../../services/apiClient';
 
 // ── Export helpers (browser-side via CDN) ─────────────────────────────────
 function loadScript(src) {
@@ -327,8 +326,9 @@ async function exportToExcel(title, headers, rows) {
 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function Reports() {
-  const [activeTab, setActiveTab] = useState("admissions"); // 'admissions' | 'participants'
-  const [reportDate] = useState("Jan 10, 2024");
+  const [activeTab, setActiveTab] = useState("admissions");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -339,24 +339,46 @@ export default function Reports() {
     pendingFees: 0,
     todaysAttendance: 0,
   });
+  const [appliedFilter, setAppliedFilter] = useState(null);
 
   const [admissionsData, setAdmissionsData] = useState([]);
   const [participantsData, setParticipantsData] = useState([]);
-  const [exporting, setExporting] = useState(""); // "pdf" | "excel"
+  const [exporting, setExporting] = useState("");
 
   const isAdmissions = activeTab === "admissions";
 
-  // Fetch data on mount and when tab changes
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+  const formatIndian = (num) => {
+    if (num === null || num === undefined) return "0";
+    const n = Number(num);
+    if (isNaN(n)) return "0";
+    return n.toLocaleString("en-IN");
+  };
 
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Fetch Admissions
-      const admissionsRes = await api.schoolStaffPanel.getAdmissions();
+      const params = {};
+      if (fromDate) params.fromDate = fromDate;
+      if (toDate) params.toDate = toDate;
+
+      const [dashRes, admissionsRes, studentsRes] = await Promise.all([
+        api.schoolReports.getDashboard(params),
+        api.schoolAdmission.getAll(),
+        api.students.getAll(),
+      ]);
+
+      const dash = dashRes.data || {};
+      setStats({
+        totalEnquiries: dash.totalEnquiries || 0,
+        totalAdmissions: dash.totalAdmissions || 0,
+        activeParticipants: dash.activeParticipants || 0,
+        totalRevenue: dash.totalRevenue || 0,
+        pendingFees: dash.pendingFees || 0,
+        todaysAttendance: dash.todaysAttendance || 0,
+      });
+      setAppliedFilter(dash.appliedFilter || null);
+
       const admissions = admissionsRes.data?.data || admissionsRes.data || [];
       setAdmissionsData(admissions.map(a => ({
         name: a.fullName,
@@ -365,8 +387,6 @@ export default function Reports() {
         admissionId: a.admissionId || '',
       })));
 
-      // Fetch Participants (Students)
-      const studentsRes = await api.schoolStaffPanel.getStudents();
       const students = studentsRes.data || [];
       setParticipantsData(students.map(s => ({
         name: s.fullName,
@@ -374,26 +394,17 @@ export default function Reports() {
         status: s.status || "Active",
       })));
 
-      // Calculate Stats (based on fetched data)
-      const totalAdmissionsCount = admissions.length;
-      const activeParticipantsCount = students.filter(s => s.status === 'Active').length;
-
-      setStats({
-        totalEnquiries: 248, // You can enhance this later with enquiry API
-        totalAdmissions: totalAdmissionsCount,
-        activeParticipants: activeParticipantsCount,
-        totalRevenue: "6,45,000",     // Static for now or enhance with fee logic
-        pendingFees: "78,000",        // Static for now
-        todaysAttendance: "118",      // Static for now
-      });
-
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to load reports data");
     } finally {
       setLoading(false);
     }
-  };
+  }, [fromDate, toDate]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const currentTitle = isAdmissions ? "Admissions Report" : "Participants Report";
   
@@ -447,30 +458,51 @@ export default function Reports() {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
-        <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-sm text-gray-700 shadow-sm">
-          <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          {reportDate}
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white shadow-sm"
+          />
+          <span className="text-gray-400">to</span>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white shadow-sm"
+          />
+          {(fromDate || toDate) && (
+            <button
+              onClick={() => { setFromDate(""); setToDate(""); }}
+              className="text-xs text-gray-500 hover:text-gray-700 px-2"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
+      {appliedFilter && (appliedFilter.fromDate || appliedFilter.toDate) && (
+        <p className="text-xs text-gray-500 -mt-4 mb-4">
+          Filtered: {appliedFilter.fromDate || "…"} – {appliedFilter.toDate || "…"}
+        </p>
+      )}
 
       {/* ── Stats grid ── */}
       <div className="bg-gray-100 rounded-2xl p-4 mb-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Top 4 cards */}
           {[
-            { label: "Total Enquiries", value: stats.totalEnquiries, prefix: "" },
-            { label: "Total Admissions", value: stats.totalAdmissions, prefix: "" },
-            { label: "Active Participants", value: stats.activeParticipants, prefix: "" },
-            { label: "Total Revenue", value: stats.totalRevenue, prefix: "₹ " },
+            { label: "Total Enquiries", value: stats.totalEnquiries, prefix: "", format: false },
+            { label: "Total Admissions", value: stats.totalAdmissions, prefix: "", format: false },
+            { label: "Active Participants", value: stats.activeParticipants, prefix: "", format: false },
+            { label: "Total Revenue", value: stats.totalRevenue, prefix: "₹ ", format: true },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                {stat.prefix}{stat.value}
+                {stat.prefix}{stat.format ? formatIndian(stat.value) : stat.value}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">{stat.label}</p>
             </div>
@@ -479,12 +511,12 @@ export default function Reports() {
         {/* Bottom 2 wide cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
           {[
-            { label: "Pending Fees", value: stats.pendingFees, prefix: "₹ " },
-            { label: "Today's Attendance", value: stats.todaysAttendance, prefix: "" },
+            { label: "Pending Fees", value: stats.pendingFees, prefix: "₹ ", format: true },
+            { label: "Today's Attendance", value: stats.todaysAttendance, prefix: "", format: false },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                {stat.prefix}{stat.value}
+                {stat.prefix}{stat.format ? formatIndian(stat.value) : stat.value}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">{stat.label}</p>
             </div>

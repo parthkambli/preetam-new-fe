@@ -100,6 +100,13 @@ export const api = {
     getPayments: (id) => apiClient.get(`/school/admission/${id}/payments`),
   },
 
+  // School Attendance (admin)
+  schoolAttendance: {
+    getSummary: (params) => apiClient.get('/school/attendance/summary', { params }),
+    getActivities: () => apiClient.get('/school/attendance/activities'),
+    getStudents: (params) => apiClient.get('/school/attendance/students', { params }),
+  },
+
   // Service bookings (standalone collection)
   serviceBookings: {
     getAll: (params) => apiClient.get('/school/service-bookings', { params }),
@@ -422,6 +429,14 @@ fitnessFees: {
     return apiClient.get(`/reports/summary${query ? "?" + query : ""}`);
   },
 },
+
+  // School Reports Dashboard
+  schoolReports: {
+    getDashboard: (params = {}) => {
+      const query = new URLSearchParams(params).toString();
+      return apiClient.get(`/reports/dashboard${query ? '?' + query : ''}`);
+    },
+  },
 
   // School Renewals
   renewals: {
