@@ -414,6 +414,7 @@ export default function ViewAdmission() {
           <th className="border p-3">Thursday</th>
           <th className="border p-3">Friday</th>
           <th className="border p-3">Saturday</th>
+          <th className="border p-3">Sunday</th>
         </tr>
       </thead>
 
@@ -431,6 +432,7 @@ export default function ViewAdmission() {
               row.thursdayActivityId,
               row.fridayActivityId,
               row.saturdayActivityId,
+              row.sundayActivityId,
             ].map((activityId, idx) => (
               <td key={idx} className="border p-3">
                 <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">

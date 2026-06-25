@@ -56,7 +56,7 @@ export default function EditAdmission() {
   });
 
   const [timetableRows, setTimetableRows] = useState([
-    { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null },
+    { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null, sunday: null },
   ]);
   const [periods, setPeriods] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -95,7 +95,7 @@ export default function EditAdmission() {
     updateFeeAmount(option?.data, formData.feePlan);
   };
 
-  const DAY_LABELS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const DAY_LABELS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   const fetchPeriods = async () => {
     try {
@@ -175,7 +175,7 @@ export default function EditAdmission() {
   const selectedPeriods = timetableRows.map((r) => r.period?.value).filter(Boolean);
 
   const addRow = () =>
-    setTimetableRows((prev) => [...prev, { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null }]);
+    setTimetableRows((prev) => [...prev, { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null, sunday: null }]);
 
   const removeRow = (i) => setTimetableRows((prev) => prev.filter((_, idx) => idx !== i));
 
@@ -187,12 +187,12 @@ export default function EditAdmission() {
 
   const clearTimetable = () =>
     setTimetableRows((prev) =>
-      prev.map((r) => ({ ...r, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null }))
+      prev.map((r) => ({ ...r, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null, sunday: null }))
     );
 
   const copyMondayToAll = () =>
     setTimetableRows((prev) =>
-      prev.map((r) => ({ ...r, tuesday: r.monday, wednesday: r.monday, thursday: r.monday, friday: r.monday, saturday: r.monday }))
+      prev.map((r) => ({ ...r, tuesday: r.monday, wednesday: r.monday, thursday: r.monday, friday: r.monday, saturday: r.monday, sunday: r.monday }))
     );
 
   const addServiceRow = () => setServiceRows((prev) => [...prev, { service: null, startDate: '', endDate: '', days: '' }]);
@@ -342,6 +342,7 @@ export default function EditAdmission() {
       thursday: activities.find((a) => a.value === (row.thursdayActivityId || row.thursday)) || null,
       friday: activities.find((a) => a.value === (row.fridayActivityId || row.friday)) || null,
       saturday: activities.find((a) => a.value === (row.saturdayActivityId || row.saturday)) || null,
+      sunday: activities.find((a) => a.value === (row.sundayActivityId || row.sunday)) || null,
     })));
   }, [rawTimetable, periods, activities]);
 
@@ -443,6 +444,7 @@ export default function EditAdmission() {
         thursdayActivityId: row.thursday?.value || null,
         fridayActivityId: row.friday?.value || null,
         saturdayActivityId: row.saturday?.value || null,
+        sundayActivityId: row.sunday?.value || null,
       }))));
       fd.append('services', JSON.stringify(serviceRows.filter(s => s.service).map(row => {
         const days = Number(row.days) || 0;
@@ -682,7 +684,7 @@ export default function EditAdmission() {
                 <thead>
                   <tr className="bg-[#000359] text-white">
                     <th className="p-3 text-left font-medium">Period</th>
-                    {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map((d) => (
+                    {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((d) => (
                       <th key={d} className="p-3 font-medium">{d}</th>
                     ))}
                     <th className="p-3 font-medium">Action</th>
@@ -721,7 +723,7 @@ export default function EditAdmission() {
                             </div>
                           )}
                         </td>
-                        {['monday','tuesday','wednesday','thursday','friday','saturday'].map((day) => (
+                        {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map((day) => (
                           <td key={day} className="p-2 min-w-[160px]">
                             <Select
                               options={activities}

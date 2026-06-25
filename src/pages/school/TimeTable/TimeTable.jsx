@@ -3,8 +3,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const DayCell = ({ booked, capacity }) => {
   const pct = capacity > 0 ? (booked / capacity) * 100 : 0;

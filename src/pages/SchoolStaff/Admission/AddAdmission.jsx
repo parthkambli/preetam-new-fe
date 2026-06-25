@@ -77,9 +77,7 @@ export default function AddAdmission() {
   
 
   // ── Timetable ──────────────────────────────────────────────
-  const [timetableRows, setTimetableRows] = useState([
-    { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null },
-  ]);
+  const [timetableRows, setTimetableRows] = useState([]);
   const [periods, setPeriods] = useState([]);
   const [activities, setActivities] = useState([]);
   const [services, setServices] = useState([]);
@@ -108,7 +106,17 @@ useEffect(() => {
   fetchFeeTypes();
 }, []);
 
-const DAY_LABELS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+useEffect(() => {
+  if (periods.length > 0 && timetableRows.length === 0) {
+    setTimetableRows(periods.map(p => ({
+      period: p,
+      monday: null, tuesday: null, wednesday: null,
+      thursday: null, friday: null, saturday: null, sunday: null,
+    })));
+  }
+}, [periods]);
+
+const DAY_LABELS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 const fetchPeriods = async () => {
   try {
@@ -254,7 +262,7 @@ const validateTimetable = () => {
   const selectedPeriods = timetableRows.map((r) => r.period?.value).filter(Boolean);
 
   const addRow = () =>
-    setTimetableRows((prev) => [...prev, { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null }]);
+    setTimetableRows((prev) => [...prev, { period: null, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null, sunday: null }]);
 
   const removeRow = (i) => setTimetableRows((prev) => prev.filter((_, idx) => idx !== i));
 
@@ -266,12 +274,12 @@ const validateTimetable = () => {
 
   const clearTimetable = () =>
     setTimetableRows((prev) =>
-      prev.map((r) => ({ ...r, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null }))
+      prev.map((r) => ({ ...r, monday: null, tuesday: null, wednesday: null, thursday: null, friday: null, saturday: null, sunday: null }))
     );
 
   const copyMondayToAll = () =>
     setTimetableRows((prev) =>
-      prev.map((r) => ({ ...r, tuesday: r.monday, wednesday: r.monday, thursday: r.monday, friday: r.monday, saturday: r.monday }))
+      prev.map((r) => ({ ...r, tuesday: r.monday, wednesday: r.monday, thursday: r.monday, friday: r.monday, saturday: r.monday, sunday: r.monday }))
     );
 
   // ── Services ───────────────────────────────────────────────
@@ -460,6 +468,7 @@ const validateTimetable = () => {
         thursdayActivityId: row.thursday?.value || null,
         fridayActivityId: row.friday?.value || null,
         saturdayActivityId: row.saturday?.value || null,
+        sundayActivityId: row.sunday?.value || null,
       }))));
       fd.append('services', JSON.stringify(serviceRows.filter(s => s.service).map(row => {
         const days = Number(row.days) || 0;
@@ -568,14 +577,14 @@ const validateTimetable = () => {
 
             <h2 className="text-xl font-semibold border-b pb-2">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div><label className={labelCls}>Full Name</label><input name="fullName" value={formData.fullName} onChange={handleChange} className={inputCls} required /></div>
-              <div><label className={labelCls}>Age</label><input type="number" name="age" min={1} max={120} value={formData.age} onChange={handleChange} className={inputCls} required /></div>
-              <div><label className={labelCls}>Gender</label><select name="gender" value={formData.gender} onChange={handleChange} className={inputCls}><option>Male</option><option>Female</option><option>Other</option></select></div>
+              <div><label className={labelCls}>Full Name <span className="text-red-500">*</span></label><input name="fullName" value={formData.fullName} onChange={handleChange} className={inputCls} required /></div>
+              <div><label className={labelCls}>Age <span className="text-red-500">*</span></label><input type="number" name="age" min={1} max={120} value={formData.age} onChange={handleChange} className={inputCls} required /></div>
+              <div><label className={labelCls}>Gender <span className="text-red-500">*</span></label><select name="gender" value={formData.gender} onChange={handleChange} className={inputCls} required><option>Male</option><option>Female</option><option>Other</option></select></div>
               <div><label className={labelCls}>Date of Birth</label><input type="date" name="dob" value={formData.dob} max={new Date().toISOString().split('T')[0]} onChange={handleChange} className={inputCls} /></div>
               <div><label className={labelCls}>Aadhaar Number</label><input name="aadhaar" value={formData.aadhaar} onChange={(e) => setFormData((p) => ({ ...p, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12) }))} inputMode="numeric" maxLength={12} placeholder="12-digit number" className={inputCls} /></div>
-              <div><label className={labelCls}>Mobile Number</label><input type="tel" inputMode="numeric" name="mobile" value={formData.mobile} onChange={(e) => setFormData((p) => ({ ...p, mobile: numericPhone(e.target.value) }))} maxLength={10} placeholder="10-digit number" className={inputCls} required /></div>
+              <div><label className={labelCls}>Mobile Number <span className="text-red-500">*</span></label><input type="tel" inputMode="numeric" name="mobile" value={formData.mobile} onChange={(e) => setFormData((p) => ({ ...p, mobile: numericPhone(e.target.value) }))} maxLength={10} placeholder="10-digit number" className={inputCls} required /></div>
             </div>
-            <div><label className={labelCls}>Full Address</label><textarea name="fullAddress" value={formData.fullAddress} onChange={handleChange} rows={3} className={inputCls} /></div>
+            <div><label className={labelCls}>Full Address <span className="text-red-500">*</span></label><textarea name="fullAddress" value={formData.fullAddress} onChange={handleChange} rows={3} className={inputCls} required /></div>
             <div><label className={labelCls}>Upload Photo</label><input type="file" name="photo" onChange={handleChange} accept="image/*" className={inputCls} /></div>
 
             <h2 className="text-xl font-semibold border-b pb-2 mt-10">Health Information</h2>
@@ -636,9 +645,9 @@ const validateTimetable = () => {
           <>
             <h2 className="text-xl font-semibold border-b pb-2">Emergency Contact Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div><label className={labelCls}>Primary Contact Name</label><input name="primaryContactName" value={formData.primaryContactName} onChange={handleChange} className={inputCls} /></div>
-              <div><label className={labelCls}>Primary Relation</label><input name="primaryRelation" value={formData.primaryRelation} onChange={handleChange} className={inputCls} /></div>
-              <div><label className={labelCls}>Primary Phone</label><input type="tel" inputMode="numeric" name="primaryPhone" value={formData.primaryPhone} onChange={handlePhoneChange('primaryPhone')} maxLength={10} placeholder="10-digit number" className={inputCls} /></div>
+              <div><label className={labelCls}>Primary Contact Name <span className="text-red-500">*</span></label><input name="primaryContactName" value={formData.primaryContactName} onChange={handleChange} className={inputCls} required /></div>
+              <div><label className={labelCls}>Primary Relation <span className="text-red-500">*</span></label><input name="primaryRelation" value={formData.primaryRelation} onChange={handleChange} className={inputCls} required /></div>
+              <div><label className={labelCls}>Primary Phone <span className="text-red-500">*</span></label><input type="tel" inputMode="numeric" name="primaryPhone" value={formData.primaryPhone} onChange={handlePhoneChange('primaryPhone')} maxLength={10} placeholder="10-digit number" className={inputCls} required /></div>
               <div><label className={labelCls}>Secondary Contact Name</label><input name="secondaryContactName" value={formData.secondaryContactName} onChange={handleChange} className={inputCls} /></div>
               <div><label className={labelCls}>Secondary Relation</label><input name="secondaryRelation" value={formData.secondaryRelation} onChange={handleChange} className={inputCls} /></div>
               <div><label className={labelCls}>Secondary Phone</label><input type="tel" inputMode="numeric" name="secondaryPhone" value={formData.secondaryPhone} onChange={handlePhoneChange('secondaryPhone')} maxLength={10} placeholder="10-digit number" className={inputCls} /></div>
@@ -662,7 +671,7 @@ const validateTimetable = () => {
                 <thead>
                   <tr className="bg-[#000359] text-white">
                     <th className="p-3 text-left font-medium">Period</th>
-                    {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map((d) => (
+                    {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((d) => (
                       <th key={d} className="p-3 font-medium">{d}</th>
                     ))}
                     <th className="p-3 font-medium">Action</th>
@@ -701,7 +710,7 @@ const validateTimetable = () => {
                             </div>
                           )}
                         </td>
-                        {['monday','tuesday','wednesday','thursday','friday','saturday'].map((day) => (
+                        {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map((day) => (
                           <td key={day} className="p-2 min-w-[160px]">
                             <Select
                                 options={activities}
@@ -724,9 +733,7 @@ const validateTimetable = () => {
               </table>
             </div>
 
-            <button type="button" onClick={addRow} disabled={timetableRows.length >= periods.length} className="mt-4 px-4 py-2 bg-[#000359] text-white rounded-lg text-sm disabled:opacity-50">
-              + Add Period Row
-            </button>
+
             
 
             <div className="flex justify-between mt-10 pt-6 border-t">
@@ -952,6 +959,9 @@ const validateTimetable = () => {
                 <div>
                   <label className={labelCls}>Amount Paid</label>
                   <input type="number" name="paidAmount" value={formData.paidAmount} onChange={handleChange} className={inputCls} />
+                  {Number(formData.paidAmount) > grandTotal && (
+                    <p className="text-red-500 text-xs mt-1">Exceeds total by ₹{(Number(formData.paidAmount) - grandTotal).toLocaleString()}</p>
+                  )}
                 </div>
                 <div>
                   <label className={labelCls}>Remaining Amount</label>
@@ -984,15 +994,15 @@ const validateTimetable = () => {
               <h2 className="text-xl font-semibold border-b pb-2 mb-6">Schedule</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
-                  <label className={labelCls}>Start Date</label>
-                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} />
+                  <label className={labelCls}>Start Date <span className="text-red-500">*</span></label>
+                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} required />
                 </div>
                 <div>
                   <label className={labelCls}>End Date (Auto)</label>
                   <input value={formData.endDate} readOnly className={`${inputCls} bg-gray-50`} />
                 </div>
                 <div>
-                  <label className={labelCls}>Responsible Staff</label>
+                  <label className={labelCls}>Responsible Staff <span className="text-red-500">*</span></label>
                   <AsyncSelect
                     cacheOptions
                     defaultOptions

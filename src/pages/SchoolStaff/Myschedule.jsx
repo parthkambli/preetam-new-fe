@@ -49,10 +49,10 @@ const getISTWeekDates = () => {
   const monday = new Date(todayIST);
   monday.setUTCDate(todayIST.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
 
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const days = [];
 
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setUTCDate(monday.getUTCDate() + i);
     const y = d.getUTCFullYear();
@@ -77,7 +77,7 @@ const getISTWeekDates = () => {
 const getDefaultDay = () => {
   const { day } = getISTDateParts();
   const names = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  return day === 0 ? 'monday' : names[day];
+  return names[day];
 };
 
 export default function SchoolStaffMySchedule() {
@@ -150,7 +150,7 @@ export default function SchoolStaffMySchedule() {
 
   const dayNames = {
     monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
-    thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday',
+    thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday',
   };
 
   return (

@@ -1715,7 +1715,8 @@ export default function StudentView() {
     wednesday: "Music",
     thursday: "Yoga",
     friday: "Reading",
-    saturday: "Meditation"
+    saturday: "Meditation",
+    sunday: "Yoga"
   },
   {
     period: "P2",
@@ -1724,7 +1725,8 @@ export default function StudentView() {
     wednesday: "Walking",
     thursday: "Games",
     friday: "Walking",
-    saturday: "Games"
+    saturday: "Games",
+    sunday: "Games"
   }
 ];
 
@@ -2132,6 +2134,7 @@ export default function StudentView() {
             <th className="border p-3">Thursday</th>
             <th className="border p-3">Friday</th>
             <th className="border p-3">Saturday</th>
+            <th className="border p-3">Sunday</th>
           </tr>
         </thead>
 
@@ -2148,6 +2151,7 @@ export default function StudentView() {
               <td className="border p-3">{row.thursday}</td>
               <td className="border p-3">{row.friday}</td>
               <td className="border p-3">{row.saturday}</td>
+              <td className="border p-3">{row.sunday}</td>
             </tr>
           ))}
         </tbody>

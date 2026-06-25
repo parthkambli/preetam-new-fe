@@ -206,7 +206,7 @@ export default function BookService() {
     }
   };
 
-  const filterServiceOptions = [...new Set(bookings.map(b => b.serviceName).filter(Boolean))].map(n => ({ label: n, value: n }));
+  const filterServiceOptions = useMemo(() => services.map(s => ({ value: s._id, label: s.serviceName })), [services]);
 
   return (
     <div className="space-y-6">
