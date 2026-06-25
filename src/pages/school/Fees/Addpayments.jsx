@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { jsPDF } from 'jspdf';
+import { applyPlugin } from 'jspdf-autotable';
+applyPlugin(jsPDF);
+import * as XLSX from 'xlsx';
 import AsyncSelect from 'react-select/async';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
@@ -20,6 +25,21 @@ export default function AddPayments() {
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  // ── Build filter params (shared between table load + export) ──
+  const buildFilterParams = (extra = {}) => {
+    const params = {
+      participant: filterParticipant || undefined,
+      mode: filterMode || undefined,
+      staff: selectedStaff?.value || undefined,
+      fromDate: fromDate || undefined,
+      toDate: toDate || undefined,
+      ...extra,
+    };
+    Object.keys(params).forEach((k) => { if (params[k] === undefined) delete params[k]; });
+    return params;
+  };
 
   const loadStaffOptions = async (inputValue) => {
     try {
@@ -38,16 +58,7 @@ export default function AddPayments() {
   const loadPayments = async () => {
     setLoading(true);
     try {
-      const params = {
-        page,
-        limit,
-        participant: filterParticipant || undefined,
-        mode: filterMode || undefined,
-        staff: selectedStaff?.value || undefined,
-        fromDate: fromDate || undefined,
-        toDate: toDate || undefined,
-      };
-      Object.keys(params).forEach((k) => { if (params[k] === undefined) delete params[k]; });
+      const params = buildFilterParams({ page, limit });
 
       const res = await api.fees.getPayments(params);
       const data = res.data?.data || res.data || [];
@@ -61,6 +72,80 @@ export default function AddPayments() {
       toast.error('Failed to load payments');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ── Export helpers ────────────────────────────────────────────────
+  const fetchExportData = async () => {
+    const params = buildFilterParams({ page: 1, limit: 999999 });
+    const res = await api.fees.getPayments(params);
+    return res.data?.data || res.data || [];
+  };
+
+  const exportPDF = async () => {
+    setExporting(true);
+    try {
+      const all = await fetchExportData();
+      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+      doc.setFontSize(16);
+      doc.text('Payments Report', 14, 18);
+
+      const rows = all.map((r) => [
+        r.studentId?.fullName || r.studentId?.name || r.participant || 'N/A',
+        r.description || r.feeTypeId?.description || '-',
+        r.feePlan || '-',
+        `Rs. ${Number(r.amount).toLocaleString('en-IN')}`,
+        r.allotmentId?.status || 'Paid',
+        r.paymentDate ? new Date(r.paymentDate).toLocaleDateString('en-IN') : '-',
+        r.paymentMode || '-',
+        r.responsibleStaff?.fullName || r.responsibleStaff?.name || '-',
+      ]);
+
+      doc.autoTable({
+        head: [['Participant', 'Fee Description', 'Type', 'Amount', 'Status', 'Payment Date', 'Payment Mode', 'Staff']],
+        body: rows,
+        startY: 25,
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [30, 58, 138] },
+      });
+
+      doc.save(`payments-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error('PDF export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportExcel = async () => {
+    setExporting(true);
+    try {
+      const all = await fetchExportData();
+      const data = all.map((r) => ({
+        Participant: r.studentId?.fullName || r.studentId?.name || r.participant || 'N/A',
+        'Fee Description': r.description || r.feeTypeId?.description || '-',
+        Type: r.feePlan || '-',
+        Amount: Number(r.amount) || 0,
+        Status: r.allotmentId?.status || 'Paid',
+        'Payment Date': r.paymentDate ? new Date(r.paymentDate).toLocaleDateString('en-IN') : '-',
+        'Payment Mode': r.paymentMode || '-',
+        Staff: r.responsibleStaff?.fullName || r.responsibleStaff?.name || '-',
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const cols = (Object.keys(data[0] || {}).map((k) => ({
+        wch: Math.max(k.length, ...data.map((d) => String(d[k]).length)) + 2,
+      })));
+      ws['!cols'] = cols;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Payments');
+      XLSX.writeFile(wb, `payments-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    } catch {
+      toast.error('Excel export failed');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -121,6 +206,20 @@ export default function AddPayments() {
           onChange={(e) => setToDate(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
         />
+        <button
+          onClick={exportPDF}
+          disabled={exporting}
+          className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer"
+        >
+          PDF
+        </button>
+        <button
+          onClick={exportExcel}
+          disabled={exporting}
+          className="bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer"
+        >
+          Excel
+        </button>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200">

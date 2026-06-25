@@ -114,6 +114,7 @@ export const api = {
     cancel: (id) => apiClient.patch(`/school/service-bookings/${id}/cancel`),
     getAvailableSeats: (serviceId, params) =>
       apiClient.get(`/school/service-bookings/seats/${serviceId}`, { params }),
+    getStudents: (params) => apiClient.get('/school/service-bookings/students', { params }),
   },
 
   // Followups

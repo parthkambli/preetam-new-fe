@@ -481,7 +481,8 @@ export default function SchoolAdmission() {
         paymentDate: today,
         startDate: '',
         endDate: '',
-        description: `Renewal - ${adm.feePlan}`,
+        description: `Renewal`,
+        //- ${adm.feePlan}
         responsibleStaff: '',
       });
     } else {

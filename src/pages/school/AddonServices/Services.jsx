@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { format, addDays, isToday, isSameDay } from "date-fns";
+import { X, Printer } from "lucide-react";
+import { toast } from "sonner";
 
 import { api } from '../../../services/apiClient';
 
@@ -26,11 +28,19 @@ export default function Services() {
   const [modalBookings, setModalBookings] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
+  const [showServiceStudentModal, setShowServiceStudentModal] = useState(false);
+  const [svcStudentServiceId, setSvcStudentServiceId] = useState("");
+  const [svcStudentFromDate, setSvcStudentFromDate] = useState("");
+  const [svcStudentToDate, setSvcStudentToDate] = useState("");
+  const [svcStudentList, setSvcStudentList] = useState([]);
+  const [svcStudentLoading, setSvcStudentLoading] = useState(false);
+
   // ── Fetch services ────────────────────────────────────────────────
   useEffect(() => {
     const fetch = async () => {
       try {
         const res = await api.schoolServices.getAll();
+        console.log('Services API response:', res.data);
         setServices(res.data?.data || []);
       } catch (err) {
         console.error('Failed to fetch services:', err);
@@ -38,6 +48,11 @@ export default function Services() {
     };
     fetch();
   }, []);
+
+  useEffect(() => {
+    console.log('services state:', services);
+    console.log('services names:', services.map(s => s.serviceName));
+  }, [services]);
 
   // ── Fetch all active bookings when services load ─────────────────
   useEffect(() => {
@@ -104,6 +119,39 @@ export default function Services() {
     setShowModal(true);
   };
 
+  const handleShowServiceStudents = async () => {
+    if (!svcStudentServiceId || !svcStudentFromDate || !svcStudentToDate) {
+      toast.error("Please select Service, From date, and To date");
+      return;
+    }
+    setSvcStudentLoading(true);
+    try {
+      const res = await api.serviceBookings.getStudents({
+        serviceId: svcStudentServiceId,
+        fromDate: svcStudentFromDate,
+        toDate: svcStudentToDate,
+      });
+      setSvcStudentList(res.data?.students || []);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load students");
+      setSvcStudentList([]);
+    } finally {
+      setSvcStudentLoading(false);
+    }
+  };
+
+  const handlePrintSvcStudents = () => {
+    window.print();
+  };
+
+  const handleOpenServiceStudentModal = () => {
+    setSvcStudentServiceId("");
+    setSvcStudentFromDate("");
+    setSvcStudentToDate("");
+    setSvcStudentList([]);
+    setShowServiceStudentModal(true);
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
 
@@ -134,6 +182,12 @@ export default function Services() {
             className={`px-5 py-2.5 rounded-xl text-sm font-semibold ${view === 'add' ? 'bg-[#000359] text-white' : 'border border-[#000359] text-[#000359]'}`}
           >
             + Add Service
+          </button>
+          <button
+            onClick={handleOpenServiceStudentModal}
+            className="bg-[#000359] hover:opacity-90 text-white px-5 py-2.5 rounded-xl text-sm font-semibold"
+          >
+            View by Service
           </button>
         </div>
       </div>
@@ -188,6 +242,124 @@ export default function Services() {
       {/* ================= BOOK ================= */}
       {view === 'book' && <BookService />}
 
+      {/* ================= SERVICE STUDENT MODAL ================= */}
+      {showServiceStudentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowServiceStudentModal(false)}>
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="no-print flex items-center justify-between px-6 py-4 border-b shrink-0">
+              <h2 className="text-xl font-semibold text-gray-900">Students by Service & Date Range</h2>
+              <button onClick={() => setShowServiceStudentModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Filters */}
+            <div className="no-print px-6 py-4 border-b shrink-0">
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Service</label>
+                  <select
+                    value={svcStudentServiceId}
+                    onChange={(e) => setSvcStudentServiceId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
+                  >
+                    <option value="">Select Service</option>
+                    {services.map((s) => (
+                      <option key={s._id} value={s._id}>{s.serviceName}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                  <input
+                    type="date"
+                    value={svcStudentFromDate}
+                    onChange={(e) => setSvcStudentFromDate(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                  <input
+                    type="date"
+                    value={svcStudentToDate}
+                    onChange={(e) => setSvcStudentToDate(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                <button
+                  onClick={handleShowServiceStudents}
+                  disabled={svcStudentLoading}
+                  className="bg-[#000359] hover:opacity-90 disabled:opacity-60 text-white px-6 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer"
+                >
+                  {svcStudentLoading ? "Loading..." : "Show"}
+                </button>
+              </div>
+            </div>
+
+            {/* Print heading */}
+            <div className="print-only hidden p-6 pb-0">
+              <h2 className="text-xl font-bold">
+                Students — {services.find(s => s._id === svcStudentServiceId)?.serviceName || ''} ({svcStudentFromDate} to {svcStudentToDate})
+              </h2>
+            </div>
+
+            {/* Student List */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {svcStudentLoading ? (
+                <div className="text-center py-8 text-gray-400">Loading...</div>
+              ) : svcStudentList.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">No students found for this service in the selected date range.</div>
+              ) : (
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#000359] text-white">
+                      <th className="px-4 py-3 text-left text-xs font-semibold">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">Admission ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">Student Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">Start Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">End Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {svcStudentList.map((s, idx) => (
+                      <tr key={idx} className="border-b border-gray-100 hover:bg-blue-50/30">
+                        <td className="px-4 py-3 text-sm text-gray-500">{idx + 1}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{s.admissionId}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{s.studentName}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{s.startDate ? format(new Date(s.startDate), 'dd MMM yyyy') : '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{s.endDate ? format(new Date(s.endDate), 'dd MMM yyyy') : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="no-print flex items-center justify-end gap-3 px-6 py-4 border-t shrink-0">
+              <button
+                onClick={handlePrintSvcStudents}
+                disabled={svcStudentList.length === 0}
+                className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+              >
+                <Printer size={16} /> Print
+              </button>
+              <button
+                onClick={() => setShowServiceStudentModal(false)}
+                className="bg-[#000359] hover:opacity-90 text-white px-6 py-2 rounded-lg text-sm font-medium cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ================= MODAL ================= */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -221,6 +393,18 @@ export default function Services() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          body * { visibility: hidden; }
+          .fixed.inset-0.z-50, .fixed.inset-0.z-50 * { visibility: visible; }
+          .fixed.inset-0.z-50 { position: absolute !important; left: 0; top: 0; background: white !important; }
+          .fixed.inset-0.z-50 > div { box-shadow: none !important; max-width: 100% !important; max-height: none !important; margin: 0 !important; border-radius: 0 !important; }
+          @page { size: landscape; margin: 15mm; }
+        }
+      `}</style>
     </div>
   );
 }
