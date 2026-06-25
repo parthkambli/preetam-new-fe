@@ -186,6 +186,10 @@ staff: {
   update: (id, data) => apiClient.put(`/period/${id}`, data),
   delete: (id) => apiClient.delete(`/period/${id}`),
 },
+  // Period Students
+  periodStudents: {
+    getStudents: (params) => apiClient.get('/school/period-students', { params }),
+  },
   // Activities
   activities: {
     // Master Activities

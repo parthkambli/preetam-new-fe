@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, X, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
@@ -41,8 +41,23 @@ export default function TimeTable() {
 
   const [editingId, setEditingId] = useState(null);
 
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState("");
+  const [selectedActivity, setSelectedActivity] = useState("");
+  const [selectedDay, setSelectedDay] = useState("");
+  const [studentList, setStudentList] = useState([]);
+  const [studentListLoading, setStudentListLoading] = useState(false);
+  const [activities, setActivities] = useState([]);
+
   useEffect(() => {
     fetchPeriods();
+  }, []);
+
+  useEffect(() => {
+    api.activities.getAll().then((res) => {
+      const list = res.data?.data || res.data || [];
+      setActivities(list);
+    }).catch(() => {});
   }, []);
 
   const fetchPeriods = async () => {
@@ -121,12 +136,51 @@ export default function TimeTable() {
     }
   };
 
+  const handleShowStudents = async () => {
+    if (!selectedPeriod || !selectedActivity) {
+      toast.error("Please select both Period and Activity");
+      return;
+    }
+    setStudentListLoading(true);
+    try {
+      const params = { periodId: selectedPeriod, activityId: selectedActivity };
+      if (selectedDay) params.day = selectedDay;
+      const res = await api.periodStudents.getStudents(params);
+      setStudentList(res.data?.students || []);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load students");
+      setStudentList([]);
+    } finally {
+      setStudentListLoading(false);
+    }
+  };
+
+  const handlePrintStudentList = () => {
+    window.print();
+  };
+
+  const handleOpenStudentModal = () => {
+    setSelectedPeriod("");
+    setSelectedActivity("");
+    setSelectedDay("");
+    setStudentList([]);
+    setShowStudentModal(true);
+  };
+
   return (
     <div className="p-6">
       <div className="bg-white rounded-xl p-8 shadow-sm">
-        <h1 className="text-3xl font-semibold text-gray-900">
-          Timetable Management
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-semibold text-gray-900">
+            Timetable Management
+          </h1>
+          <button
+            onClick={handleOpenStudentModal}
+            className="bg-[#000359] hover:opacity-90 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
+          >
+            View Students
+          </button>
+        </div>
 
         <div className="border-b mt-4 mb-10" />
 
@@ -325,6 +379,151 @@ export default function TimeTable() {
           </table>
         </div>
       </div>
+
+      {/* ── View Students Modal ── */}
+      {showStudentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowStudentModal(false)}>
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header (hidden on print) */}
+            <div className="no-print flex items-center justify-between px-6 py-4 border-b shrink-0">
+              <h2 className="text-xl font-semibold text-gray-900">Students by Period & Activity</h2>
+              <button onClick={() => setShowStudentModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Dropdowns (hidden on print) */}
+            <div className="no-print px-6 py-4 border-b shrink-0">
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
+                  >
+                    <option value="">Select Period</option>
+                    {periods.map((p) => (
+                      <option key={p._id} value={p._id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
+                  <select
+                    value={selectedActivity}
+                    onChange={(e) => setSelectedActivity(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
+                  >
+                    <option value="">Select Activity</option>
+                    {activities.map((a) => (
+                      <option key={a._id} value={a._id}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
+                  <select
+                    value={selectedDay}
+                    onChange={(e) => setSelectedDay(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
+                  >
+                    <option value="">All Days</option>
+                    <option value="monday">Monday</option>
+                    <option value="tuesday">Tuesday</option>
+                    <option value="wednesday">Wednesday</option>
+                    <option value="thursday">Thursday</option>
+                    <option value="friday">Friday</option>
+                    <option value="saturday">Saturday</option>
+                    <option value="sunday">Sunday</option>
+                  </select>
+                </div>
+                <button
+                  onClick={handleShowStudents}
+                  disabled={studentListLoading}
+                  className="bg-[#000359] hover:opacity-90 disabled:opacity-60 text-white px-6 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer"
+                >
+                  {studentListLoading ? "Loading..." : "Show Students"}
+                </button>
+              </div>
+            </div>
+
+            {/* Print heading */}
+            <div className="print-only hidden p-6 pb-0">
+              <h2 className="text-xl font-bold">
+                Students — {periods.find(p => p._id === selectedPeriod)?.name || ''} / {activities.find(a => a._id === selectedActivity)?.name || ''}{selectedDay ? ` (${selectedDay.charAt(0).toUpperCase() + selectedDay.slice(1)})` : ''}
+              </h2>
+            </div>
+
+            {/* Student List */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {studentListLoading ? (
+                <div className="text-center py-8 text-gray-400">Loading...</div>
+              ) : studentList.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">No students found for this period and activity.</div>
+              ) : (
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#000359] text-white">
+                      <th className="px-4 py-3 text-left text-xs font-semibold">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">Admission ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">Student Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentList.map((s, idx) => (
+                      <tr key={s._id} className="border-b border-gray-100 hover:bg-blue-50/30">
+                        <td className="px-4 py-3 text-sm text-gray-500">{idx + 1}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{s.admissionId}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{s.fullName}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className={`inline-flex items-center justify-center rounded-full px-3 py-0.5 text-xs font-semibold ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                            {s.status || 'Active'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Footer (hidden on print) */}
+            <div className="no-print flex items-center justify-end gap-3 px-6 py-4 border-t shrink-0">
+              <button
+                onClick={handlePrintStudentList}
+                disabled={studentList.length === 0}
+                className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+              >
+                <Printer size={16} /> Print
+              </button>
+              <button
+                onClick={() => setShowStudentModal(false)}
+                className="bg-[#000359] hover:opacity-90 text-white px-6 py-2 rounded-lg text-sm font-medium cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          body * { visibility: hidden; }
+          .fixed.inset-0.z-50, .fixed.inset-0.z-50 * { visibility: visible; }
+          .fixed.inset-0.z-50 { position: absolute !important; left: 0; top: 0; background: white !important; }
+          .fixed.inset-0.z-50 > div { box-shadow: none !important; max-width: 100% !important; max-height: none !important; margin: 0 !important; border-radius: 0 !important; }
+          .fixed.inset-0.z-50 > div > div:nth-child(4) { overflow: visible !important; }
+          @page { size: landscape; margin: 15mm; }
+        }
+      `}</style>
     </div>
   );
 }

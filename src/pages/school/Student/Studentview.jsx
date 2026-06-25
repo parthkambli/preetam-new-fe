@@ -1378,7 +1378,7 @@
 
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 
@@ -1404,11 +1404,17 @@ function parseApiError(err, context = 'perform this action') {
 
 // ─── Shared field components ──────────────────────────────────────────────────
 function ReadField({ label, value, className = '' }) {
+  const displayValue =
+    value !== null && value !== undefined
+      ? typeof value === 'object'
+        ? JSON.stringify(value)
+        : value
+      : null;
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
       <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
       <div className="border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-800 text-sm min-h-[40px]">
-        {value ?? <span className="text-gray-400">—</span>}
+        {displayValue ?? <span className="text-gray-400">—</span>}
       </div>
     </div>
   );
@@ -1482,15 +1488,22 @@ const TABS = [
 export default function StudentView() {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [student,    setStudent]    = useState(null);
   const [lastHealthRecord, setLastHealthRecord] = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [loadingHealth, setLoadingHealth] = useState(false);
-  const [activeTab,  setActiveTab]  = useState('profile');
+  const [activeTab,  setActiveTab]  = useState(searchParams.get('tab') || 'profile');
   const [editSection,setEditSection]= useState(null);
   const [editData,   setEditData]   = useState({});
   const [saving,     setSaving]     = useState(false);
+
+  const [admission, setAdmission] = useState(null);
+  const [periods, setPeriods] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [timetableRows, setTimetableRows] = useState([]);
+  const [loadingAdmission, setLoadingAdmission] = useState(false);
 
   // ── Fetch Student ─────────────────────────────────────────────────────────
   const fetchStudent = useCallback(async () => {
@@ -1556,6 +1569,55 @@ export default function StudentView() {
       fetchLatestHealthRecord();
     }
   }, [activeTab, student, fetchLatestHealthRecord]);
+
+  // ── Fetch Admission (for Fee + Timetable tabs) ─────────────────────────
+  const fetchAdmission = useCallback(async () => {
+    const admId = student?.admissionId?._id || student?.admissionId;
+    if (!admId) return;
+    setLoadingAdmission(true);
+    try {
+      const res = await api.schoolAdmission.getById(admId);
+      const data = res?.data?.data || res?.data;
+      if (data && data._id) {
+        setAdmission(data);
+        setTimetableRows(data.timetable || []);
+      }
+    } catch (err) {
+      console.error('[StudentView] fetchAdmission:', err);
+    } finally {
+      setLoadingAdmission(false);
+    }
+  }, [student]);
+
+  // ── Fetch reference data for timetable ──────────────────────────────────
+  const fetchTimetableRefs = useCallback(async () => {
+    try {
+      const [periodsRes, activitiesRes] = await Promise.all([
+        api.periods.getAll(),
+        api.activities.getAll(),
+      ]);
+      const periodsArr = periodsRes?.data?.data || periodsRes?.data || [];
+      const activitiesArr = activitiesRes?.data?.data || activitiesRes?.data || [];
+      setPeriods(Array.isArray(periodsArr) ? periodsArr : []);
+      setActivities(Array.isArray(activitiesArr) ? activitiesArr : []);
+    } catch (err) {
+      console.error('[StudentView] fetchTimetableRefs:', err);
+    }
+  }, []);
+
+  // Fetch admission when Fee or Timetable tab becomes active
+  useEffect(() => {
+    if ((activeTab === 'fee' || activeTab === 'timetable') && student && !admission) {
+      fetchAdmission();
+    }
+  }, [activeTab, student, admission, fetchAdmission]);
+
+  // Fetch reference data when Timetable tab becomes active
+  useEffect(() => {
+    if (activeTab === 'timetable' && periods.length === 0 && activities.length === 0) {
+      fetchTimetableRefs();
+    }
+  }, [activeTab, periods, activities, fetchTimetableRefs]);
 
   // ── Edit helpers ──────────────────────────────────────────────────────────
   const startEdit = (section, fields) => {
@@ -1707,29 +1769,6 @@ export default function StudentView() {
 
   const ed = editSection;
 
-  const dummyTimetable = [
-  {
-    period: "P1",
-    monday: "Yoga",
-    tuesday: "Yoga",
-    wednesday: "Music",
-    thursday: "Yoga",
-    friday: "Reading",
-    saturday: "Meditation",
-    sunday: "Yoga"
-  },
-  {
-    period: "P2",
-    monday: "Walking",
-    tuesday: "Walking",
-    wednesday: "Walking",
-    thursday: "Games",
-    friday: "Walking",
-    saturday: "Games",
-    sunday: "Games"
-  }
-];
-
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
 
@@ -1774,7 +1813,7 @@ export default function StudentView() {
             <div className="flex-shrink-0 flex flex-col items-center gap-3">
               <div className="w-28 h-28 rounded-xl border-2 border-gray-200 bg-gray-100 flex items-center justify-center overflow-hidden">
                 {student.photo
-                  ? <img src={student.photo} alt={student.fullName} className="w-full h-full object-cover" />
+                  ? <img src={student.photo.startsWith('http') ? student.photo : `${(import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '')}${student.photo}`} alt={student.fullName} className="w-full h-full object-cover" />
                   : <span className="text-gray-400 text-xs text-center px-2 leading-tight">Profile Photo</span>
                 }
               </div>
@@ -2059,40 +2098,46 @@ export default function StudentView() {
       {/* ══ FEE INFO ═════════════════════════════════════════════════════════ */}
       {activeTab === 'fee' && (
         <SectionCard title="Fee Information" icon="💳">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ed === 'fee' ? (
-              <>
-                <EditField label="Fee Plan" name="feePlan" value={editData.feePlan} onChange={handleChange}
-                  options={[
-                    { value: 'Daily', label: 'Daily' },
-                    { value: 'Weekly', label: 'Weekly' },
-                    { value: 'Monthly', label: 'Monthly' },
-                    { value: 'Annual', label: 'Annual' },
-                  ]}
-                />
-                <EditField label="Amount (₹)" name="amount" value={editData.amount} onChange={handleChange} type="number" />
-                <EditField label="Assigned Caregiver" name="assignedCaregiver" value={editData.assignedCaregiver} onChange={handleChange} />
-                <EditField label="Mess Facility" name="messFacility" value={editData.messFacility} onChange={handleChange}
-                  options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
-                />
-                <EditField label="Residency" name="residency" value={editData.residency} onChange={handleChange}
-                  options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
-                />
-              </>
-            ) : (
-              <>
-                {[
-                  { label: 'Fee Plan', value: student.feePlan },
-                  { label: 'Amount', value: student.amount != null ? `₹${Number(student.amount).toLocaleString('en-IN')}` : undefined },
-                  { label: 'Assigned Caregiver', value: student.assignedCaregiver },
-                  { label: 'Mess Facility', value: student.messFacility },
-                  { label: 'Residency', value: student.residency },
-                ].map(({ label, value }) => (
-                  <ReadField key={label} label={label} value={value} />
-                ))}
-              </>
-            )}
-          </div>
+          {loadingAdmission ? (
+            <div className="py-6 text-center text-gray-500">Loading fee information...</div>
+          ) : ed === 'fee' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <EditField label="Fee Plan" name="feePlan" value={editData.feePlan} onChange={handleChange}
+                options={[
+                  { value: 'Daily', label: 'Daily' },
+                  { value: 'Weekly', label: 'Weekly' },
+                  { value: 'Monthly', label: 'Monthly' },
+                  { value: 'Annual', label: 'Annual' },
+                ]}
+              />
+              <EditField label="Amount (₹)" name="amount" value={editData.amount} onChange={handleChange} type="number" />
+              <EditField label="Assigned Caregiver" name="assignedCaregiver" value={editData.assignedCaregiver} onChange={handleChange} />
+              <EditField label="Mess Facility" name="messFacility" value={editData.messFacility} onChange={handleChange}
+                options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
+              />
+              <EditField label="Residency" name="residency" value={editData.residency} onChange={handleChange}
+                options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Fee summary from admission (live data) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ReadField label="Fee Plan" value={admission?.feePlan || student.feePlan} />
+                <ReadField label="Start Date" value={admission?.startDate ? new Date(admission.startDate).toLocaleDateString('en-IN') : (student.startDate ? new Date(student.startDate).toLocaleDateString('en-IN') : null)} />
+                <ReadField label="End Date" value={admission?.endDate ? new Date(admission.endDate).toLocaleDateString('en-IN') : (student.endDate ? new Date(student.endDate).toLocaleDateString('en-IN') : null)} />
+                <ReadField label="Total Fee" value={admission?.totalFee != null ? `₹${Number(admission.totalFee).toLocaleString('en-IN')}` : (student.totalFee != null ? `₹${Number(student.totalFee).toLocaleString('en-IN')}` : undefined)} />
+                <ReadField label="Paid" value={admission?.paidAmount != null ? `₹${Number(admission.paidAmount).toLocaleString('en-IN')}` : (student.paidAmount != null ? `₹${Number(student.paidAmount).toLocaleString('en-IN')}` : undefined)} />
+                <ReadField label="Pending" value={admission?.remainingAmount != null ? `₹${Number(admission.remainingAmount).toLocaleString('en-IN')}` : (student.remainingAmount != null ? `₹${Number(student.remainingAmount).toLocaleString('en-IN')}` : undefined)} />
+              </div>
+              {/* Extra info from student */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <ReadField label="Assigned Caregiver" value={student.assignedCaregiver} />
+                <ReadField label="Mess Facility" value={student.messFacility} />
+                <ReadField label="Residency" value={student.residency} />
+              </div>
+            </div>
+          )}
 
           {ed === 'fee'
             ? <SaveBar onSave={() => saveSection('fee')} onCancel={cancelEdit} saving={saving} />
@@ -2114,53 +2159,85 @@ export default function StudentView() {
       {activeTab === 'timetable' && (
   <SectionCard title="Student Timetable" icon="📅">
 
-    <div className="flex justify-end mb-4">
-      <button
-        onClick={() => window.print()}
-        className="px-4 py-2 bg-[#000359] text-white rounded-lg"
-      >
-        Download PDF
-      </button>
-    </div>
+    <style>{`
+      @media print {
+        body * { visibility: hidden; }
+        #print-timetable, #print-timetable * { visibility: visible; }
+        #print-timetable { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        #print-timetable .overflow-x-auto { overflow: visible !important; }
+        #print-timetable table { min-width: auto !important; width: 100% !important; }
+        #print-timetable th, #print-timetable td { padding: 8px !important; font-size: 12px !important; }
+        #print-timetable .no-print { display: none !important; }
+        @page { size: landscape; margin: 1cm; }
+      }
+    `}</style>
 
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[1000px] border-collapse">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="border p-3">Period</th>
-            <th className="border p-3">Monday</th>
-            <th className="border p-3">Tuesday</th>
-            <th className="border p-3">Wednesday</th>
-            <th className="border p-3">Thursday</th>
-            <th className="border p-3">Friday</th>
-            <th className="border p-3">Saturday</th>
-            <th className="border p-3">Sunday</th>
-          </tr>
-        </thead>
+    <div id="print-timetable">
+      <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">{student.fullName}'s Timetable</h2>
 
-        <tbody>
-          {dummyTimetable.map((row, index) => (
-            <tr key={index}>
-              <td className="border p-3 font-medium">
-                {row.period}
-              </td>
+      <div className="flex justify-end mb-4 no-print">
+        <button
+          onClick={() => window.print()}
+          className="px-4 py-2 bg-[#000359] text-white rounded-lg"
+        >
+          Download PDF
+        </button>
+      </div>
 
-              <td className="border p-3">{row.monday}</td>
-              <td className="border p-3">{row.tuesday}</td>
-              <td className="border p-3">{row.wednesday}</td>
-              <td className="border p-3">{row.thursday}</td>
-              <td className="border p-3">{row.friday}</td>
-              <td className="border p-3">{row.saturday}</td>
-              <td className="border p-3">{row.sunday}</td>
+      {loadingAdmission || (periods.length === 0 && activities.length === 0) ? (
+        <div className="py-8 text-center text-gray-500">Loading timetable...</div>
+      ) : timetableRows.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">No timetable assigned yet.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1000px] border-collapse">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border p-3">Period</th>
+              <th className="border p-3">Monday</th>
+              <th className="border p-3">Tuesday</th>
+              <th className="border p-3">Wednesday</th>
+              <th className="border p-3">Thursday</th>
+              <th className="border p-3">Friday</th>
+              <th className="border p-3">Saturday</th>
+              <th className="border p-3">Sunday</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+
+          <tbody>
+            {timetableRows.map((row, index) => {
+              const periodName = periods.find(p => String(p._id) === String(row.periodId))?.name || row.periodId;
+
+              const dayMap = {
+                monday: row.mondayActivityId,
+                tuesday: row.tuesdayActivityId,
+                wednesday: row.wednesdayActivityId,
+                thursday: row.thursdayActivityId,
+                friday: row.fridayActivityId,
+                saturday: row.saturdayActivityId,
+                sunday: row.sundayActivityId,
+              };
+
+              return (
+                <tr key={index}>
+                  <td className="border p-3 font-medium">{periodName}</td>
+                  {Object.entries(dayMap).map(([day, actId]) => (
+                    <td key={day} className="border p-3">
+                      {actId ? (activities.find(a => String(a._id) === String(actId))?.name || actId) : '—'}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
+    </div>{/* end #print-timetable */}
 
   </SectionCard>
 )}
-      
-    </div>
+        </div>
   );
 }

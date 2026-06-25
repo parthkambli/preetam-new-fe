@@ -185,12 +185,18 @@ export default function StudentList() {
                         {s.status || 'Unknown'}
                       </span>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 flex gap-2">
                       <button
                         onClick={() => handleView(s._id)}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm transition"
                       >
                         View
+                      </button>
+                      <button
+                        onClick={() => navigate(`/school-staff/participants/view/${s._id}?tab=timetable`)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm transition"
+                      >
+                        Timetable
                       </button>
                     </td>
                   </tr>

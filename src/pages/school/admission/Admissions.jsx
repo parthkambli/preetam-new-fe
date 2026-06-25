@@ -689,6 +689,8 @@ export default function SchoolAdmission() {
                   <th className="p-4 text-left font-semibold">Total Fee</th>
                   <th className="p-4 text-left font-semibold">Paid</th>
                   <th className="p-4 text-left font-semibold">Pending</th>
+                  <th className="p-4 text-left font-semibold">Fees Remain</th>
+                  <th className="p-4 text-left font-semibold">Services Remain</th>
                   <th className="p-4 text-left font-semibold">Status</th>
                   <th className="p-4 text-left font-semibold">Actions</th>
                 </tr>
@@ -705,6 +707,31 @@ export default function SchoolAdmission() {
                     <td className="p-4">₹{(adm.paidAmount || 0).toLocaleString('en-IN')}</td>
                     <td className="p-4">₹{(adm.remainingAmount || 0).toLocaleString('en-IN')}</td>
                     
+                    <td className="p-4">
+                      {adm.feeRemainingDays === 'Expired' ? (
+                        <span className="text-red-600 font-semibold">Expired</span>
+                      ) : adm.feeRemainingDays && adm.feeRemainingDays.startsWith('Starts in') ? (
+                        <span className="text-green-600 font-semibold">{adm.feeRemainingDays}</span>
+                      ) : adm.feeRemainingDays && adm.feeRemainingDays !== '—' ? (
+                        <span className={parseInt(adm.feeRemainingDays) <= 3 ? 'text-yellow-600 font-semibold' : ''}>
+                          {adm.feeRemainingDays}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {adm.serviceRemainingDays === 'Expired' ? (
+                        <span className="text-red-600 font-semibold">Expired</span>
+                      ) : adm.serviceRemainingDays && adm.serviceRemainingDays !== '—' ? (
+                        <span className={parseInt(adm.serviceRemainingDays) <= 3 ? 'text-yellow-600 font-semibold' : ''}>
+                          {adm.serviceRemainingDays}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+
                     {/* Editable Status */}
                     <td className="p-4">
                       <button
