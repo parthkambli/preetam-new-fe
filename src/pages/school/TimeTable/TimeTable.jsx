@@ -49,6 +49,9 @@ export default function TimeTable() {
   const [studentListLoading, setStudentListLoading] = useState(false);
   const [activities, setActivities] = useState([]);
 
+  const [occPeriodId, setOccPeriodId] = useState("");
+  const [activeView, setActiveView] = useState("periods");
+
   useEffect(() => {
     fetchPeriods();
   }, []);
@@ -276,12 +279,23 @@ export default function TimeTable() {
           </button>
         </div>
 
-        {/* Existing Periods */}
+        {/* View toggle tabs */}
+        <div className="flex mt-12 mb-6 border-b border-gray-200">
+          <button
+            onClick={() => setActiveView("periods")}
+            className={`px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${activeView === "periods" ? "text-[#000359] border-b-2 border-[#000359]" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Existing Periods
+          </button>
+          <button
+            onClick={() => setActiveView("breakdown")}
+            className={`px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${activeView === "breakdown" ? "text-[#000359] border-b-2 border-[#000359]" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Capacity Breakdown
+          </button>
+        </div>
 
-        <h2 className="text-2xl font-medium mt-12 mb-6">
-          Existing Periods
-        </h2>
-
+        {activeView === "periods" && (
         <div className="overflow-hidden rounded-xl border">
           <table className="w-full">
             <thead>
@@ -298,9 +312,9 @@ export default function TimeTable() {
                 <th className="px-6 py-4 text-center">
                   Capacity
                 </th>
-                {DAY_LABELS.map(d => (
+                {/* {DAY_LABELS.map(d => (
                   <th key={d} className="px-3 py-4 text-center text-xs">{d}</th>
-                ))}
+                ))} */}
                 <th className="px-6 py-4 text-center">
                   Actions
                 </th>
@@ -342,14 +356,14 @@ export default function TimeTable() {
                       {period.capacity}
                     </td>
 
-                    {DAYS.map(day => (
+                    {/* {DAYS.map(day => (
                       <td key={day} className="px-3 py-5 text-center">
                         <DayCell
                           booked={period.dayCounts?.[day] || 0}
                           capacity={period.capacity}
                         />
                       </td>
-                    ))}
+                    ))} */}
 
                     <td className="px-6 py-5">
                       <div className="flex justify-center gap-3">
@@ -378,6 +392,96 @@ export default function TimeTable() {
             </tbody>
           </table>
         </div>
+        )}
+
+        {activeView === "breakdown" && (
+          <>
+            <div className="max-w-xs mb-6">
+              <select
+                value={occPeriodId}
+                onChange={(e) => setOccPeriodId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
+              >
+                <option value="">Select a period to view occupancy</option>
+                {periods.map((p) => (
+                  <option key={p._id} value={p._id}>{p.name} ({p.startTime} - {p.endTime})</option>
+                ))}
+              </select>
+            </div>
+            {occPeriodId && (() => {
+              const period = periods.find(p => p._id === occPeriodId);
+              if (!period || !period.activityDayCounts) {
+                return <p className="text-gray-500 text-sm">No occupancy data available.</p>;
+              }
+              const entries = Object.entries(period.activityDayCounts);
+              const activityIds = [...new Set(entries.map(([k]) => k.split('_')[0]))];
+              const activityNames = {};
+              activities.forEach(a => { activityNames[a._id] = a.name; });
+              const dayTotals = {};
+              DAYS.forEach(d => { dayTotals[d] = 0; });
+              const actRows = activityIds.map(aid => {
+                const row = {};
+                DAYS.forEach(day => {
+                  const key = `${aid}_${day}`;
+                  row[day] = period.activityDayCounts[key] || 0;
+                  dayTotals[day] += row[day];
+                });
+                return { activityId: aid, activityName: activityNames[aid] || aid.slice(0, 8), days: row };
+              });
+              actRows.sort((a, b) => a.activityName.localeCompare(b.activityName));
+              return (
+                <div className="overflow-x-auto rounded-xl border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-[#000359] text-white">
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Activity</th>
+                        {DAY_LABELS.map(d => (
+                          <th key={d} className="px-3 py-3 text-center text-xs font-semibold">{d}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {actRows.map((act, idx) => (
+                        <tr key={act.activityId} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-4 py-3 text-sm font-medium text-gray-800">{act.activityName}</td>
+                          {DAYS.map(day => {
+                            const booked = act.days[day];
+                            const cap = period.capacity;
+                            const full = cap > 0 && booked >= cap;
+                            return (
+                              <td key={day} className="px-3 py-3 text-center">
+                                <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${full ? 'bg-red-100 text-red-700' : booked > 0 ? 'bg-green-100 text-green-700' : 'text-gray-400'}`}>
+                                  {booked > 0 ? `${booked}/${cap}` : '—'}
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                      {actRows.length > 0 && (
+                        <tr className="border-t-2 border-gray-300 bg-gray-100 font-semibold">
+                          <td className="px-4 py-3 text-sm text-gray-900">Total</td>
+                          {DAYS.map(day => {
+                            const booked = dayTotals[day];
+                            const cap = period.capacity;
+                            const full = cap > 0 && booked >= cap;
+                            return (
+                              <td key={day} className="px-3 py-3 text-center">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${full ? 'bg-red-200 text-red-800' : booked > 0 ? 'bg-green-200 text-green-800' : 'text-gray-500'}`}>
+                                  {booked > 0 ? `${booked}/${cap}` : '—'}
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+          </>
+        )}
       </div>
 
       {/* ── View Students Modal ── */}

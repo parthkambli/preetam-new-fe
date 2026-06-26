@@ -336,7 +336,9 @@ export default function SchoolAdmission() {
     );
 
     try {
-      await api.schoolAdmission.update(adm._id, { status: newStatus });
+      const fd = new FormData();
+      fd.append('status', newStatus);
+      await api.schoolAdmission.update(adm._id, fd);
 
       window.dispatchEvent(
         new CustomEvent("admissionStatusChanged", {
@@ -738,12 +740,12 @@ export default function SchoolAdmission() {
                       <button
                         onClick={() => toggleStatus(adm)}
                         className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-all hover:scale-105 ${
-                          adm.status === 'Active' 
+                          (adm.computedStatus || adm.status) === 'Active' 
                             ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                             : 'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
                       >
-                        {adm.status}
+                        {adm.computedStatus || adm.status}
                       </button>
                     </td>
 

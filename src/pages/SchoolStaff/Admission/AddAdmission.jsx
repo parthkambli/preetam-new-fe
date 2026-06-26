@@ -128,6 +128,7 @@ const fetchPeriods = async () => {
         label: `${p.name} (${p.startTime} - ${p.endTime})`,
         capacity: p.capacity,
         dayCounts: p.dayCounts || {},
+        activityDayCounts: p.activityDayCounts || {},
       }))
     );
   } catch (err) {
@@ -695,10 +696,13 @@ const validateTimetable = () => {
                             onChange={(v) => updateRow(index, "period", v)}
                             classNamePrefix="react-select"
                           />
-                          {row.period && row.period.dayCounts && (
+                          {row.period && row.period.activityDayCounts && (
                             <div className="mt-1.5 flex flex-wrap gap-1">
                               {DAY_LABELS.map(day => {
-                                const booked = row.period.dayCounts[day] || 0;
+                                const activityId = row[day]?.value || row[day]?._id;
+                                if (!activityId) return null;
+                                const key = `${activityId}_${day}`;
+                                const booked = row.period.activityDayCounts[key] || 0;
                                 const cap = row.period.capacity || 0;
                                 const full = cap > 0 && booked >= cap;
                                 return (
