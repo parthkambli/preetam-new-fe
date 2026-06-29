@@ -97,6 +97,14 @@ export const api = {
 },
     delete: (id) => apiClient.delete(`/school/admission/${id}`),
     collectPayment: (id, data) => apiClient.post(`/school/admission/${id}/collect-payment`, data),
+    getPayments: (id) => apiClient.get(`/school/admission/${id}/payments`),
+  },
+
+  // School Attendance (admin)
+  schoolAttendance: {
+    getSummary: (params) => apiClient.get('/school/attendance/summary', { params }),
+    getActivities: () => apiClient.get('/school/attendance/activities'),
+    getStudents: (params) => apiClient.get('/school/attendance/students', { params }),
   },
 
   // Service bookings (standalone collection)
@@ -106,6 +114,7 @@ export const api = {
     cancel: (id) => apiClient.patch(`/school/service-bookings/${id}/cancel`),
     getAvailableSeats: (serviceId, params) =>
       apiClient.get(`/school/service-bookings/seats/${serviceId}`, { params }),
+    getStudents: (params) => apiClient.get('/school/service-bookings/students', { params }),
   },
 
   // Followups
@@ -178,6 +187,10 @@ staff: {
   update: (id, data) => apiClient.put(`/period/${id}`, data),
   delete: (id) => apiClient.delete(`/period/${id}`),
 },
+  // Period Students
+  periodStudents: {
+    getStudents: (params) => apiClient.get('/school/period-students', { params }),
+  },
   // Activities
   activities: {
     // Master Activities
@@ -422,6 +435,14 @@ fitnessFees: {
   },
 },
 
+  // School Reports Dashboard
+  schoolReports: {
+    getDashboard: (params = {}) => {
+      const query = new URLSearchParams(params).toString();
+      return apiClient.get(`/reports/dashboard${query ? '?' + query : ''}`);
+    },
+  },
+
   // School Renewals
   renewals: {
     getExpiring: (params) => apiClient.get("/school/renewals", { params }),
@@ -453,6 +474,205 @@ fitnessFees: {
       create: (data) => apiClient.post("/access-roles", data),
       update: (id, data) => apiClient.put(`/access-roles/${id}`, data),
   },
+
+  // ================= SCHOOL STAFF PANEL =================
+schoolStaffPanel: {
+  getDashboard: () =>
+    apiClient.get('/school-staff/dashboard'),
+
+  getMySchedule: () =>
+    apiClient.get('/school-staff/my-schedule'),
+
+  getScheduleStudents: (params) =>
+    apiClient.get('/school-staff/my-schedule/students', { params }),
+
+  getProfile: () =>
+    apiClient.get('/school-staff/profile'),
+
+  // Enquiry
+  getEnquiries: (params) =>
+    apiClient.get('/school-staff/enquiry', { params }),
+
+  getEnquiryById: (id) =>
+    apiClient.get(`/school-staff/enquiry/${id}`),
+
+  createEnquiry: (data) =>
+    apiClient.post('/school-staff/enquiry', data),
+
+  updateEnquiry: (id, data) =>
+    apiClient.put(`/school-staff/enquiry/${id}`, data),
+
+  deleteEnquiry: (id) =>
+    apiClient.delete(`/school-staff/enquiry/${id}`),
+
+  // Followups
+  getFollowups: (params) =>
+    apiClient.get('/school-staff/followups', { params }),
+
+  createFollowup: (data) =>
+    apiClient.post('/school-staff/followups', data),
+
+  updateFollowup: (id, data) =>
+    apiClient.put(`/school-staff/followups/${id}`, data),
+
+  // Admission
+  getAdmissions: (params) =>
+    apiClient.get('/school-staff/admission', { params }),
+
+  getAdmissionById: (id) =>
+    apiClient.get(`/school-staff/admission/${id}`),
+
+  getAdmissionPayments: (id) =>
+    apiClient.get(`/school-staff/admission/${id}/payments`),
+
+  createAdmission: (data) =>
+    apiClient.post('/school-staff/admission', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  updateAdmission: (id, data) =>
+    apiClient.put(`/school-staff/admission/${id}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  deleteAdmission: (id) =>
+    apiClient.delete(`/school-staff/admission/${id}`),
+
+  collectPayment: (admissionId, data) =>
+    apiClient.post(`/school-staff/admission/${admissionId}/collect-payment`, data),
+
+  // Participants
+  getStudents: (params) =>
+    apiClient.get('/school-staff/participants', { params }),
+
+  getStudentById: (id) =>
+    apiClient.get(`/school-staff/participants/${id}`),
+
+  updateStudent: (id, data) =>
+    apiClient.put(`/school-staff/participants/${id}`, data),
+
+  updateEmergencyContact: (id, data) =>
+    apiClient.put(`/school-staff/participants/${id}/emergency-contact`, data),
+
+  clearEmergencyContact: (id) =>
+    apiClient.delete(`/school-staff/participants/${id}/emergency-contact`),
+
+  // Attendance
+  getAttendance: (params) =>
+    apiClient.get('/school-staff/attendance', { params }),
+
+  getAttendanceStudents: (params) =>
+    apiClient.get('/school-staff/attendance/students', { params }),
+
+  getStudentPeriods: (params) =>
+    apiClient.get('/school-staff/attendance/student-periods', { params }),
+
+  scanMark: (data) =>
+    apiClient.post('/school-staff/attendance/scan-mark', data),
+
+  // Services
+  getServices: (params) =>
+    apiClient.get('/school-staff/services', { params }),
+
+  createService: (data) =>
+    apiClient.post('/school-staff/services', data),
+
+  updateService: (id, data) =>
+    apiClient.put(`/school-staff/services/${id}`, data),
+
+  deleteService: (id) =>
+    apiClient.delete(`/school-staff/services/${id}`),
+
+  toggleServiceStatus: (id, data) =>
+    apiClient.patch(`/school-staff/services/${id}/toggle-status`, data),
+
+  getServiceBookings: (params) =>
+    apiClient.get('/school-staff/services/bookings', { params }),
+
+  createServiceBooking: (data) =>
+    apiClient.post('/school-staff/services/bookings', data),
+
+  cancelServiceBooking: (id) =>
+    apiClient.delete(`/school-staff/services/bookings/${id}`),
+
+  getAvailableSeats: (params) =>
+    apiClient.get('/school-staff/services/bookings/available-seats', { params }),
+
+  // Fees
+  getFeeTypes: () =>
+    apiClient.get('/school-staff/fees/types'),
+
+  createFeeType: (data) =>
+    apiClient.post('/school-staff/fees/types', data),
+
+  updateFeeType: (id, data) =>
+    apiClient.put(`/school-staff/fees/types/${id}`, data),
+
+  deleteFeeType: (id) =>
+    apiClient.delete(`/school-staff/fees/types/${id}`),
+
+  getAllotments: (params) =>
+    apiClient.get('/school-staff/fees/allotments', { params }),
+
+  allotFee: (data) =>
+    apiClient.post('/school-staff/fees/allotments', data),
+
+  getPayments: (params) =>
+    apiClient.get('/school-staff/fees/payments', { params }),
+
+  getFeePayments: (params) =>
+    apiClient.get('/school-staff/fees/payments', { params }),
+
+  addPayment: (data) =>
+    apiClient.post('/school-staff/fees/payments', data),
+
+  // Health Records
+  getHealthRecords: (params) =>
+    apiClient.get('/school-staff/health-records', { params }),
+
+  getHealthRecordById: (id) =>
+    apiClient.get(`/school-staff/health-records/${id}`),
+
+  createHealthRecord: (data) =>
+    apiClient.post('/school-staff/health-records', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  updateHealthRecord: (id, data) =>
+    apiClient.put(`/school-staff/health-records/${id}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  deleteHealthRecord: (id) =>
+    apiClient.delete(`/school-staff/health-records/${id}`),
+
+  // Activities
+  getActivities: () =>
+    apiClient.get('/school-staff/activities'),
+
+  // Renewals
+  getExpiring: (params) =>
+    apiClient.get('/school-staff/renewals/expiring', { params }),
+
+  renew: (data) =>
+    apiClient.post('/school-staff/renewals/renew', data),
+
+  // Events
+  getEvents: () =>
+    apiClient.get('/school-staff/events'),
+
+  // Reports
+  getReports: (params) =>
+    apiClient.get('/school-staff/reports', { params }),
+}
 
   
 

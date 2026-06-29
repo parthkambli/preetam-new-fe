@@ -42,7 +42,7 @@ export default function StudentList() {
       if (filters.feePlan !== 'all') params.feePlan = filters.feePlan;
       if (filters.status !== 'all') params.status = filters.status;
 
-      const response = await api.students.getAll(params);
+      const response = await api.schoolStaffPanel.getStudents(params);
       setStudents(response.data || []);
     } catch (err) {
       console.error(err);
@@ -76,7 +76,7 @@ export default function StudentList() {
   };
 
   const handleView = (id) => {
-    navigate(`/school/participants/view/${id}`);
+    navigate(`/school-staff/participants/view/${id}`);
   };
 
   return (
@@ -193,7 +193,7 @@ export default function StudentList() {
                         View
                       </button>
                       <button
-                        onClick={() => navigate(`/school/participants/view/${s._id}?tab=timetable`)}
+                        onClick={() => navigate(`/school-staff/participants/view/${s._id}?tab=timetable`)}
                         className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm transition"
                       >
                         Timetable

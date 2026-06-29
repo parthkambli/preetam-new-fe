@@ -60,7 +60,7 @@ export default function AddPayments() {
     try {
       const params = buildFilterParams({ page, limit });
 
-      const res = await api.fees.getPayments(params);
+      const res = await api.schoolStaffPanel.getFeePayments(params);
       const data = res.data?.data || res.data || [];
       const pagination = res.data?.pagination || {};
 
@@ -78,7 +78,7 @@ export default function AddPayments() {
   // ── Export helpers ────────────────────────────────────────────────
   const fetchExportData = async () => {
     const params = buildFilterParams({ page: 1, limit: 999999 });
-    const res = await api.fees.getPayments(params);
+    const res = await api.schoolStaffPanel.getFeePayments(params);
     return res.data?.data || res.data || [];
   };
 

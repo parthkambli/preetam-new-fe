@@ -106,6 +106,7 @@ export default function EditAdmission() {
           label: `${p.name} (${p.startTime} - ${p.endTime})`,
           capacity: p.capacity,
           dayCounts: p.dayCounts || {},
+          activityDayCounts: p.activityDayCounts || {},
         }))
       );
     } catch (err) { console.error(err); }
@@ -122,7 +123,7 @@ export default function EditAdmission() {
 
   const fetchServices = async () => {
     try {
-      const res = await api.schoolServices.getAll();
+      const res = await api.schoolStaffPanel.getServices();
       setServices(
         (res.data.data || [])
           .filter((s) => s.isActive)
@@ -140,7 +141,7 @@ export default function EditAdmission() {
 
   const fetchFeeTypes = async () => {
     try {
-      const res = await api.fees.getTypes();
+      const res = await api.schoolStaffPanel.getFeeTypes();
       const options = (res.data || []).map((fee) => ({
         value: fee._id,
         label: fee.description,
@@ -297,7 +298,7 @@ export default function EditAdmission() {
   useEffect(() => {
     const loadAdmission = async () => {
       try {
-        const res = await api.schoolAdmission.getById(id);
+        const res = await api.schoolStaffPanel.getAdmissionById(id);
         const data = res.data;
         const fmt = (d) => d ? new Date(d).toISOString().slice(0, 10) : '';
 
@@ -465,9 +466,9 @@ export default function EditAdmission() {
         };
       })));
 
-      await api.schoolAdmission.update(id, fd);
+      await api.schoolStaffPanel.updateAdmission(id, fd);
       toast.success('Admission updated successfully!');
-      navigate('/school/admission');
+      navigate('/school-staff/admission');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save changes.');
     } finally {
@@ -519,7 +520,7 @@ export default function EditAdmission() {
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {fetchError}
         </div>
-        <button onClick={() => navigate('/school/admission')} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+        <button onClick={() => navigate('/school-staff/admission')} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
           Back to Admissions
         </button>
       </div>
@@ -531,7 +532,7 @@ export default function EditAdmission() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Edit Admission – {formData.admissionId}</h1>
-        <button onClick={() => navigate('/school/admission')} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+        <button onClick={() => navigate('/school-staff/admission')} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
           Back to Admissions
         </button>
       </div>
@@ -708,10 +709,13 @@ export default function EditAdmission() {
                             onChange={(v) => updateRow(index, "period", v)}
                             classNamePrefix="react-select"
                           />
-                          {row.period && row.period.dayCounts && (
+                          {row.period && row.period.activityDayCounts && (
                             <div className="mt-1.5 flex flex-wrap gap-1">
                               {DAY_LABELS.map(day => {
-                                const booked = row.period.dayCounts[day] || 0;
+                                const activityId = row[day]?.value || row[day]?._id;
+                                if (!activityId) return null;
+                                const key = `${activityId}_${day}`;
+                                const booked = row.period.activityDayCounts[key] || 0;
                                 const cap = row.period.capacity || 0;
                                 const full = cap > 0 && booked >= cap;
                                 return (
@@ -868,18 +872,7 @@ export default function EditAdmission() {
                   <label className={labelCls}>Discount</label>
                   <input type="number" name="discount" value={formData.discount} onChange={handleChange} className={inputCls} />
                 </div>
-
-                <div>
-                  <label className={labelCls}>Start Date</label>
-                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>End Date (Auto)</label>
-                  <input value={formData.endDate} readOnly className={`${inputCls} bg-gray-50`} />
-                </div>
               </div>
-
-              
             </div>
 
             {/* ── SERVICES TABLE ── */}
@@ -893,8 +886,8 @@ export default function EditAdmission() {
                     <tr className="bg-[#000359] text-white">
                       <th className="px-4 py-3 text-left font-medium">Service</th>
                       <th className="px-4 py-3 text-left font-medium">Start Date</th>
-                      <th className="px-4 py-3 text-left font-medium">No. of Days</th>
                       <th className="px-4 py-3 text-left font-medium">End Date</th>
+                      <th className="px-4 py-3 text-left font-medium">No. of Days</th>
                       <th className="px-4 py-3 text-left font-medium">Per Day (₹)</th>
                       <th className="px-4 py-3 text-left font-medium">Total (₹)</th>
                       <th className="px-4 py-3 text-center font-medium">Action</th>
@@ -938,12 +931,11 @@ export default function EditAdmission() {
                             <input type="date" value={row.startDate} onChange={(e) => updateServiceRow(index, 'startDate', e.target.value)} className={inputCls} />
                           </td>
                           <td className="px-3 py-2">
-                            <input type="number" min="1" value={row.days} onChange={(e) => updateServiceRow(index, 'days', e.target.value)} placeholder="Days" className={inputCls} />
-                          </td>
-                          <td className="px-3 py-2">
                             <input value={rowEndDate || ''} readOnly className={`${inputCls} bg-gray-50`} />
                           </td>
-                          
+                          <td className="px-3 py-2">
+                            <input type="number" min="1" value={row.days} onChange={(e) => updateServiceRow(index, 'days', e.target.value)} placeholder="Days" className={inputCls} />
+                          </td>
                           <td className="px-3 py-2 text-gray-600">
                             {perDay > 0 ? `₹${perDay}` : <span className="text-gray-300">—</span>}
                           </td>
@@ -1010,9 +1002,16 @@ export default function EditAdmission() {
 
             {/* ── SCHEDULE ── */}
             <div>
-              {/* <h2 className="text-xl font-semibold border-b pb-2 mb-6">Schedule</h2> */}
+              <h2 className="text-xl font-semibold border-b pb-2 mb-6">Schedule</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                
+                <div>
+                  <label className={labelCls}>Start Date</label>
+                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>End Date (Auto)</label>
+                  <input value={formData.endDate} readOnly className={`${inputCls} bg-gray-50`} />
+                </div>
                 <div>
                   <label className={labelCls}>Responsible Staff</label>
                   <AsyncSelect

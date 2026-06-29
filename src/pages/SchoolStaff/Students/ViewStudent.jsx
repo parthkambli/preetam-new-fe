@@ -1514,7 +1514,7 @@ export default function StudentView() {
     }
     setLoading(true);
     try {
-      const res  = await api.students.getById(id);
+      const res  = await api.schoolStaffPanel.getStudentById(id);
       let data = res?.data?.data || res?.data;
 
       if (!data || typeof data !== 'object' || !data._id) {
@@ -1542,7 +1542,7 @@ export default function StudentView() {
     if (!id) return;
     setLoadingHealth(true);
     try {
-      const res = await api.healthRecords.getAll({ 
+      const res = await api.schoolStaffPanel.getHealthRecords({ 
         studentId: id 
       });
 
@@ -1576,7 +1576,7 @@ export default function StudentView() {
     if (!admId) return;
     setLoadingAdmission(true);
     try {
-      const res = await api.schoolAdmission.getById(admId);
+      const res = await api.schoolStaffPanel.getAdmissionById(admId);
       const data = res?.data?.data || res?.data;
       if (data && data._id) {
         setAdmission(data);
@@ -1660,7 +1660,7 @@ export default function StudentView() {
         payload.games   = (editData.games   || '').split(',').map(g => g.trim()).filter(Boolean);
       }
 
-      const res = await api.students.update(student._id, payload);
+      const res = await api.schoolStaffPanel.updateStudent(student._id, payload);
       const updated = res?.data;
       if (!updated || typeof updated !== 'object') throw new Error('INVALID_RESPONSE');
 
@@ -1691,7 +1691,7 @@ export default function StudentView() {
       if (editData.secondaryPhone?.trim() && !/^\d{10}$/.test(editData.secondaryPhone.trim()))
         return void toast.error('Secondary phone must be exactly 10 digits.', { id: tid });
 
-      const res     = await api.students.updateEmergencyContact(student._id, editData);
+      const res     = await api.schoolStaffPanel.updateEmergencyContact(student._id, editData);
       const updated = res?.data?.data;
       if (!updated) throw new Error('INVALID_RESPONSE');
 
@@ -1715,7 +1715,7 @@ export default function StudentView() {
     if (!window.confirm('Clear all emergency contact details? This cannot be undone.')) return;
     const tid = toast.loading('Clearing emergency contact…');
     try {
-      await api.students.clearEmergencyContact(student._id);
+      await api.schoolStaffPanel.clearEmergencyContact(student._id);
       setStudent(p => ({
         ...p,
         primaryContactName: '', primaryRelation: '', primaryPhone: '',
@@ -1733,7 +1733,7 @@ export default function StudentView() {
     const next = student.status === 'Active' ? 'Inactive' : 'Active';
     const tid  = toast.loading(`Changing status to ${next}…`);
     try {
-      await api.students.update(student._id, { status: next });
+      await api.schoolStaffPanel.updateStudent(student._id, { status: next });
       setStudent(p => ({ ...p, status: next }));
       toast.success(`Status changed to ${next}.`, { id: tid });
     } catch (err) {
@@ -2121,7 +2121,6 @@ export default function StudentView() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Fee summary from admission (live data) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <ReadField label="Fee Plan" value={admission?.feePlan || student.feePlan} />
                 <ReadField label="Start Date" value={admission?.startDate ? new Date(admission.startDate).toLocaleDateString('en-IN') : (student.startDate ? new Date(student.startDate).toLocaleDateString('en-IN') : null)} />
@@ -2130,7 +2129,6 @@ export default function StudentView() {
                 <ReadField label="Paid" value={admission?.paidAmount != null ? `₹${Number(admission.paidAmount).toLocaleString('en-IN')}` : (student.paidAmount != null ? `₹${Number(student.paidAmount).toLocaleString('en-IN')}` : undefined)} />
                 <ReadField label="Pending" value={admission?.remainingAmount != null ? `₹${Number(admission.remainingAmount).toLocaleString('en-IN')}` : (student.remainingAmount != null ? `₹${Number(student.remainingAmount).toLocaleString('en-IN')}` : undefined)} />
               </div>
-              {/* Extra info from student */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <ReadField label="Assigned Caregiver" value={student.assignedCaregiver} />
                 <ReadField label="Mess Facility" value={student.messFacility} />
@@ -2233,11 +2231,12 @@ export default function StudentView() {
           </tbody>
         </table>
       </div>
-    )}
+      )}
     </div>{/* end #print-timetable */}
 
   </SectionCard>
 )}
-        </div>
+      
+    </div>
   );
 }

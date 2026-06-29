@@ -63,7 +63,7 @@ export default function BookService() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.schoolServices.getAll();
+        const res = await api.schoolStaffPanel.getServices();
         setServices(res.data?.data || []);
       } catch {
         toast.error('Failed to load services');
@@ -86,7 +86,7 @@ export default function BookService() {
       if (filterDateFrom) params.dateFrom = filterDateFrom;
       if (filterDateTo) params.dateTo = filterDateTo;
 
-      const res = await api.serviceBookings.getAll(params);
+      const res = await api.schoolStaffPanel.getServiceBookings(params);
       const data = res.data;
       setBookings(data.bookings || []);
       setTotalCount(data.pagination?.total || 0);
@@ -112,7 +112,7 @@ export default function BookService() {
     (async () => {
       setSeatsLoading(true);
       try {
-        const res = await api.serviceBookings.getAvailableSeats(selectedService.value, {
+        const res = await api.schoolStaffPanel.getAvailableSeats(selectedService.value, {
           startDate,
           endDate: endDateStr,
         });
@@ -129,7 +129,7 @@ export default function BookService() {
   // ── Load students (async) ───────────────────────────────────────
   const loadStudents = async (inputValue) => {
     try {
-      const res = await api.students.getAll({ searchName: inputValue || '' });
+      const res = await api.schoolStaffPanel.getStudents({ searchName: inputValue || '' });
       const list = Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : [];
       return list.map(s => ({
         value: s.admissionId?._id || s.admissionId,
@@ -177,7 +177,7 @@ export default function BookService() {
     };
 
     try {
-      await api.serviceBookings.create(payload);
+      await api.schoolStaffPanel.createServiceBooking(payload);
       toast.success('Service booked successfully');
       fetchBookings();
 
@@ -198,7 +198,7 @@ export default function BookService() {
   // ── Cancel ──────────────────────────────────────────────────────
   const handleCancel = async (id) => {
     try {
-      await api.serviceBookings.cancel(id);
+      await api.schoolStaffPanel.cancelServiceBooking(id);
       toast.success('Booking cancelled');
       fetchBookings();
     } catch (err) {

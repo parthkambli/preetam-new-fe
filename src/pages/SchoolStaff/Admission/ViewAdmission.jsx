@@ -154,7 +154,7 @@ export default function ViewAdmission() {
       const [periodsRes, activitiesRes, servicesRes, staffRes] = await Promise.all([
         api.periods.getAll(),
         api.activities.getAll(),
-        api.schoolServices.getAll(),
+        api.schoolStaffPanel.getServices(),
         api.fitnessStaff.getAll()
       ]);
       const pm = {};
@@ -178,7 +178,7 @@ export default function ViewAdmission() {
     setLoading(true);
     setError('');
     try {
-      const response = await api.schoolAdmission.getById(id);
+      const response = await api.schoolStaffPanel.getAdmissionById(id);
       setData(response.data);
     } catch (err) {
       setError('Failed to load admission details');
@@ -191,7 +191,7 @@ export default function ViewAdmission() {
   const fetchPayments = async () => {
     setLoadingPayments(true);
     try {
-      const res = await api.schoolAdmission.getPayments(id);
+      const res = await api.schoolStaffPanel.getPayments(id);
       setPayments(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
       console.error('Failed to load payment history', err);
@@ -221,7 +221,7 @@ export default function ViewAdmission() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Admission Details – {data.admissionId}</h1>
         <button
-          onClick={() => navigate('/school/admission')}
+          onClick={() => navigate('/school-staff/admission')}
           className="px-6 py-2 border rounded-lg hover:bg-gray-50"
         >
           Back to List

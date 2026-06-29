@@ -277,7 +277,7 @@ export default function SchoolAdmission() {
 
   const fetchExpiring = async () => {
     try {
-      const res = await api.renewals.getExpiring({ days: 3 });
+      const res = await api.schoolStaffPanel.getExpiring({ days: 3 });
       const list = res.data?.data || [];
       const map = {};
       list.forEach(item => { map[item._id] = item; });
@@ -297,7 +297,7 @@ export default function SchoolAdmission() {
       if (filterStatus) params.status = filterStatus;
       if (filterPayment) params.paymentFilter = filterPayment;
 
-      const response = await api.schoolAdmission.getAll(params);
+      const response = await api.schoolStaffPanel.getAdmissions(params);
       const data = response.data?.data || response.data || [];
       const pagination = response.data?.pagination || {};
 
@@ -338,7 +338,7 @@ export default function SchoolAdmission() {
     try {
       const fd = new FormData();
       fd.append('status', newStatus);
-      await api.schoolAdmission.update(adm._id, fd);
+      await api.schoolStaffPanel.updateAdmission(adm._id, fd);
 
       window.dispatchEvent(
         new CustomEvent("admissionStatusChanged", {
@@ -399,7 +399,7 @@ export default function SchoolAdmission() {
         responsibleStaff: paymentForm.responsibleStaff || null,
       };
 
-      await api.schoolAdmission.collectPayment(selectedAdmission._id, payload);
+      await api.schoolStaffPanel.collectPayment(selectedAdmission._id, payload);
 
       toast.success('Payment collected successfully!');
       closePaymentModal();
@@ -414,7 +414,7 @@ export default function SchoolAdmission() {
 
   const fetchFeeTypes = async () => {
     try {
-      const res = await api.fees.getTypes();
+      const res = await api.schoolStaffPanel.getFeeTypes();
       const options = (res.data || []).map(fee => ({
         value: fee._id,
         label: fee.description,
@@ -428,7 +428,7 @@ export default function SchoolAdmission() {
 
   const fetchServices = async () => {
     try {
-      const res = await api.schoolServices.getAll();
+      const res = await api.schoolStaffPanel.getServices();
       const options = (res.data?.data || [])
         .filter(s => s.isActive)
         .map(s => ({
@@ -590,7 +590,7 @@ export default function SchoolAdmission() {
 
     setSavingRenewal(true);
     try {
-      await api.renewals.renew({
+      await api.schoolStaffPanel.renew({
         admissionId: renewAdmission._id,
         renewals,
       });
@@ -625,7 +625,7 @@ export default function SchoolAdmission() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Admission</h1>
         <Link
-          to="/school/admission/add"
+          to="/school-staff/admission/add"
           className="bg-[#000359] text-white px-6 py-2.5 rounded-lg hover:bg-blue-900 transition"
         >
           Add Admission
@@ -695,8 +695,6 @@ export default function SchoolAdmission() {
                   <th className="p-4 text-left font-semibold">Total Fee</th>
                   <th className="p-4 text-left font-semibold">Paid</th>
                   <th className="p-4 text-left font-semibold">Pending</th>
-                  <th className="p-4 text-left font-semibold">Fees Remain</th>
-                  <th className="p-4 text-left font-semibold">Services Remain</th>
                   <th className="p-4 text-left font-semibold">Status</th>
                   <th className="p-4 text-left font-semibold">Actions</th>
                 </tr>
@@ -713,31 +711,6 @@ export default function SchoolAdmission() {
                     <td className="p-4">₹{(adm.paidAmount || 0).toLocaleString('en-IN')}</td>
                     <td className="p-4">₹{(adm.remainingAmount || 0).toLocaleString('en-IN')}</td>
                     
-                    <td className="p-4">
-                      {adm.feeRemainingDays === 'Expired' ? (
-                        <span className="text-red-600 font-semibold">Expired</span>
-                      ) : adm.feeRemainingDays && adm.feeRemainingDays.startsWith('Starts in') ? (
-                        <span className="text-green-600 font-semibold">{adm.feeRemainingDays}</span>
-                      ) : adm.feeRemainingDays && adm.feeRemainingDays !== '—' ? (
-                        <span className={parseInt(adm.feeRemainingDays) <= 3 ? 'text-yellow-600 font-semibold' : ''}>
-                          {adm.feeRemainingDays}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {adm.serviceRemainingDays === 'Expired' ? (
-                        <span className="text-red-600 font-semibold">Expired</span>
-                      ) : adm.serviceRemainingDays && adm.serviceRemainingDays !== '—' ? (
-                        <span className={parseInt(adm.serviceRemainingDays) <= 3 ? 'text-yellow-600 font-semibold' : ''}>
-                          {adm.serviceRemainingDays}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </td>
-
                     {/* Editable Status */}
                     <td className="p-4">
                       <button
@@ -755,13 +728,13 @@ export default function SchoolAdmission() {
                     <td className="p-4">
                       <div className="flex gap-3 flex-wrap items-center">
                         <Link 
-                          to={`/school/admission/view/${adm._id}`} 
+                          to={`/school-staff/admission/view/${adm._id}`} 
                           className="text-blue-600 hover:underline"
                         >
                           View
                         </Link>
                         <Link 
-                          to={`/school/admission/edit/${adm._id}`} 
+                          to={`/school-staff/admission/edit/${adm._id}`} 
                           className="text-green-600 hover:underline"
                         >
                           Edit
