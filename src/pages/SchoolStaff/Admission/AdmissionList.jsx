@@ -388,6 +388,9 @@ export default function SchoolAdmission() {
     if (!paymentForm.paymentDate) {
       return toast.error('Select payment date');
     }
+    if (!paymentForm.responsibleStaff) {
+      return toast.error('Please select a responsible staff member');
+    }
 
     setSavingPayment(true);
     try {
@@ -1367,7 +1370,7 @@ export default function SchoolAdmission() {
 
               {/* Responsible Staff */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Responsible Staff</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Responsible Staff *</label>
                 <AsyncSelect
                   cacheOptions
                   defaultOptions
@@ -1378,7 +1381,6 @@ export default function SchoolAdmission() {
                     setPaymentForm(p => ({ ...p, responsibleStaff: option ? option.value : '' }));
                   }}
                   placeholder="Search staff..."
-                  isClearable
                   classNamePrefix="react-select"
                   className="text-sm"
                 />
@@ -1396,7 +1398,7 @@ export default function SchoolAdmission() {
               </button>
               <button
                 onClick={handleCollectPayment}
-                disabled={savingPayment || !paymentForm.amount || Number(paymentForm.amount) <= 0 || Number(paymentForm.amount) > (selectedAdmission.remainingAmount || 0)}
+                disabled={savingPayment || !paymentForm.amount || Number(paymentForm.amount) <= 0 || Number(paymentForm.amount) > (selectedAdmission.remainingAmount || 0) || !paymentForm.responsibleStaff}
                 className="bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white px-6 py-2 rounded-md text-sm font-semibold transition-colors"
               >
                 {savingPayment ? 'Processing...' : 'Collect Payment'}
