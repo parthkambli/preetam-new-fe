@@ -112,6 +112,8 @@ import FitnessStaffAddPassMember from "./pages/FitnessStaff/Members/AddPassMembe
 import AddPassMember from './pages/fitnessClub/Members/AddPassMember';
 import ViewPassMember from './pages/fitnessClub/Members/ViewPassMember';
 import StaffProfilePage from './pages/FitnessStaff/Profile';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import DeletionPolicy from './pages/DeletionPolicy';
 
 
 
@@ -237,6 +239,8 @@ function App() {
              <Route path="/fitness-staff/profile" element={<StaffProfilePage />} /> 
 
 
+
+
         
           </Route>
 
@@ -254,6 +258,12 @@ function App() {
 
           {/* 404 Route */}
           <Route path="*" element={<div>404 - Not Found</div>} />
+                       <Route path="/privacy-policy" element={<PrivacyPolicy />} /> 
+
+             <Route
+  path="/deletion-policy"
+  element={<DeletionPolicy />}
+/>
         </Routes>
       </BrowserRouter>
     </OrgProvider>

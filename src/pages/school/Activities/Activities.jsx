@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import AsyncSelect from "react-select/async";
+import Select from "react-select";
 import { toast } from "sonner";
 import { api } from "../../../services/apiClient";
 
@@ -11,9 +11,11 @@ export default function Activities() {
   const [editData, setEditData] = useState(null);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [staffOptions, setStaffOptions] = useState([]);
 
   useEffect(() => {
     fetchActivities();
+    fetchAllStaff();
   }, []);
 
   const fetchActivities = async () => {
@@ -29,11 +31,28 @@ export default function Activities() {
     }
   };
 
+  const fetchAllStaff = async () => {
+    try {
+      const res = await api.fitnessStaff.getAll({});
+      const staff = res.data?.data?.staff || res.data?.data || res.data || [];
+      setStaffOptions(
+        staff.map((s) => ({
+          value: s._id,
+          label: `${s.fullName} (${s.role || "Staff"})`,
+          fullName: s.fullName,
+        }))
+      );
+    } catch {
+      // silent
+    }
+  };
+
   // Populate form when editing
   const handleEditClick = (a) => {
     setEditData(a);
     setActivityName(a.name || "");
     const staff = a.staffId;
+    const staffName = a.staffName;
     setSelectedStaff(
       staff
         ? {
@@ -44,26 +63,11 @@ export default function Activities() {
                 : "",
             fullName: typeof staff === "object" ? staff.fullName : "",
           }
-        : null
+        : staffName
+          ? { value: "", label: staffName, fullName: staffName }
+          : null
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // ── Staff search ─────────────────────────────────────────────
-  const loadStaffOptions = async (inputValue) => {
-    try {
-      const params = {};
-      if (inputValue) params.search = inputValue;
-      const res = await api.fitnessStaff.getAll(params);
-      const staff = res.data?.data?.staff || res.data?.data || res.data || [];
-      return staff.map((s) => ({
-        value: s._id,
-        label: `${s.fullName} (${s.role || "Staff"})`,
-        fullName: s.fullName,
-      }));
-    } catch {
-      return [];
-    }
   };
 
   // ── Form submit ──────────────────────────────────────────────
@@ -148,10 +152,8 @@ export default function Activities() {
             <label className="block text-sm font-medium text-gray-600 mb-2">
               Instructor
             </label>
-            <AsyncSelect
-              cacheOptions
-              defaultOptions
-              loadOptions={loadStaffOptions}
+            <Select
+              options={staffOptions}
               placeholder="Search Instructor"
               value={selectedStaff}
               onChange={setSelectedStaff}
