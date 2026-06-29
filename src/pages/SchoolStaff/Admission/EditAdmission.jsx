@@ -411,7 +411,7 @@ export default function EditAdmission() {
     }
   };
 
-  const SYSTEM_FIELDS = ['_id', 'organizationId', '__v', 'createdAt', 'updatedAt', 'status', 'paymentHistory', 'photo', 'medicalReports'];
+  const SYSTEM_FIELDS = ['_id', 'organizationId', '__v', 'createdAt', 'updatedAt', 'status', 'paymentHistory', 'photo', 'medicalReports', 'membershipHistory'];
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();

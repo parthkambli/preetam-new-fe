@@ -911,6 +911,7 @@ const validateTimetable = () => {
                               placeholder="Select Service"
                               menuPosition="fixed"
                               onChange={(v) => updateServiceRow(index, 'service', v)}
+                              isClearable
                               classNamePrefix="react-select"
                             />
                             {row.service && serviceAvailability[index] && (
@@ -926,10 +927,10 @@ const validateTimetable = () => {
                             )}
                           </td>
                           <td className="px-3 py-2">
-                            <input type="date" value={row.startDate} onChange={(e) => updateServiceRow(index, 'startDate', e.target.value)} className={inputCls} />
+                            <input type="date" value={row.startDate} onChange={(e) => updateServiceRow(index, 'startDate', e.target.value)} required={!!row.service} className={inputCls} />
                           </td>
                           <td className="px-3 py-2">
-                            <input type="number" min="1" value={row.days} onChange={(e) => updateServiceRow(index, 'days', e.target.value)} placeholder="Days" className={inputCls} />
+                            <input type="number" min="1" value={row.days} onChange={(e) => updateServiceRow(index, 'days', e.target.value)} required={!!row.service} placeholder="Days" className={inputCls} />
                           </td>
                           <td className="px-3 py-2">
                             <input value={rowEndDate || ''} readOnly className={`${inputCls} bg-gray-50`} />
