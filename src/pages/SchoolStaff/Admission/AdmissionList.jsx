@@ -382,6 +382,9 @@ export default function SchoolAdmission() {
     if (!paymentForm.amount || Number(paymentForm.amount) <= 0) {
       return toast.error('Enter a valid payment amount');
     }
+    if (Number(paymentForm.amount) > (selectedAdmission.remainingAmount || 0)) {
+      return toast.error('Amount cannot exceed pending balance');
+    }
     if (!paymentForm.paymentDate) {
       return toast.error('Select payment date');
     }
@@ -1307,16 +1310,25 @@ export default function SchoolAdmission() {
               {/* Amount */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">Amount</label>
-                <input
-                  type="number"
-                  value={paymentForm.amount}
-                  onChange={e => setPaymentForm(p => ({ ...p, amount: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  placeholder="₹ Amount"
-                />
-              </div>
+                  <input
+                    type="number"
+                    value={paymentForm.amount}
+                    onChange={e => setPaymentForm(p => ({ ...p, amount: e.target.value }))}
+                    max={selectedAdmission.remainingAmount || 0}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    placeholder="₹ Amount"
+                  />
+                </div>
 
-              {/* Payment Mode */}
+                {/* Remaining After Payment */}
+                <div className="flex justify-between items-center text-sm bg-gray-50 rounded-md px-3 py-2">
+                  <span className="text-gray-600">Remaining After Payment</span>
+                  <span className="font-semibold text-gray-800">
+                    ₹{Math.max(0, (selectedAdmission.remainingAmount || 0) - Number(paymentForm.amount || 0)).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                {/* Payment Mode */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">Payment Mode</label>
                 <select
@@ -1384,7 +1396,7 @@ export default function SchoolAdmission() {
               </button>
               <button
                 onClick={handleCollectPayment}
-                disabled={savingPayment || !paymentForm.amount || Number(paymentForm.amount) <= 0}
+                disabled={savingPayment || !paymentForm.amount || Number(paymentForm.amount) <= 0 || Number(paymentForm.amount) > (selectedAdmission.remainingAmount || 0)}
                 className="bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white px-6 py-2 rounded-md text-sm font-semibold transition-colors"
               >
                 {savingPayment ? 'Processing...' : 'Collect Payment'}
