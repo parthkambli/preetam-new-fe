@@ -791,7 +791,7 @@ const weeklySchedule = [
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
         <div className="space-y-5 sm:space-y-6">
           {/* Search + Avatar */}
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Search
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -813,7 +813,7 @@ const weeklySchedule = [
   className="w-full h-full object-cover"
 />
             </Avatar>
-          </div>
+          </div> */}
 
           {/* Welcome Card */}
           <Card className="p-5 sm:p-6">

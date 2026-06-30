@@ -113,7 +113,9 @@ export default function StudentList() {
           <option value="Daily">Daily</option>
           <option value="Weekly">Weekly</option>
           <option value="Monthly">Monthly</option>
-            <option value="Annual">Annual</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="HalfYearly">Half Yearly</option>
+          <option value="Annual">Annual</option>
         </select>
 
         <select

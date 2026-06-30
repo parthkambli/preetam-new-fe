@@ -650,12 +650,12 @@ export default function SchoolAdmission() {
           onChange={(e) => setFilterFeePlan(e.target.value)}
         >
           <option value="">Fee Plan</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="quarterly">Quarterly</option>
-          <option value="halfYearly">Half Yearly</option>
-          <option value="annual">Annual</option>
+          <option value="Daily">Daily</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="HalfYearly">Half Yearly</option>
+          <option value="Annual">Annual</option>
         </select>
         <select 
           className="border rounded px-4 py-2"
