@@ -278,9 +278,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useOrg();
-
-  // const handleLogin = async (e) => {
+  const { login, switchOrg } = useOrg();
   //   e.preventDefault();
   //   setError('');
   //   setLoading(true);
@@ -337,6 +335,7 @@ login(organizations, defaultOrg, user);
 
 // 🔥 Redirect based on exact sidebar routes
 if (user?.role === "FitnessStaff") {
+  switchOrg('fitness');
   navigate("/fitness-staff");
 }
 else if (user?.role === "SchoolStaff") {

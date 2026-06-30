@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
-
+import { hasPermission } from '../../../utils/permissions';
 const numericPhone = (val) => val.replace(/\D/g, '').slice(0, 10);
 
 export default function EditAdmission() {

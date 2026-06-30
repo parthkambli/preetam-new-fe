@@ -317,7 +317,7 @@
 
 
 
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useOrg } from '../../context/OrgContext';
 import schoolLogo from '../../assets/school-logo.png';
 import fitnessLogo from '../../assets/fitness-logo.png';
@@ -326,12 +326,13 @@ import { hasPermission } from "../../utils/permissions";
 export default function Sidebar({ isOpen, onClose }) {
   const { currentOrg, user, logout } = useOrg();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Determine menu based on user role (priority) or organization (fallback)
   let menu = [];
 
   if (user?.role === 'FitnessStaff') {
-    if (currentOrg?.id === 'school') {
+    if (location.pathname.startsWith('/school-staff')) {
       const schoolStaffMenu = [
         { to: "/school-staff/dashboard", label: "Dashboard", icon: "🏠" },
         { to: "/school-staff/my-schedule", label: "My Schedule", icon: "📅" },

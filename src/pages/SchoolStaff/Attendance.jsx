@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../services/apiClient";
 import QRScanner from "../../components/QRScanner";
+import { hasPermission } from '../../utils/permissions';
 
 function Card({ className = "", ...props }) {
   return (
@@ -249,12 +250,14 @@ export default function SchoolStaffAttendance() {
         <h2 className="text-[32px] sm:text-2xl font-bold text-[#000033]">
           Attendance
         </h2>
+        {hasPermission("SCHOOL_MARK_ATTENDANCE") && (
         <button
           onClick={() => setShowScanner(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer"
         >
           Scan QR
         </button>
+        )}
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">

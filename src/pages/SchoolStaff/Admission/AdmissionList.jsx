@@ -739,12 +739,14 @@ export default function SchoolAdmission() {
                         >
                           View
                         </Link>
+                        {hasPermission("SCHOOL_EDIT_ADMISSION") && (
                         <Link 
                           to={`/school-staff/admission/edit/${adm._id}`} 
                           className="text-green-600 hover:underline"
                         >
                           Edit
                         </Link>
+                        )}
                         {(adm.remainingAmount || 0) > 0 && (
                           <button
                             onClick={() => openPaymentModal(adm)}
