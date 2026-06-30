@@ -20,7 +20,8 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (currentOrgId) {
+    // Allow per-request override via headers
+    if (currentOrgId && !config.headers["X-Organization-ID"]) {
       config.headers["X-Organization-ID"] = currentOrgId;
     }
 

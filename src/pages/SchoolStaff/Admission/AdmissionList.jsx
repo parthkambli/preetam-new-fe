@@ -174,6 +174,7 @@ import Select from 'react-select';
 import { toast } from 'sonner';
 import { api } from '../../../services/apiClient';
 import Pagination from '../../../components/Pagination';
+import { hasPermission } from '../../../utils/permissions';
 
 const PAYMENT_MODES = ['Cash', 'Bank Transfer'];
 
@@ -627,12 +628,14 @@ export default function SchoolAdmission() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Admission</h1>
-        <Link
-          to="/school-staff/admission/add"
-          className="bg-[#000359] text-white px-6 py-2.5 rounded-lg hover:bg-blue-900 transition"
-        >
-          Add Admission
-        </Link>
+        {hasPermission('SCHOOL_ADD_ADMISSION') && (
+          <Link
+            to="/school-staff/admission/add"
+            className="bg-[#000359] text-white px-6 py-2.5 rounded-lg hover:bg-blue-900 transition"
+          >
+            Add Admission
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
@@ -650,12 +653,12 @@ export default function SchoolAdmission() {
           onChange={(e) => setFilterFeePlan(e.target.value)}
         >
           <option value="">Fee Plan</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="quarterly">Quarterly</option>
-          <option value="halfYearly">Half Yearly</option>
-          <option value="annual">Annual</option>
+          <option value="Daily">Daily</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="HalfYearly">Half Yearly</option>
+          <option value="Annual">Annual</option>
         </select>
         <select 
           className="border rounded px-4 py-2"
